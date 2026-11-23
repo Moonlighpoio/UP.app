@@ -4,7 +4,9 @@ Prototipo web **local y privado** de **UP**: busca entre **30 productos de despe
 
 > ⚠️ **Estado de los datos:** precios **referenciales de demostración**, no precios en tiempo real. Ver [¿Por qué no hay conexión real ya?](#4-por-qué-no-hay-conexión-real-ya).
 >
-> 🔒 **Privacidad:** nada se publica en este momento. Las imágenes y descripciones son referencia privada de Jumbo.cl; los detalles legales y comerciales se resuelven después.
+> 🌐 **Demo pública (GitHub Pages):** https://moonlighpoio.github.io/UP.app/ · Repo: https://github.com/Moonlighpoio/UP.app. En Pages se activa automáticamente el **modo demo estático**: usa `data/demo.js`, no llama a `/api/prices` ni a `/api/verify-link`, y los badges muestran `Demo · sin verificación` en lugar de marcar enlaces como rotos.
+>
+> 🔒 **Privacidad:** el prototipo local se mantuvo como referencia privada, pero para recibir opiniones el repo y el sitio son públicos. Las imágenes y descripciones son referencia de Jumbo.cl; los detalles legales, comerciales y de licenciamiento se resuelven antes de cualquier uso productivo.
 
 ---
 
@@ -19,7 +21,7 @@ Prototipo web **local y privado** de **UP**: busca entre **30 productos de despe
 7. **Checkout consolidado y comprobante split.** Un solo resumen con subtotales por cadena, despachos, comisión UP del 1% y un cargo final. **Confirmar pago** genera el **comprobante de boleta dividida**: 99% dispersado a supermercados, 1% retenido por UP, dispersión por franquicia y detalle de entrega coordinada.
 8. **Avisos breves.** Los eventos usan un toast deslizante que desaparece solo; no hay popups persistentes ni avisos que bloqueen el catálogo.
 
-> Implementado en un solo `index.html` (Tailwind CDN + JS inline: `offerLink`, `verifyLink`, `refreshPrices`, `openCompareModal`, `calculateCartTotals`, `processUnifiedCheckout`) y `server.js` (`/api/prices`, `/api/verify-link`).
+> Implementado en un solo `index.html` (Tailwind CDN + JS inline: `offerLink`, `verifyLink`, `refreshPrices`, `openCompareModal`, `calculateCartTotals`, `processUnifiedCheckout`) y `server.js` (`/api/prices`, `/api/verify-link`). En GitHub Pages el front-end detecta el host `github.io` y usa el catálogo estático sin depender del servidor local.
 
 ---
 
