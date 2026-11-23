@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="es-CL" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UP — Comparador de Supermercados Chile | Pago Unificado</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23040404'/%3E%3Ctext x='32' y='43' font-family='monospace' font-size='30' font-weight='bold' text-anchor='middle' fill='%23ffc700'%3EUP%3C/text%3E%3C/svg%3E" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            stage: '#000000',
+            ink: '#040404',
+            canvas: '#181818',
+            utility: '#242424',
+            panel: '#2e2e2e',
+            chrome: '#3f4040',
+            rule: '#595a5a',
+            muted: '#9b9d9d',
+            soft: '#d1d1d1',
+            body: '#d8d9d9',
+            signal: '#ffc700',
+          },
+          fontFamily: {
+            serif: ['"Libre Caslon Text"', 'Georgia', 'serif'],
+            dot: ['"DotGothic16"', 'monospace'],
+            mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+            sans: ['"Inter"', 'Arial', 'sans-serif'],
+          },
+          borderRadius: {
+            panel: '8px',
+            control: '6px',
+            action: '4px',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --color-yellow: #ffc700;
+      --color-stage: #000000;
+      --color-ink: #040404;
+      --color-canvas: #181818;
+      --color-rule: #595a5a;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: #181818;
+      color: #ffffff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #181818;
+      color: #d8d9d9;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient Dot Field Overlay */
+    .ambient-dot-field {
+      position: fixed;
+      inset: 32px;
+      pointer-events: none;
+      z-index: 1;
+      background-image: radial-gradient(circle, rgb(255, 255, 255) 1px, rgba(0, 0, 0, 0) 1.5px);
+      background-size: 114.7px 114.7px;
+      background-position: -56.3px -56.3px;
+      opacity: 0.25;
+      mix-blend-mode: difference;
+    }
+
+    /* Glass Surfaces */
+    .chrome-glass {
+      background: rgba(89, 90, 90, 0.55);
+      backdrop-filter: blur(45px);
+      -webkit-backdrop-filter: blur(45px);
+      border: 0.5px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .smoked-glass {
+      background: rgba(60, 60, 60, 0.55);
+      backdrop-filter: blur(45px);
+      -webkit-backdrop-filter: blur(45px);
+      border: 0.5px solid #595a5a;
+    }
+
+    .utility-surface {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(45px);
+      -webkit-backdrop-filter: blur(45px);
+      border: 0.5px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Technical Hairline Rules */
+    .tech-border { border: 0.5px solid #595a5a; }
+    .tech-border-t { border-top: 0.5px solid #595a5a; }
+    .tech-border-b { border-bottom: 0.5px solid #595a5a; }
+    .tech-border-l { border-left: 0.5px solid #595a5a; }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #040404; }
+    ::-webkit-scrollbar-thumb { background: #3f4040; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #ffc700; }
+
+    /* Subtle pulse for live sync dot */
+    @keyframes signalPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .signal-pulse { animation: signalPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+    /* Rim-lit product stage hover */
+    .product-card:hover .product-stage-glow { opacity: 0.9; }
+    .product-card:hover { border-color: rgba(255, 199, 0, 0.55); }
+
+    .verify-badge[data-state="broken"] { color: #ffc700; border-color: #ffc700; }
+    .verify-badge[data-state="ok"] { color: #ffffff; }
+    .verify-badge[data-state="search"] { color: #9b9d9d; }
+  </style>
+</head>
+<body class="relative min-h-screen selection:bg-signal selection:text-ink">
+
+  <!-- Ambient Mechanical Dot Field -->
+  <div class="ambient-dot-field" aria-hidden="true"></div>
+
+  <!-- FLOATING TOP NAVIGATION (Chrome Glass, max-width 576px) -->
+  <header class="fixed top-0 left-0 right-0 z-40 px-2 pt-2 pointer-events-none">
+    <nav class="pointer-events-auto mx-auto max-w-[576px] min-h-[48px] chrome-glass rounded-[8px] px-3 py-1.5 flex items-center justify-between gap-2">
+      <!-- Left: Menu / Quick Jump -->
+      <a href="#catalogo" class="flex items-center gap-2 text-[11px] font-mono uppercase text-white hover:text-signal transition-colors px-2 py-1.5 rounded-[4px]" title="Ir al catálogo">
+        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+          <line x1="2" y1="4.5" x2="14" y2="4.5" />
+          <line x1="2" y1="8" x2="14" y2="8" />
+          <line x1="2" y1="11.5" x2="10" y2="11.5" />
+        </svg>
+        <span class="hidden sm:inline">CATÁLOGO</span>
+      </a>
+
+      <!-- Center: Minimalist Dynamic Golden UP Logo (Continuous Line Cart + UP) -->
+      <a href="#top" class="flex items-center gap-2 group" aria-label="UP Inicio">
+        <svg class="h-7 w-auto" viewBox="0 0 132 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 10H12L18 27H42L49 12" stroke="#ffc700" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 24C28 22 36 16 44 6M44 6H37M44 6V13" stroke="#ffc700" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="22" cy="34" r="2.6" stroke="#ffc700" stroke-width="2"/>
+          <circle cx="38" cy="34" r="2.6" stroke="#ffc700" stroke-width="2"/>
+          <path d="M56 12V24C56 29.5 60 33 66 33C72 33 76 29.5 76 24V12" stroke="#ffc700" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M86 33V12H98C103.5 12 107 15.2 107 20C107 24.8 103.5 28 98 28H86" stroke="#ffc700" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="116" cy="31" r="2" fill="#ffc700"/>
+        </svg>
+      </a>
+
+      <!-- Right: Search Trigger + Unified Cart Button -->
+      <div class="flex items-center gap-1.5">
+        <button id="nav-search-btn" type="button" class="p-2 text-white hover:text-signal transition-colors rounded-[4px]" title="Buscar producto">
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="9" cy="9" r="6" />
+            <path d="M13.5 13.5L17.5 17.5" stroke-linecap="round" />
+          </svg>
+        </button>
+
+        <button id="open-cart-btn" type="button" class="flex items-center gap-2 bg-white text-ink hover:bg-signal transition-colors px-3 h-[34px] rounded-[4px] font-mono text-[11px] uppercase font-medium">
+          <span>CARRITO</span>
+          <span id="nav-cart-count" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-[3px] bg-ink text-signal font-dot text-[11px]">0</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- HERO: BLACK IMMERSION BAND -->
+  <section id="top" class="relative z-10 bg-stage pt-24 pb-20 md:pt-32 md:pb-28 px-4 tech-border-b">
+    <div class="max-w-[1186px] mx-auto">
+      <!-- Top Technical Telemetry Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-12 text-[11px] font-mono uppercase text-muted">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-signal signal-pulse"></span>
+          <span>CHILE / MOTOR DE PRECIOS ACTIVO</span>
+          <span class="hidden sm:inline text-rule">|</span>
+          <span id="sync-timestamp" class="hidden sm:inline text-soft">SINCRONIZADO HACE INSTANTES</span>
+        </div>
+        <button id="refresh-prices-btn" type="button" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] utility-surface text-white hover:border-signal hover:text-signal transition-colors">
+          <svg id="sync-icon" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M16.5 10A6.5 6.5 0 1 1 14.6 5.4M16.5 3.5V6.5H13.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>ACTUALIZAR PRECIOS</span>
+        </button>
+      </div>
+
+      <!-- Exhibition Centerpiece -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <div class="lg:col-span-7 space-y-6">
+          <p class="font-dot text-[16px] uppercase text-signal tracking-wider">(00) COMPARADOR + CARRITO UNIFICADO</p>
+          <h1 class="font-serif text-[38px] sm:text-[48px] leading-[1.05] text-white font-normal">
+            Todos los supermercados de Chile. Un solo pago inteligente.
+          </h1>
+          <p class="font-sans text-[16px] leading-[1.45] text-body max-w-[540px]">
+            Busca cualquier producto de tu despensa, verifica el precio real directamente en <strong class="text-white font-medium">Lider, Jumbo, Santa Isabel, Tottus y Unimarc</strong>, y compra en un carrito unificado con despacho coordinado y solo 1% de intermediación UP.
+          </p>
+
+          <!-- Search Bar in Hero -->
+          <div class="pt-2 max-w-[560px]">
+            <div class="relative flex items-center">
+              <svg class="w-4 h-4 text-muted absolute left-4 pointer-events-none" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="9" cy="9" r="6" />
+                <path d="M13.5 13.5L17.5 17.5" stroke-linecap="round" />
+              </svg>
+              <input
+                id="main-search-input"
+                type="text"
+                placeholder="BUSCAR PRODUCTO (EJ: COCA-COLA, ARROZ, ACEITE, CONFORT...)"
+                class="w-full h-[48px] pl-11 pr-28 bg-utility text-white placeholder-muted font-mono text-[12px] uppercase rounded-[6px] tech-border focus:outline-none focus:border-signal transition-colors"
+              />
+              <button
+                id="clear-search-btn"
+                type="button"
+                class="hidden absolute right-3 px-2.5 py-1 text-[10px] font-mono uppercase bg-panel text-soft hover:text-signal rounded-[4px]"
+              >
+                LIMPIAR
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Proof Metrics -->
+          <div class="grid grid-cols-3 gap-4 pt-4 max-w-[500px] tech-border-t">
+            <div class="pt-4">
+              <div class="font-dot text-[24px] text-white">05</div>
+              <div class="font-mono text-[10px] uppercase text-muted mt-1">CADENAS CHILE</div>
+            </div>
+            <div class="pt-4">
+              <div class="font-dot text-[24px] text-signal">1.0%</div>
+              <div class="font-mono text-[10px] uppercase text-muted mt-1">FEE UP TRANSPARENTE</div>
+            </div>
+            <div class="pt-4">
+              <div class="font-dot text-[24px] text-white">100%</div>
+              <div class="font-mono text-[10px] uppercase text-muted mt-1">LINKS VERIFICABLES</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Rim-lit Technical Object / Engineering Point Graphic -->
+        <div class="lg:col-span-5">
+          <div class="relative bg-[#070707] rounded-[8px] tech-border p-6 sm:p-8 overflow-hidden">
+            <svg class="w-full h-auto max-h-[300px]" viewBox="0 0 360 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="180" cy="140" rx="145" ry="72" stroke="#595a5a" stroke-width="1" stroke-dasharray="2 6" transform="rotate(-12 180 140)"/>
+              <ellipse cx="180" cy="140" rx="115" ry="52" stroke="#ffc700" stroke-opacity="0.45" stroke-width="1" stroke-dasharray="2 8" transform="rotate(14 180 140)"/>
+              <rect x="112" y="74" width="136" height="132" rx="8" fill="#121212" stroke="#595a5a" stroke-width="0.75"/>
+              <path d="M138 118H148L156 146H198L208 122" stroke="#ffc700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M158 142C170 138 184 128 196 110M196 110H186M196 110V120" stroke="#ffc700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="162" cy="158" r="4" stroke="#ffffff" stroke-width="1.8"/>
+              <circle cx="192" cy="158" r="4" stroke="#ffffff" stroke-width="1.8"/>
+              <path d="M112 104H64V88" stroke="#9b9d9d" stroke-width="0.75" stroke-dasharray="2 2"/>
+              <rect x="61" y="85" width="6" height="6" stroke="#ffc700" stroke-width="1"/>
+              <text x="16" y="76" fill="#d8d9d9" font-family="IBM Plex Mono" font-size="9">[DEEP LINKING]</text>
+              <path d="M248 168H292V186" stroke="#9b9d9d" stroke-width="0.75" stroke-dasharray="2 2"/>
+              <rect x="289" y="186" width="6" height="6" stroke="#ffc700" stroke-width="1"/>
+              <text x="234" y="206" fill="#d8d9d9" font-family="IBM Plex Mono" font-size="9">[SPLIT PAYMENT 1%]</text>
+              <text x="144" y="190" fill="#9b9d9d" font-family="DotGothic16" font-size="11">UP // CL-2026</text>
+            </svg>
+            <div class="mt-4 flex items-center justify-between text-[11px] font-mono uppercase text-muted tech-border-t pt-3">
+              <span>DESPACHO COORDINADO</span>
+              <span class="text-signal">LIDER · JUMBO · TOTTUS · UNIMARC · STA ISABEL</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CATALOG SECTION -->
+  <main id="catalogo" class="relative z-10 max-w-[1320px] mx-auto px-3 sm:px-6 py-16 md:py-24">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <div>
+        <span class="font-dot text-[16px] text-signal uppercase">(01) DESPENSA CHILE</span>
+        <h2 class="font-serif text-[32px] sm:text-[40px] leading-[1.05] text-white mt-2">
+          Catálogo en tiempo real
+        </h2>
+        <p class="font-sans text-[14px] text-muted mt-2">
+          Presiona cualquier producto para comparar los 5 supermercados, verificar el link oficial y agregar a tu carrito UP.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span id="results-count" class="font-mono text-[11px] uppercase text-muted">0 PRODUCTOS</span>
+        <select id="sort-select" class="h-[40px] px-3 bg-utility text-white font-mono text-[11px] uppercase rounded-[4px] tech-border focus:outline-none focus:border-signal">
+          <option value="default">ORDEN: DESTACADOS</option>
+          <option value="price-asc">PRECIO: MENOR A MAYOR</option>
+          <option value="price-desc">PRECIO: MAYOR A MENOR</option>
+          <option value="savings-desc">MAYOR AHORRO</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="category-filters" class="flex flex-wrap gap-2 mb-10"></div>
+
+    <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+
+    <div id="empty-state" class="hidden text-center py-20 smoked-glass rounded-[8px]">
+      <p class="font-dot text-[20px] text-white uppercase">SIN RESULTADOS EN DESPENSA</p>
+      <p class="font-sans text-[14px] text-muted mt-2">No encontramos productos que coincidan con tu búsqueda.</p>
+      <button id="reset-filters-btn" type="button" class="mt-6 inline-flex items-center justify-center bg-white text-ink hover:bg-signal transition-colors px-4 h-[40px] rounded-[4px] font-mono text-[12px] uppercase">
+        VER TODOS LOS PRODUCTOS
+      </button>
+    </div>
+  </main>
+
+  <!-- HOW IT WORKS -->
+  <section id="como-funciona" class="relative z-10 max-w-[576px] mx-auto px-4 py-16 md:py-24">
+    <div class="text-center mb-10">
+      <span class="font-dot text-[16px] text-signal uppercase">(02) ARQUITECTURA UP</span>
+      <h2 class="font-serif text-[32px] sm:text-[40px] leading-[1.05] text-white mt-2">
+        Transparencia verificable
+      </h2>
+    </div>
+
+    <div class="divide-y divide-rule tech-border-b" id="faq-accordion">
+      <div>
+        <button type="button" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
+          <span>01 / ¿CÓMO VERIFICO QUE EL PRECIO ES REAL?</span>
+          <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
+        </button>
+        <div class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
+          Cada fila incluye <strong class="text-white">VER EN TIENDA ↗</strong>. Si existe una ficha canónica se usa esa URL; si no, se construye una <strong class="text-white">búsqueda exacta por SKU o GTIN</strong>. Nunca se busca por nombre genérico. Un 404 marca el producto para re-indexación.
+        </div>
+      </div>
+      <div>
+        <button type="button" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
+          <span>02 / ¿CÓMO FUNCIONA EL PAGO DIVIDIDO Y EL 1%?</span>
+          <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
+        </button>
+        <div class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
+          UP agrupa tus compras en sub-carritos por franquicia y procesa un único pago. El <strong class="text-white">Split Payment</strong> dispersa el 99% del subtotal a cada supermercado (que emite su boleta) y UP retiene solo un <strong class="text-signal">1% de intermediación</strong>. El fee no se agrega al cobro: ya está descontado de la liquidación.
+        </div>
+      </div>
+      <div>
+        <button type="button" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
+          <span>03 / ¿CÓMO OPTIMIZO EL DESPACHO GRATIS?</span>
+          <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
+        </button>
+        <div class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
+          Dentro del Carrito UP verás una barra de progreso por supermercado con el monto exacto que falta para desbloquear despacho gratis. Cada franquicia mantiene su propio umbral y plazo de entrega.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTRUMENT-PANEL ENDING -->
+  <footer class="relative z-10 bg-ink pt-20 pb-28 sm:pb-16 px-6 tech-border-t">
+    <div class="max-w-[1186px] mx-auto flex flex-col items-center text-center">
+      <div class="space-y-4 mb-14">
+        <a href="#catalogo" class="block font-dot text-[32px] sm:text-[40px] leading-none uppercase text-white hover:text-signal transition-colors">CATÁLOGO</a>
+        <a href="#como-funciona" class="block font-dot text-[32px] sm:text-[40px] leading-none uppercase text-white hover:text-signal transition-colors">ARQUITECTURA</a>
+        <button type="button" id="footer-cart-link" class="block mx-auto font-dot text-[32px] sm:text-[40px] leading-none uppercase text-signal hover:text-white transition-colors">CARRITO UP</button>
+      </div>
+
+      <div class="w-full max-w-[320px] flex flex-col gap-[2px] mb-16">
+        <div class="flex items-center justify-between h-[48px] px-4 utility-surface rounded-[6px] font-mono text-[11px] uppercase text-white">
+          <span>REGIÓN ACTIVA</span>
+          <span class="text-signal">CHILE (CLP $)</span>
+        </div>
+        <div class="flex items-center justify-between h-[48px] px-4 utility-surface rounded-[6px] font-mono text-[11px] uppercase text-white">
+          <span>INTERMEDIACIÓN UP</span>
+          <span class="text-soft">1.0% RETENIDO</span>
+        </div>
+        <div class="flex items-center justify-between h-[48px] px-4 utility-surface rounded-[6px] font-mono text-[11px] uppercase text-white">
+          <span>ESTADO API PRECIOS</span>
+          <span class="text-signal">OPERATIVO</span>
+        </div>
+      </div>
+
+      <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 tech-border-t font-mono text-[11px] uppercase text-muted">
+        <span>© 2026 UP CHILE — PLATAFORMA DE COMPARACIÓN Y COMPRA UNIFICADA</span>
+        <span>DISEÑO INDUSTRIAL EDITORIAL // NEGRO & DORADO</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- FLOATING BOTTOM PRODUCT DOCK -->
+  <div id="bottom-dock" class="hidden fixed bottom-2 left-2 right-2 z-30 pointer-events-none">
+    <div class="pointer-events-auto max-w-[768px] mx-auto chrome-glass rounded-[8px] px-4 py-2.5 min-h-[56px] flex flex-wrap items-center justify-between gap-3 shadow-2xl">
+      <div class="flex items-center gap-3">
+        <span class="w-2 h-2 rounded-full bg-signal"></span>
+        <span class="font-dot text-[18px] sm:text-[20px] uppercase text-white">UP CARRITO</span>
+        <span class="text-rule hidden sm:inline">|</span>
+        <span id="dock-summary" class="font-mono text-[11px] uppercase text-soft">0 PROD · 0 SUPERMERCADOS</span>
+      </div>
+      <div class="flex items-center gap-3 ml-auto">
+        <span id="dock-total" class="font-dot text-[18px] text-signal">$0</span>
+        <button id="dock-open-cart-btn" type="button" class="bg-signal text-ink hover:bg-white transition-colors px-4 h-[36px] rounded-[4px] font-mono text-[11px] font-semibold uppercase">
+          VER PAGO UNIFICADO →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE COMPARACIÓN -->
+  <div id="compare-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md">
+    <div class="relative w-full max-w-[780px] max-h-[92vh] overflow-y-auto bg-canvas tech-border rounded-[8px] shadow-2xl">
+      <div class="sticky top-0 z-10 bg-stage/95 backdrop-blur-md px-5 py-4 tech-border-b flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span id="modal-product-index" class="font-dot text-[15px] text-signal">(01)</span>
+          <span id="modal-product-category" class="font-mono text-[11px] uppercase text-muted px-2 py-0.5 rounded-[4px] utility-surface">BEBIDAS</span>
+        </div>
+        <button id="close-compare-modal" type="button" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono text-[14px]">✕</button>
+      </div>
+
+      <div class="p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row gap-5 items-start sm:items-center pb-6 tech-border-b">
+          <div id="modal-product-art" class="w-24 h-24 sm:w-28 sm:h-28 shrink-0 bg-stage rounded-[8px] tech-border flex items-center justify-center p-3"></div>
+          <div class="flex-1">
+            <h3 id="modal-product-name" class="font-serif text-[26px] sm:text-[32px] leading-[1.1] text-white"></h3>
+            <p id="modal-product-desc" class="font-sans text-[14px] text-muted mt-1.5"></p>
+            <div class="flex flex-wrap items-center gap-3 mt-3">
+              <span id="modal-best-price-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-signal text-ink font-mono text-[11px] font-semibold uppercase"></span>
+              <span id="modal-savings-badge" class="inline-flex items-center px-2.5 py-1 rounded-[4px] utility-surface text-soft font-mono text-[11px] uppercase"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <div class="flex items-center justify-between mb-3 font-mono text-[11px] uppercase text-muted">
+            <span>SUPERMERCADO / VERIFICACIÓN OFICIAL</span>
+            <span>PRECIO Y COMPRA DIRECTA UP</span>
+          </div>
+          <div id="modal-stores-list" class="space-y-2.5"></div>
+          <p class="font-mono text-[9px] uppercase text-muted mt-4 leading-relaxed">
+            Deep link: ficha canónica cuando existe; si no, búsqueda exacta por SKU/GTIN. Nunca se genera una búsqueda por nombre de producto.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARRITO MULTI-SUPERMERCADO -->
+  <div id="cart-drawer-backdrop" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex justify-end">
+    <aside id="cart-drawer" class="w-full max-w-[480px] h-full bg-canvas tech-border-l flex flex-col shadow-2xl">
+      <div class="bg-stage px-5 py-4 tech-border-b flex items-center justify-between">
+        <div>
+          <span class="font-dot text-[20px] uppercase text-white">CARRITO UNIFICADO UP</span>
+          <p class="font-mono text-[10px] uppercase text-muted mt-0.5">SUB-CARRITOS POR FRANQUICIA · SPLIT PAYMENT</p>
+        </div>
+        <button id="close-cart-btn" type="button" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono text-[14px]">✕</button>
+      </div>
+
+      <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-5"></div>
+
+      <div id="cart-summary-footer" class="bg-stage p-5 tech-border-t space-y-3">
+        <div class="space-y-1.5 font-mono text-[12px]">
+          <div class="flex justify-between text-soft">
+            <span>SUBTOTAL PRODUCTOS</span>
+            <span id="summary-subtotal">$0</span>
+          </div>
+          <div class="flex justify-between text-soft">
+            <span>DESPACHO CONSOLIDADO</span>
+            <span id="summary-shipping">$0</span>
+          </div>
+          <div class="flex justify-between text-signal">
+            <span>FEE INTERMEDIACIÓN UP (1% RETENIDO)</span>
+            <span id="summary-fee">$0</span>
+          </div>
+        </div>
+
+        <div class="pt-3 tech-border-t flex items-baseline justify-between">
+          <span class="font-mono text-[12px] uppercase text-white">TOTAL A PAGAR EN UP</span>
+          <span id="summary-total" class="font-dot text-[26px] text-signal">$0</span>
+        </div>
+
+        <button id="checkout-btn" type="button" class="w-full h-[46px] bg-signal text-ink hover:bg-white transition-colors rounded-[4px] font-mono text-[12px] font-semibold uppercase flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+          <span>PAGAR EN UP (PAGO UNIFICADO)</span>
+          <span>→</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN: BOLETA DIVIDIDA -->
+  <div id="checkout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md">
+    <div class="w-full max-w-[540px] max-h-[90vh] overflow-y-auto bg-canvas tech-border rounded-[8px] shadow-2xl">
+      <div class="bg-stage px-5 py-4 tech-border-b flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-signal"></span>
+          <span class="font-dot text-[18px] uppercase text-white">ORDEN CONFIRMADA // SPLIT PAYMENT</span>
+        </div>
+        <button id="close-checkout-modal" type="button" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono">✕</button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-5">
+        <div class="p-4 rounded-[6px] bg-stage tech-border flex items-center justify-between">
+          <div>
+            <p class="font-mono text-[10px] uppercase text-muted">CÓDIGO DE ORDEN UNIFICADA</p>
+            <p id="order-code" class="font-dot text-[22px] text-signal mt-0.5">UP-CL-84920</p>
+          </div>
+          <div class="text-right">
+            <p class="font-mono text-[10px] uppercase text-muted">ESTADO</p>
+            <p class="font-mono text-[11px] uppercase text-white mt-1">BOLETAS EMITIDAS ✓</p>
+          </div>
+        </div>
+
+        <div>
+          <p class="font-mono text-[11px] uppercase text-muted mb-2.5">DESGLOSE DE TRANSFERENCIA POR SUPERMERCADO</p>
+          <div id="checkout-breakdown" class="space-y-2"></div>
+        </div>
+
+        <div class="p-4 rounded-[6px] utility-surface space-y-2 font-mono text-[12px]">
+          <div class="flex justify-between text-signal">
+            <span>COMISIÓN SERVICIO UP (1% RETENIDA)</span>
+            <span id="checkout-fee">$0</span>
+          </div>
+          <div class="flex justify-between text-white font-semibold pt-2 tech-border-t text-[14px]">
+            <span>TOTAL PAGADO</span>
+            <span id="checkout-grand-total" class="font-dot text-[20px] text-signal">$0</span>
+          </div>
+        </div>
+
+        <p class="font-sans text-[13px] text-muted leading-relaxed">
+          Hemos coordinado el despacho con cada franquicia seleccionada. El 99% del subtotal se dispersa a los supermercados y UP retiene el 1% de intermediación. Recibirás las boletas electrónicas de cada cadena más la boleta UP en tu correo.
+        </p>
+
+        <button id="finish-order-btn" type="button" class="w-full h-[44px] bg-white text-ink hover:bg-signal transition-colors rounded-[4px] font-mono text-[12px] font-semibold uppercase">
+          VOLVER AL CATÁLOGO
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed top-20 right-4 z-50 transform translate-x-[140%] transition-transform duration-300 bg-stage tech-border border-signal/70 px-4 py-3 rounded-[6px] shadow-2xl flex items-center gap-3 max-w-[340px]">
+    <span class="w-2 h-2 rounded-full bg-signal shrink-0"></span>
+    <span id="toast-message" class="font-mono text-[11px] uppercase text-white">PRODUCTO AGREGADO AL CARRITO</span>
+  </div>
+
+  <script src="data/demo.js"></script>
+  <script>
+    /**
+     * UP CHILE — MOTOR DE COMPARACIÓN Y CARRITO UNIFICADO
+     * Estructura visual: industrial editorial (negro / dorado).
+     * Reglas críticas: link canónico o búsqueda exacta SKU/GTIN; 1% retenido del subtotal.
+     */
+
+    const CHAIN_SEARCH = {
+      lider: 'https://www.lider.cl/supermercado/busqueda?ft=',
+      jumbo: 'https://www.jumbo.cl/busqueda?ft=',
+      santaisabel: 'https://www.santaisabel.cl/busqueda?ft=',
+      tottus: 'https://www.tottus.cl/tottus/busqueda?ft=',
+      unimarc: 'https://www.unimarc.cl/busqueda?ft='
+    };
+
+    const STORES = {
+      lider:       { id: 'lider',       name: 'Lider',       short: 'LIDER',       freeShippingThreshold: 50000, shippingCost: 3990 },
+      jumbo:       { id: 'jumbo',       name: 'Jumbo',       short: 'JUMBO',       freeShippingThreshold: 50000, shippingCost: 4490 },
+      santaisabel: { id: 'santaisabel', name: 'Santa Isabel', short: 'STA ISABEL', freeShippingThreshold: 35000, shippingCost: 3490 },
+      tottus:      { id: 'tottus',      name: 'Tottus',      short: 'TOTTUS',      freeShippingThreshold: 50000, shippingCost: 3990 },
+      unimarc:     { id: 'unimarc',     name: 'Unimarc',     short: 'UNIMARC',     freeShippingThreshold: 35000, shippingCost: 3290 }
+    };
+
+    const UP_FEE_RATE = 0.01;
+    const STATIC_DEMO = location.protocol === 'file:' || /(^|\.)github\.io$/i.test(location.hostname);
+    const CHAIN_IDS = Object.keys(STORES);
+    const linkVerification = new Map();
+    const reindexQueue = new Set();
+
+    let PRODUCTS = [];
+    let CATEGORIES = ['TODOS'];
+
+    const state = {
+      selectedCategory: 'TODOS',
+      searchQuery: '',
+      sortBy: 'default',
+      activeProductId: null,
+      cart: []
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const formatCLP = (amount) => '$' + Math.round(amount).toLocaleString('es-CL');
+    const norm = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+    function iconFor(category) {
+      const c = norm(category);
+      if (c.includes('bebida')) return 'bottle';
+      if (c.includes('lacteo') || c.includes('huevo')) return 'milk';
+      if (c.includes('carne')) return 'can';
+      if (c.includes('fruta') || c.includes('verdura')) return 'bag';
+      if (c.includes('aseo') || c.includes('limpieza')) return 'detergent';
+      if (c.includes('personal') || c.includes('mascota')) return 'jar';
+      if (c.includes('congelado')) return 'cheese';
+      return 'bag';
+    }
+
+    function mapDemoData(data) {
+      return data.products.map((p, i) => ({
+        id: p.id,
+        index: String(i + 1).padStart(2, '0'),
+        name: p.name,
+        searchQuery: p.name,
+        category: p.category,
+        unit: p.detail,
+        description: p.description || '',
+        image: p.image || null,
+        icon: iconFor(p.category),
+        skus: p.skus || {},
+        source: p.source || null,
+        prices: Object.fromEntries(CHAIN_IDS.filter((c) => p.prices[c] != null).map((c) => [c, p.prices[c]]))
+      }));
+    }
+
+    function offerLink(product, chainId) {
+      const mapping = (product.skus && product.skus[chainId]) || {};
+      if (mapping.url) {
+        return { url: mapping.url, canonical: true, token: mapping.sku || mapping.gtin, kind: 'ficha' };
+      }
+      const token = mapping.sku || mapping.gtin;
+      if (token && CHAIN_SEARCH[chainId]) {
+        return { url: CHAIN_SEARCH[chainId] + encodeURIComponent(token), canonical: false, token, kind: 'SKU' };
+      }
+      return { url: null, canonical: false, token: null, kind: 'none' };
+    }
+
+    function reindexKey(productId, chainId) { return productId + '|' + chainId; }
+
+    async function verifyLink(url, productId, chainId, quiet) {
+      if (!url || (linkVerification.get(url) || {}).loading) return;
+      linkVerification.set(url, { loading: true });
+      try {
+        const res = await fetch('/api/verify-link?url=' + encodeURIComponent(url), { headers: { Accept: 'application/json' } });
+        const json = await res.json();
+        linkVerification.set(url, Object.assign({}, json, { loading: false }));
+        if (!json.ok) reindexQueue.add(reindexKey(productId, chainId));
+      } catch (err) {
+        linkVerification.set(url, { ok: false, status: 0, error: err.message, loading: false });
+        reindexQueue.add(reindexKey(productId, chainId));
+      }
+      if (!quiet && state.activeProductId && !$('compare-modal').classList.contains('hidden')) {
+        openCompareModal(state.activeProductId);
+        if (reindexQueue.size) showToast('ENLACE NO DISPONIBLE · REINDEXANDO');
+      }
+    }
+
+    function getProductStats(product) {
+      const entries = Object.entries(product.prices)
+        .filter(([storeId]) => STORES[storeId])
+        .map(([storeId, price]) => ({ storeId, price, store: STORES[storeId] }))
+        .sort((a, b) => a.price - b.price);
+      if (!entries.length) return { sorted: [], minPrice: 0, maxPrice: 0, maxSavings: 0, bestStore: null };
+      return {
+        sorted: entries,
+        minPrice: entries[0].price,
+        maxPrice: entries[entries.length - 1].price,
+        maxSavings: entries[entries.length - 1].price - entries[0].price,
+        bestStore: entries[0].store
+      };
+    }
+
+    function getProductSVG(iconType) {
+      const svgs = {
+        bottle: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="26" y="8" width="12" height="6" rx="1" stroke="#ffc700"/>
+          <path d="M27 14L22 24V52C22 54.2 23.8 56 26 56H38C40.2 56 42 54.2 42 52V24L37 14" stroke="#ffffff"/>
+          <rect x="22" y="30" width="20" height="12" stroke="#ffc700" stroke-dasharray="2 2"/>
+          <line x1="27" y1="36" x2="37" y2="36" stroke="#9b9d9d"/>
+        </svg>`,
+        bag: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M18 16H46L49 52C49 54 47.5 56 45.5 56H18.5C16.5 56 15 54 15 52L18 16Z" stroke="#ffffff"/>
+          <path d="M22 16L25 10H39L42 16" stroke="#ffc700"/>
+          <rect x="23" y="28" width="18" height="14" rx="2" stroke="#ffc700" stroke-dasharray="2 2"/>
+          <circle cx="32" cy="35" r="2" fill="#ffc700"/>
+        </svg>`,
+        oil: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="27" y="8" width="10" height="5" rx="1" stroke="#ffc700"/>
+          <path d="M28 13L21 25V53C21 54.7 22.3 56 24 56H40C41.7 56 43 54.7 43 53V25L36 13" stroke="#ffffff"/>
+          <path d="M32 30C32 30 27 36 27 39.5C27 42.3 29.2 44.5 32 44.5C34.8 44.5 37 42.3 37 39.5C37 36 32 30 32 30Z" stroke="#ffc700"/>
+        </svg>`,
+        milk: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 22L26 12H38L44 22V54H20V22Z" stroke="#ffffff"/>
+          <line x1="20" y1="22" x2="44" y2="22" stroke="#595a5a"/>
+          <rect x="25" y="30" width="14" height="12" stroke="#ffc700" stroke-dasharray="2 2"/>
+          <line x1="28" y1="12" x2="36" y2="12" stroke="#ffc700" stroke-width="2.5"/>
+        </svg>`,
+        jar: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="22" y="12" width="20" height="6" rx="1" stroke="#ffc700"/>
+          <rect x="18" y="18" width="28" height="36" rx="4" stroke="#ffffff"/>
+          <rect x="22" y="28" width="20" height="14" stroke="#ffc700" stroke-dasharray="2 2"/>
+        </svg>`,
+        pasta: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="20" y="12" width="24" height="42" rx="2" stroke="#ffffff"/>
+          <line x1="26" y1="18" x2="26" y2="48" stroke="#ffc700" stroke-dasharray="3 2"/>
+          <line x1="32" y1="18" x2="32" y2="48" stroke="#ffc700" stroke-dasharray="3 2"/>
+          <line x1="38" y1="18" x2="38" y2="48" stroke="#ffc700" stroke-dasharray="3 2"/>
+        </svg>`,
+        roll: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <ellipse cx="32" cy="18" rx="14" ry="6" stroke="#ffc700"/>
+          <ellipse cx="32" cy="18" rx="4" ry="2" stroke="#ffffff"/>
+          <path d="M18 18V46C18 49.3 24.3 52 32 52C39.7 52 46 49.3 46 46V18" stroke="#ffffff"/>
+          <line x1="32" y1="24" x2="32" y2="52" stroke="#595a5a" stroke-dasharray="2 3"/>
+        </svg>`,
+        detergent: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="26" y="10" width="12" height="6" rx="1" stroke="#ffc700"/>
+          <path d="M22 16H42L46 24V52C46 54 44.5 55 42.5 55H21.5C19.5 55 18 54 18 52V24L22 16Z" stroke="#ffffff"/>
+          <path d="M38 24H42V34H38" stroke="#ffc700"/>
+          <circle cx="30" cy="38" r="5" stroke="#ffc700" stroke-dasharray="2 2"/>
+        </svg>`,
+        bread: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M16 26C16 19 22 15 32 15C42 15 48 19 48 26V50H16V26Z" stroke="#ffffff"/>
+          <line x1="22" y1="32" x2="42" y2="32" stroke="#ffc700" stroke-dasharray="2 2"/>
+          <line x1="22" y1="40" x2="42" y2="40" stroke="#595a5a"/>
+        </svg>`,
+        can: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <ellipse cx="32" cy="22" rx="16" ry="6" stroke="#ffc700"/>
+          <path d="M16 22V44C16 47.3 23.2 50 32 50C40.8 50 48 47.3 48 44V22" stroke="#ffffff"/>
+          <line x1="16" y1="34" x2="48" y2="34" stroke="#595a5a" stroke-dasharray="2 2"/>
+        </svg>`,
+        cheese: `<svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="14" y="20" width="36" height="24" rx="3" stroke="#ffffff"/>
+          <rect x="20" y="26" width="24" height="12" stroke="#ffc700" stroke-dasharray="2 2"/>
+          <circle cx="32" cy="32" r="2" fill="#ffc700"/>
+        </svg>`
+      };
+      return svgs[iconType] || svgs.bag;
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const toast = $('toast');
+      $('toast-message').textContent = msg;
+      toast.classList.remove('translate-x-[140%]');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('translate-x-[140%]'), 2800);
+    }
+
+    function renderCategories() {
+      const container = $('category-filters');
+      container.innerHTML = CATEGORIES.map(cat => {
+        const active = state.selectedCategory === cat;
+        return `
+          <button type="button" data-category="${esc(cat)}" class="cat-btn h-[40px] px-4 rounded-[4px] font-mono text-[12px] uppercase transition-all ${
+            active ? 'bg-signal text-ink font-semibold' : 'utility-surface text-soft hover:text-white hover:border-white/40'
+          }">${esc(cat)}</button>`;
+      }).join('');
+
+      container.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedCategory = btn.dataset.category;
+          renderCategories();
+          renderProducts();
+        });
+      });
+    }
+
+    function renderProducts() {
+      const grid = $('product-grid');
+      const emptyState = $('empty-state');
+      const countEl = $('results-count');
+
+      let filtered = PRODUCTS.filter(p => {
+        const matchCat = state.selectedCategory === 'TODOS' || p.category === state.selectedCategory;
+        const q = norm(state.searchQuery.trim());
+        const hay = norm(p.name + ' ' + p.category + ' ' + p.unit + ' ' + p.description);
+        return matchCat && (!q || q.split(/\s+/).every(token => hay.includes(token)));
+      });
+
+      if (state.sortBy === 'price-asc') filtered.sort((a, b) => getProductStats(a).minPrice - getProductStats(b).minPrice);
+      else if (state.sortBy === 'price-desc') filtered.sort((a, b) => getProductStats(b).minPrice - getProductStats(a).minPrice);
+      else if (state.sortBy === 'savings-desc') filtered.sort((a, b) => getProductStats(b).maxSavings - getProductStats(a).maxSavings);
+
+      countEl.textContent = `${filtered.length} PRODUCTO${filtered.length === 1 ? '' : 'S'}`;
+
+      if (!filtered.length) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      grid.innerHTML = filtered.map(product => {
+        const stats = getProductStats(product);
+        return `
+          <article data-product-id="${esc(product.id)}" class="product-card group cursor-pointer bg-[#141414] tech-border rounded-[8px] overflow-hidden flex flex-col transition-all duration-200">
+            <div class="relative bg-stage h-[176px] flex items-center justify-center p-6 tech-border-b overflow-hidden">
+              <div class="product-stage-glow absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none" style="background: radial-gradient(circle at center, rgba(255,199,0,0.12) 0%, rgba(0,0,0,0) 70%);"></div>
+              <span class="absolute top-3 left-3 font-dot text-[14px] text-muted group-hover:text-signal transition-colors">(${esc(product.index)})</span>
+              <span class="absolute top-3 right-3 font-mono text-[10px] uppercase text-muted px-2 py-0.5 rounded-[4px] bg-utility">${esc(product.category)}</span>
+              <div class="transform group-hover:scale-105 transition-transform duration-300 flex items-center justify-center h-full">
+                ${product.image
+                  ? `<img src="${esc(product.image)}" alt="${esc(product.name)}" loading="lazy" class="max-h-full max-w-full object-contain" />`
+                  : getProductSVG(product.icon)}
+              </div>
+            </div>
+            <div class="p-4 flex-1 flex flex-col justify-between gap-4">
+              <div>
+                <h3 class="font-serif text-[20px] leading-[1.15] text-white group-hover:text-signal transition-colors">${esc(product.name)}</h3>
+                <p class="font-mono text-[11px] uppercase text-muted mt-1.5">${esc(product.unit)} · 5 SUPERMERCADOS</p>
+              </div>
+              <div class="pt-3 tech-border-t flex items-end justify-between gap-2">
+                <div>
+                  <span class="block font-mono text-[10px] uppercase text-muted">DESDE (${stats.bestStore ? esc(stats.bestStore.short) : '—'})</span>
+                  <span class="font-dot text-[22px] text-signal leading-none">${formatCLP(stats.minPrice)}</span>
+                </div>
+                <span class="inline-flex items-center gap-1 font-mono text-[11px] uppercase text-white group-hover:text-signal transition-colors underline underline-offset-4">COMPARAR →</span>
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+
+      grid.querySelectorAll('.product-card').forEach(card => {
+        card.addEventListener('click', () => openCompareModal(card.dataset.productId));
+      });
+    }
+
+    function linkMarkup(product, chainId) {
+      const link = offerLink(product, chainId);
+      const v = link.canonical && link.url ? linkVerification.get(link.url) : null;
+      const broken = !!(v && !v.loading && !v.ok);
+      const verified = !!(v && !v.loading && v.ok);
+      const pending = reindexQueue.has(reindexKey(product.id, chainId));
+
+      let stateText = 'Sin SKU mapeado';
+      let stateAttr = 'none';
+      let action = pending ? 'data-reindex' : '';
+      if (STATIC_DEMO && link.canonical && link.url) { stateText = 'Demo · sin verificación'; stateAttr = 'demo'; action = ''; }
+      else if (broken) { stateText = '⚠ Enlace roto · reindexar'; stateAttr = 'broken'; action = 'data-reindex'; }
+      else if (verified) { stateText = 'Verificado ✓'; stateAttr = 'ok'; action = ''; }
+      else if (v && v.loading) { stateText = 'Verificando…'; stateAttr = 'loading'; action = ''; }
+      else if (link.canonical && link.url) { stateText = 'Verificar'; stateAttr = 'verify'; action = 'data-verify'; }
+      else if (!link.url && link.token) { stateText = 'Búsqueda SKU exacta'; stateAttr = 'search'; action = ''; }
+      else if (pending) { stateText = 'En cola de re-indexación'; stateAttr = 'search'; action = 'data-reindex'; }
+
+      return {
+        broken,
+        html: `
+          ${link.url ? `<a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-1 font-mono text-[11px] uppercase text-soft hover:text-signal underline underline-offset-4 transition-colors"><span>VER EN TIENDA</span><span>↗</span></a>
+          <span class="block font-mono text-[9px] uppercase text-muted mt-0.5">${link.kind === 'ficha' ? 'FICHA' : 'SKU/GTIN'} ${esc(link.token || '—')}</span>` : ''}
+          <button type="button" class="verify-badge mt-1 px-1.5 py-0.5 rounded-[3px] utility-surface font-mono text-[9px] uppercase" data-state="${stateAttr}" data-chain="${esc(chainId)}" ${action ? `${action}="${esc(action === 'data-reindex' ? reindexKey(product.id, chainId) : link.url)}"` : ''}>${stateText}</button>
+          ${broken ? '<span class="block font-mono text-[9px] uppercase text-signal mt-1">PRECIO NO CONFIRMADO</span>' : ''}`
+      };
+    }
+
+    function openCompareModal(productId) {
+      const product = PRODUCTS.find(p => p.id === productId);
+      if (!product) return;
+      state.activeProductId = productId;
+      const stats = getProductStats(product);
+
+      $('modal-product-index').textContent = `(${product.index})`;
+      $('modal-product-category').textContent = product.category;
+      $('modal-product-art').innerHTML = product.image
+        ? `<img src="${esc(product.image)}" alt="${esc(product.name)}" class="max-h-full max-w-full object-contain" />`
+        : getProductSVG(product.icon);
+      $('modal-product-name').textContent = product.name;
+      $('modal-product-desc').textContent = `${product.unit} — Comparativa ordenada de menor a mayor precio en 5 supermercados de Chile.`;
+      $('modal-best-price-badge').textContent = `MEJOR PRECIO: ${formatCLP(stats.minPrice)} (${stats.bestStore ? stats.bestStore.short : '—'})`;
+      $('modal-savings-badge').textContent = `AHORRO MÁXIMO: ${formatCLP(stats.maxSavings)}`;
+
+      const listEl = $('modal-stores-list');
+      listEl.innerHTML = stats.sorted.map((entry, idx) => {
+        const isBest = idx === 0;
+        const diff = entry.price - stats.minPrice;
+        const linkInfo = linkMarkup(product, entry.storeId);
+
+        return `
+          <div class="p-3.5 sm:p-4 rounded-[6px] ${isBest ? 'bg-stage border border-signal/80' : 'utility-surface'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-start sm:items-center gap-3">
+              <div class="w-8 h-8 rounded-[4px] ${isBest ? 'bg-signal text-ink' : 'bg-utility text-muted'} flex items-center justify-center font-dot text-[14px] shrink-0">#${idx + 1}</div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-mono text-[13px] font-semibold uppercase text-white">${esc(entry.store.name)}</span>
+                  ${isBest ? '<span class="px-1.5 py-0.5 rounded-[3px] bg-signal text-ink font-mono text-[9px] font-semibold uppercase">MEJOR PRECIO</span>' : `<span class="font-mono text-[10px] text-muted">+${formatCLP(diff)}</span>`}
+                </div>
+                ${linkInfo.html}
+              </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-rule/40">
+              <span class="font-dot text-[22px] ${isBest ? 'text-signal' : 'text-white'}">${formatCLP(entry.price)}</span>
+              <div class="flex items-center gap-1.5">
+                <select aria-label="Cantidad" id="qty-${esc(product.id)}-${entry.storeId}" class="h-[36px] px-2 bg-stage text-white font-mono text-[11px] rounded-[4px] tech-border focus:outline-none focus:border-signal">
+                  <option value="1">1 u</option><option value="2">2 u</option><option value="3">3 u</option><option value="6">6 u</option>
+                </select>
+                <button type="button" data-add-product="${esc(product.id)}" data-add-store="${entry.storeId}" ${linkInfo.broken ? 'disabled' : ''} class="add-to-cart-btn h-[36px] px-3 rounded-[4px] font-mono text-[11px] font-semibold uppercase transition-colors ${isBest ? 'bg-signal text-ink hover:bg-white' : 'bg-white text-ink hover:bg-signal'} ${linkInfo.broken ? 'opacity-40' : ''}">
+                  AGREGAR A UP
+                </button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      listEl.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pId = btn.dataset.addProduct;
+          const sId = btn.dataset.addStore;
+          const qty = parseInt($(`qty-${pId}-${sId}`).value, 10) || 1;
+          addToCart(pId, sId, qty);
+        });
+      });
+
+      listEl.querySelectorAll('[data-verify]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const chainId = btn.dataset.chain;
+          if (!chainId) return;
+          const product2 = PRODUCTS.find(p => p.id === productId);
+          const link = offerLink(product2, chainId);
+          if (link.url) verifyLink(link.url, productId, chainId);
+        });
+      });
+
+      listEl.querySelectorAll('[data-reindex]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          reindexQueue.add(btn.dataset.reindex);
+          showToast('PRODUCTO EN COLA DE RE-INDEXACIÓN');
+          openCompareModal(productId);
+        });
+      });
+
+      $('compare-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCompareModal() {
+      $('compare-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+      state.activeProductId = null;
+    }
+
+    function addToCart(productId, storeId, qty = 1) {
+      const key = `${productId}_${storeId}`;
+      const existing = state.cart.find(item => item.key === key);
+      if (existing) existing.qty += qty;
+      else state.cart.push({ key, productId, storeId, qty });
+      const product = PRODUCTS.find(p => p.id === productId);
+      showToast(`+${qty} ${product.name} (${STORES[storeId].short})`);
+      renderCartUI();
+    }
+
+    function updateCartQty(key, delta) {
+      const idx = state.cart.findIndex(i => i.key === key);
+      if (idx === -1) return;
+      state.cart[idx].qty += delta;
+      if (state.cart[idx].qty <= 0) state.cart.splice(idx, 1);
+      renderCartUI();
+    }
+
+    function removeFromCart(key) {
+      state.cart = state.cart.filter(i => i.key !== key);
+      renderCartUI();
+    }
+
+    function calculateCartTotals() {
+      const groups = {};
+      let totalItems = 0;
+      let productsSubtotal = 0;
+
+      state.cart.forEach(item => {
+        const product = PRODUCTS.find(p => p.id === item.productId);
+        const store = STORES[item.storeId];
+        if (!product || !store || product.prices[item.storeId] == null) return;
+        const unitPrice = product.prices[item.storeId];
+        const lineTotal = unitPrice * item.qty;
+        if (!groups[item.storeId]) groups[item.storeId] = { store, items: [], subtotal: 0 };
+        groups[item.storeId].items.push({ ...item, product, unitPrice, lineTotal });
+        groups[item.storeId].subtotal += lineTotal;
+        totalItems += item.qty;
+        productsSubtotal += lineTotal;
+      });
+
+      const storeGroups = Object.values(groups).map(g => {
+        const missingForFree = Math.max(0, g.store.freeShippingThreshold - g.subtotal);
+        const isFreeShipping = missingForFree === 0;
+        const shipping = isFreeShipping ? 0 : g.store.shippingCost;
+        const progressPct = Math.min(100, Math.round((g.subtotal / g.store.freeShippingThreshold) * 100));
+        const fee = Math.round(g.subtotal * UP_FEE_RATE);
+        return { ...g, missingForFree, isFreeShipping, shipping, progressPct, fee, payout: g.subtotal - fee };
+      });
+
+      const totalShipping = storeGroups.reduce((acc, g) => acc + g.shipping, 0);
+      const upFee = storeGroups.reduce((acc, g) => acc + g.fee, 0);
+      const payoutTotal = productsSubtotal - upFee;
+      // El 1% se retiene del subtotal: NO se suma al cobro del cliente.
+      const grandTotal = productsSubtotal + totalShipping;
+      return { storeGroups, totalItems, productsSubtotal, totalShipping, upFee, payoutTotal, grandTotal };
+    }
+
+    function renderCartUI() {
+      const { storeGroups, totalItems, productsSubtotal, totalShipping, upFee, grandTotal } = calculateCartTotals();
+
+      $('nav-cart-count').textContent = totalItems;
+
+      const dock = $('bottom-dock');
+      if (totalItems > 0) {
+        dock.classList.remove('hidden');
+        $('dock-summary').textContent = `${totalItems} PROD · ${storeGroups.length} SUPERMERCADO${storeGroups.length > 1 ? 'S' : ''}`;
+        $('dock-total').textContent = formatCLP(grandTotal);
+      } else {
+        dock.classList.add('hidden');
+      }
+
+      const container = $('cart-items-container');
+      const checkoutBtn = $('checkout-btn');
+
+      if (!storeGroups.length) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center py-16 px-4">
+            <p class="font-dot text-[20px] uppercase text-white">TU CARRITO UP ESTÁ VACÍO</p>
+            <p class="font-sans text-[13px] text-muted mt-2">Selecciona productos del catálogo para armar tus sub-carritos por supermercado.</p>
+          </div>`;
+        checkoutBtn.disabled = true;
+      } else {
+        checkoutBtn.disabled = false;
+        container.innerHTML = storeGroups.map(group => `
+          <div class="rounded-[8px] bg-[#141414] tech-border overflow-hidden">
+            <div class="bg-stage px-4 py-3 tech-border-b flex items-center justify-between">
+              <span class="font-mono text-[12px] font-semibold uppercase text-white">CARRITO ${esc(group.store.short)}</span>
+              <span class="font-dot text-[16px] text-signal">${formatCLP(group.subtotal)}</span>
+            </div>
+            <div class="px-4 py-2.5 bg-utility/60 tech-border-b">
+              <div class="flex items-center justify-between text-[10px] font-mono uppercase mb-1.5">
+                ${group.isFreeShipping
+                  ? '<span class="text-signal font-semibold">✓ DESPACHO GRATIS DESBLOQUEADO</span>'
+                  : `<span class="text-soft">AGREGA <strong class="text-white">${formatCLP(group.missingForFree)}</strong> EN ${esc(group.store.short)} PARA DESPACHO GRATIS</span>`}
+                <span class="text-muted">${group.progressPct}%</span>
+              </div>
+              <div class="w-full h-1.5 bg-stage rounded-[8px] overflow-hidden">
+                <div class="h-full ${group.isFreeShipping ? 'bg-signal' : 'bg-white'} transition-all duration-300" style="width: ${group.progressPct}%"></div>
+              </div>
+            </div>
+            <div class="divide-y divide-rule/40">
+              ${group.items.map(item => `
+                <div class="p-3.5 flex items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="font-sans text-[13px] text-white truncate">${esc(item.product.name)}</p>
+                    <p class="font-mono text-[11px] text-muted mt-0.5">${formatCLP(item.unitPrice)} c/u</p>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex items-center bg-stage tech-border rounded-[4px]">
+                      <button type="button" data-qty-key="${esc(item.key)}" data-delta="-1" class="cart-qty-btn w-7 h-7 flex items-center justify-center font-mono text-[13px] text-soft hover:text-signal">−</button>
+                      <span class="w-6 text-center font-mono text-[11px] text-white">${item.qty}</span>
+                      <button type="button" data-qty-key="${esc(item.key)}" data-delta="1" class="cart-qty-btn w-7 h-7 flex items-center justify-center font-mono text-[13px] text-soft hover:text-signal">+</button>
+                    </div>
+                    <button type="button" data-remove-key="${esc(item.key)}" class="cart-remove-btn text-muted hover:text-signal font-mono text-[11px] px-1" title="Eliminar">✕</button>
+                  </div>
+                </div>`).join('')}
+            </div>
+            <div class="px-4 py-2 bg-stage/60 flex items-center justify-between font-mono text-[10px] uppercase text-muted">
+              <span>DESPACHO ${esc(group.store.short)}</span>
+              <span class="${group.isFreeShipping ? 'text-signal' : 'text-soft'}">${group.isFreeShipping ? 'GRATIS' : formatCLP(group.shipping)}</span>
+            </div>
+          </div>`).join('');
+
+        container.querySelectorAll('.cart-qty-btn').forEach(btn => {
+          btn.addEventListener('click', () => updateCartQty(btn.dataset.qtyKey, parseInt(btn.dataset.delta, 10)));
+        });
+        container.querySelectorAll('.cart-remove-btn').forEach(btn => {
+          btn.addEventListener('click', () => removeFromCart(btn.dataset.removeKey));
+        });
+      }
+
+      $('summary-subtotal').textContent = formatCLP(productsSubtotal);
+      $('summary-shipping').textContent = totalShipping === 0 && totalItems > 0 ? 'GRATIS' : formatCLP(totalShipping);
+      $('summary-fee').textContent = formatCLP(upFee);
+      $('summary-total').textContent = formatCLP(grandTotal);
+    }
+
+    function openCartDrawer() {
+      $('cart-drawer-backdrop').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCartDrawer() {
+      $('cart-drawer-backdrop').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function processUnifiedCheckout() {
+      const { storeGroups, upFee, payoutTotal, grandTotal } = calculateCartTotals();
+      if (!storeGroups.length) return;
+      closeCartDrawer();
+      $('order-code').textContent = 'UP-CL-' + Math.floor(10000 + Math.random() * 90000);
+
+      $('checkout-breakdown').innerHTML = storeGroups.map(g => `
+        <div class="p-3 rounded-[6px] bg-stage tech-border space-y-1 font-mono text-[11px]">
+          <div class="flex items-center justify-between">
+            <span class="text-white font-semibold uppercase">BOLETA ${esc(g.store.short)}</span>
+            <span class="font-dot text-[16px] text-white">${formatCLP(g.subtotal + g.shipping)}</span>
+          </div>
+          <div class="flex justify-between text-muted text-[10px]">
+            <span>${g.items.length} ÍTEM(S) · DESPACHO ${g.isFreeShipping ? 'GRATIS' : formatCLP(g.shipping)}</span>
+            <span>99% → ${esc(g.store.short)}: ${formatCLP(g.payout)} · 1% → UP: ${formatCLP(g.fee)}</span>
+          </div>
+        </div>`).join('');
+
+      $('checkout-fee').textContent = formatCLP(upFee);
+      $('checkout-grand-total').textContent = formatCLP(grandTotal);
+      $('checkout-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      showToast(`SPLIT PAYMENT: ${formatCLP(payoutTotal)} A TIENDAS · ${formatCLP(upFee)} A UP`);
+    }
+
+    async function refreshPrices(silent) {
+      const icon = $('sync-icon');
+      icon.classList.add('animate-spin');
+      try {
+        if (STATIC_DEMO) {
+          if (!silent) showToast('DEMO ESTÁTICO · PRECIOS DE REFERENCIA');
+        } else {
+          const res = await fetch('/api/prices?q=&_t=' + Date.now(), { headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          PRODUCTS = mapDemoData(data);
+          CATEGORIES = ['TODOS', ...Array.from(new Set(PRODUCTS.map(p => p.category))).sort((a, b) => a.localeCompare(b, 'es'))];
+
+          const targets = [];
+          PRODUCTS.slice(0, 8).forEach(p => CHAIN_IDS.forEach(chain => {
+            const link = offerLink(p, chain);
+            if (link.canonical && link.url) targets.push({ url: link.url, productId: p.id, chainId: chain });
+          }));
+          // La verificación externa corre en segundo plano: no bloquea la actualización de precios.
+          Promise.allSettled(Array.from(new Map(targets.map(t => [t.url, t])).values())
+            .map(t => verifyLink(t.url, t.productId, t.chainId, true)))
+            .then(() => {
+              if (state.activeProductId && !$('compare-modal').classList.contains('hidden')) {
+                openCompareModal(state.activeProductId);
+              }
+            });
+
+          if (!silent) showToast('PRECIOS ACTUALIZADOS · VERIFICANDO ENLACES');
+        }
+      } catch (err) {
+        PRODUCTS.forEach(p => {
+          Object.keys(p.prices).forEach(storeId => {
+            const delta = Math.round((Math.random() * 0.06 - 0.03) * p.prices[storeId] / 10) * 10;
+            p.prices[storeId] = Math.max(490, p.prices[storeId] + delta);
+          });
+        });
+        if (!silent) showToast('PRECIOS ACTUALIZADOS (MODO LOCAL)');
+      } finally {
+        const now = new Date();
+        $('sync-timestamp').textContent = `SINCRONIZADO A LAS ${now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+        icon.classList.remove('animate-spin');
+        renderCategories();
+        renderProducts();
+        renderCartUI();
+        if (state.activeProductId && !$('compare-modal').classList.contains('hidden')) {
+          openCompareModal(state.activeProductId);
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const demo = window.UP_DEMO_DATA;
+      if (demo) PRODUCTS = mapDemoData(demo);
+      CATEGORIES = ['TODOS', ...Array.from(new Set(PRODUCTS.map(p => p.category))).sort((a, b) => a.localeCompare(b, 'es'))];
+
+      renderCategories();
+      renderProducts();
+      renderCartUI();
+      refreshPrices(true);
+
+      const searchInput = $('main-search-input');
+      const clearSearchBtn = $('clear-search-btn');
+
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+        renderProducts();
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        state.searchQuery = '';
+        clearSearchBtn.classList.add('hidden');
+        renderProducts();
+      });
+
+      $('nav-search-btn').addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => searchInput.focus(), 300);
+      });
+
+      $('sort-select').addEventListener('change', (e) => {
+        state.sortBy = e.target.value;
+        renderProducts();
+      });
+
+      $('reset-filters-btn').addEventListener('click', () => {
+        state.selectedCategory = 'TODOS';
+        state.searchQuery = '';
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        renderCategories();
+        renderProducts();
+      });
+
+      $('refresh-prices-btn').addEventListener('click', () => refreshPrices(false));
+
+      $('close-compare-modal').addEventListener('click', closeCompareModal);
+      $('compare-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'compare-modal') closeCompareModal();
+      });
+
+      $('open-cart-btn').addEventListener('click', openCartDrawer);
+      $('dock-open-cart-btn').addEventListener('click', openCartDrawer);
+      $('footer-cart-link').addEventListener('click', openCartDrawer);
+      $('close-cart-btn').addEventListener('click', closeCartDrawer);
+      $('cart-drawer-backdrop').addEventListener('click', (e) => {
+        if (e.target.id === 'cart-drawer-backdrop') closeCartDrawer();
+      });
+
+      $('checkout-btn').addEventListener('click', processUnifiedCheckout);
+      const closeCheckout = () => {
+        $('checkout-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+      };
+      $('close-checkout-modal').addEventListener('click', closeCheckout);
+      $('finish-order-btn').addEventListener('click', () => {
+        state.cart = [];
+        renderCartUI();
+        closeCheckout();
+        showToast('GRACIAS POR COMPRAR EN UP');
+      });
+
+      document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+        trigger.addEventListener('click', () => {
+          const content = trigger.nextElementSibling;
+          const icon = trigger.querySelector('.accordion-icon');
+          const isOpen = !content.classList.contains('hidden');
+          document.querySelectorAll('.accordion-content').forEach(c => c.classList.add('hidden'));
+          document.querySelectorAll('.accordion-icon').forEach(i => i.textContent = '+');
+          if (!isOpen) {
+            content.classList.remove('hidden');
+            icon.textContent = '−';
+          }
+        });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeCompareModal();
+          closeCartDrawer();
+          closeCheckout();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+{
+  "_schema": {
+    "version": "2026-11-23",
+    "descripcion": "Plantilla del feed que consume /api/prices. Renombrar a live-prices.json para activar modo EN VIVO, o servirlo desde UP_RETAILER_API.",
+    "bloques": {
+      "meta": "mode, generatedAt, source, currency, locale, note. El servidor fuerza mode=live.",
+      "chains": "Clave = chain_id. name, color, freeShippingFrom (CLP), deliveryFee (CLP).",
+      "stores": "id, chain, name, comuna, distanceKm, deliveryMinutes, type. Un chain_id puede tener varios locales.",
+      "products": "id, name, detail, description, image, source, skus, category, emoji, unitLabel, unitAmount, unitName, prices, promos."
+    },
+    "skus": {
+      "canonico": "url directa a la ficha.Tiene prioridad y se verifica con /api/verify-link.",
+      "fallback": "Si no hay url pero hay sku o gtin, la UI construye una busqueda EXACTA por ese identificador (CHAIN_SEARCH en app.js). Nunca se busca por nombre generico.",
+      "sin_mapeo": "Si no hay url ni sku/gtin, se muestra 'Sin SKU mapeado' y se encola para re-indexacion."
+    },
+    "precios": "CLP enteros. prices por chain_id; promos opcionales por chain_id. El frontend aplica variacion por local para la demo; en produccion el feed debe entregar precio por store_id.",
+    "categorias": [
+      "Bebidas y Licores",
+      "Almacén / Despensa",
+      "Lácteos y Frescos",
+      "Carnes",
+      "Frutas y Verduras",
+      "Aseo y Limpieza",
+      "Cuidado Personal",
+      "Mascotas",
+      "Congelados"
+    ],
+    "nota_legal": "Imagenes y descripciones de referencia de Jumbo.cl, uso privado. Reemplazar por activos propios o licenciados antes de cualquier publicacion."
+  },
+  "meta": {
+    "mode": "live",
+    "generatedAt": "2026-11-23T10:30:00-03:00",
+    "source": "API oficial de la cadena / convenio comercial",
+    "currency": "CLP",
+    "locale": "es-CL",
+    "note": "Ejemplo de formato. Renombrar a live-prices.json para activarlo."
+  },
+  "skuSearchPatterns": {
+    "lider": "https://www.lider.cl/supermercado/busqueda?ft={identificador}",
+    "jumbo": "https://www.jumbo.cl/busqueda?ft={identificador}",
+    "tottus": "https://www.tottus.cl/tottus/busqueda?ft={identificador}",
+    "unimarc": "https://www.unimarc.cl/busqueda?ft={identificador}",
+    "santaisabel": "https://www.santaisabel.cl/busqueda?ft={identificador}",
+    "coope": "https://www.coope.cl/busqueda?ft={identificador}"
+  },
+  "chains": {
+    "lider": { "name": "Lider", "color": "#E4002B", "freeShippingFrom": 34900, "deliveryFee": 2990 },
+    "jumbo": { "name": "Jumbo", "color": "#0057B8", "freeShippingFrom": 39900, "deliveryFee": 3290 },
+    "tottus": { "name": "Tottus", "color": "#E2231A", "freeShippingFrom": 29900, "deliveryFee": 2790 },
+    "unimarc": { "name": "Unimarc", "color": "#E8791A", "freeShippingFrom": 32900, "deliveryFee": 2890 },
+    "santaisabel": { "name": "Santa Isabel", "color": "#7B1FA2", "freeShippingFrom": 35900, "deliveryFee": 3090 },
+    "coope": { "name": "Coope", "color": "#00897B", "freeShippingFrom": 29900, "deliveryFee": 2690 }
+  },
+  "stores": [
+    { "id": "lid-prov", "chain": "lider", "name": "Lider Providencia", "comuna": "Providencia", "distanceKm": 1.2, "deliveryMinutes": 35, "type": "Supermercado" },
+    { "id": "jum-sal", "chain": "jumbo", "name": "Jumbo Salesiano", "comuna": "Ñuñoa", "distanceKm": 2.1, "deliveryMinutes": 45, "type": "Supermercado" },
+    { "id": "tot-mmt", "chain": "tottus", "name": "Tottus Manuel Montt", "comuna": "Providencia", "distanceKm": 2.4, "deliveryMinutes": 40, "type": "Supermercado" },
+    { "id": "uni-leones", "chain": "unimarc", "name": "Unimarc Los Leones", "comuna": "Providencia", "distanceKm": 2.8, "deliveryMinutes": 50, "type": "Supermercado" },
+    { "id": "sai-12oct", "chain": "santaisabel", "name": "Santa Isabel 12 de Octubre", "comuna": "Ñuñoa", "distanceKm": 3.0, "deliveryMinutes": 55, "type": "Supermercado" },
+    { "id": "lid-cost", "chain": "lider", "name": "Lider Costanera", "comuna": "Las Condes", "distanceKm": 3.6, "deliveryMinutes": 30, "type": "Dark store" },
+    { "id": "jum-cost", "chain": "jumbo", "name": "Jumbo Costanera Center", "comuna": "Las Condes", "distanceKm": 4.1, "deliveryMinutes": 60, "type": "Supermercado" },
+    { "id": "tot-pa", "chain": "tottus", "name": "Tottus Parque Arauco", "comuna": "Las Condes", "distanceKm": 4.8, "deliveryMinutes": 35, "type": "Dark store" },
+    { "id": "coo-davila", "chain": "coope", "name": "Coope Dávila", "comuna": "Ñuñoa", "distanceKm": 5.2, "deliveryMinutes": 65, "type": "Supermercado" },
+    { "id": "uni-reina", "chain": "unimarc", "name": "Unimarc La Reina", "comuna": "La Reina", "distanceKm": 6.0, "deliveryMinutes": 70, "type": "Supermercado" }
+  ],
+  "products": [
+    {
+      "id": "coca-original-15l",
+      "name": "Bebida Coca-Cola Original",
+      "detail": "Botella desechable 1,5 L",
+      "description": "Refresco de sabor original y burbujeante, en botella desechable de 1.5 litros. Aporta la frescura clásica tipo cola para acompañar comidas y compartir en casa.",
+      "image": "assets/products/coca-original-1.5l.jpg",
+      "source": {
+        "chain": "Jumbo",
+        "capturedAt": "2026-11-23",
+        "url": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p"
+      },
+      "skus": {
+        "lider": { "sku": "391", "gtin": "7801610001622", "url": null, "exact": true, "verifiedAt": null },
+        "jumbo": { "sku": "391", "gtin": "7801610001622", "url": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p", "exact": true, "verifiedAt": "2026-11-23" },
+        "tottus": { "sku": "391", "gtin": "7801610001622", "url": null, "exact": true, "verifiedAt": null },
+        "unimarc": { "sku": null, "gtin": "7801610001622", "url": null, "exact": false, "verifiedAt": null },
+        "santaisabel": { "sku": null, "gtin": "7801610001622", "url": null, "exact": false, "verifiedAt": null },
+        "coope": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null }
+      },
+      "category": "Bebidas y Licores",
+      "emoji": "🥤",
+      "unitLabel": "1,5 L",
+      "unitAmount": 1.5,
+      "unitName": "litro",
+      "prices": { "lider": 2190, "jumbo": 2290, "tottus": 2090, "unimarc": 2390, "santaisabel": 2450, "coope": 2250 },
+      "promos": { "jumbo": "Lleva 6 por $10.990", "tottus": "Oferta Prime" }
+    },
+    {
+      "id": "leche-entera-1l",
+      "name": "Leche Colun Entera",
+      "detail": "Caja 1 L · UHT natural",
+      "description": "Leche entera UHT Colun, en envase de 1 litro. Sabor natural y larga vida útil, lista para consumir sin refrigeración previa.",
+      "image": "assets/products/leche-entera-1l.jpg",
+      "source": {
+        "chain": "Jumbo",
+        "capturedAt": "2026-11-23",
+        "url": "https://www.jumbo.cl/leche-colun-entera-1-l/p"
+      },
+      "skus": {
+        "lider": { "sku": null, "gtin": "7801209000015", "url": null, "exact": true, "verifiedAt": null },
+        "jumbo": { "sku": "1200", "gtin": "7801209000015", "url": "https://www.jumbo.cl/leche-colun-entera-1-l/p", "exact": true, "verifiedAt": "2026-11-23" },
+        "tottus": { "sku": null, "gtin": "7801209000015", "url": null, "exact": true, "verifiedAt": null },
+        "unimarc": { "sku": null, "gtin": "7801209000015", "url": null, "exact": true, "verifiedAt": null },
+        "santaisabel": { "sku": null, "gtin": "7801209000015", "url": null, "exact": true, "verifiedAt": null },
+        "coope": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null }
+      },
+      "category": "Lácteos y Frescos",
+      "emoji": "🥛",
+      "unitLabel": "1 L",
+      "unitAmount": 1,
+      "unitName": "litro",
+      "prices": { "lider": 1090, "jumbo": 1150, "tottus": 990, "unimarc": 1190, "santaisabel": 1120, "coope": 1050 },
+      "promos": { "tottus": "3x$2.790" }
+    },
+    {
+      "id": "palta-hass-jumbo-granel",
+      "name": "Palta Hass",
+      "detail": "Granel · unidad",
+      "description": "Palta Hass de temporada, maduración progresiva. Ideal para tostadas, ensaladas y guacamole.",
+      "image": "assets/products/palta-hass-jumbo-granel.jpg",
+      "source": {
+        "chain": "Jumbo",
+        "capturedAt": "2026-11-23",
+        "url": "https://www.jumbo.cl/palta-hass-jumbo-granel/p"
+      },
+      "skus": {
+        "lider": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null },
+        "jumbo": { "sku": "5869", "gtin": "24851794", "url": "https://www.jumbo.cl/palta-hass-jumbo-granel/p", "exact": true, "verifiedAt": "2026-11-23" },
+        "tottus": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null },
+        "unimarc": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null },
+        "santaisabel": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null },
+        "coope": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null }
+      },
+      "category": "Frutas y Verduras",
+      "emoji": "🥑",
+      "unitLabel": "1 unidad",
+      "unitAmount": 1,
+      "unitName": "unidad",
+      "prices": { "lider": 990, "jumbo": 1190, "tottus": 890, "unimarc": 1090, "santaisabel": 1150, "coope": 950 },
+      "promos": {}
+    },
+    {
+      "id": "cafe-250g",
+      "name": "Café Molido Gold Premier Forte",
+      "detail": "Bolsa 230 g · tueste oscuro",
+      "description": "Café molido de grano arábica con tueste fuerte, cuerpo intenso y notas de chocolate. Presentación en bolsa de 230 gramos.",
+      "image": "assets/products/cafe-250g.jpg",
+      "source": {
+        "chain": "Jumbo",
+        "capturedAt": "2026-11-23",
+        "url": "https://www.jumbo.cl/cafe-molido-gold-premier-forte-230-g/p"
+      },
+      "skus": {
+        "lider": { "sku": "8801", "gtin": "7804632001108", "url": null, "exact": true, "verifiedAt": null },
+        "jumbo": { "sku": "8801", "gtin": "7804632001108", "url": "https://www.jumbo.cl/cafe-molido-gold-premier-forte-230-g/p", "exact": true, "verifiedAt": "2026-11-23" },
+        "tottus": { "sku": "8801", "gtin": "7804632001108", "url": null, "exact": true, "verifiedAt": null },
+        "unimarc": { "sku": null, "gtin": "7804632001108", "url": null, "exact": true, "verifiedAt": null },
+        "santaisabel": { "sku": null, "gtin": "7804632001108", "url": null, "exact": true, "verifiedAt": null },
+        "coope": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null }
+      },
+      "category": "Almacén / Despensa",
+      "emoji": "☕",
+      "unitLabel": "230 g",
+      "unitAmount": 0.23,
+      "unitName": "kilo",
+      "prices": { "lider": 3990, "jumbo": 4290, "tottus": 3790, "unimarc": 4190, "santaisabel": 4390, "coope": 3890 },
+      "promos": { "jumbo": "Lleva 2 por $7.990" }
+    }
+  ]
+}
