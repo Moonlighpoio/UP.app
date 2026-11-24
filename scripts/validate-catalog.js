@@ -35,7 +35,7 @@ if (catalog) {
     products: 30,
     offers: 180,
     matchQueue: 153,
-    urlQueue: 30,
+    urlQueue: 150,
     chains: 6,
     stores: 10,
   };

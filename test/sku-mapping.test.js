@@ -2,7 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { createRequire } from 'node:module';
 import { CHAIN_SEARCH, isPurchaseBlocked, offerLink } from '../src/links.js';
+
+const require = createRequire(import.meta.url);
+const { SEARCH_BY_CHAIN } = require('../scripts/catalog-db.js');
 
 const UI_CHAINS = ['lider', 'jumbo', 'tottus', 'unimarc', 'santaisabel'];
 const ctx = { window: {} };
@@ -59,6 +63,17 @@ test('Jumbo conserva SKU propio y ficha canónica; las demás usan GTIN o PLU', 
 test('los patrones de búsqueda VTEX vigentes usan /busca?ft=', () => {
   assert.equal(CHAIN_SEARCH.jumbo, 'https://www.jumbo.cl/busca?ft=');
   assert.equal(CHAIN_SEARCH.santaisabel, 'https://www.santaisabel.cl/busca?ft=');
+});
+
+test('la cola SQLite usa exactamente los patrones verificados de la UI', () => {
+  assert.deepEqual(SEARCH_BY_CHAIN, {
+    lider: CHAIN_SEARCH.lider,
+    santaisabel: CHAIN_SEARCH.santaisabel,
+    tottus: CHAIN_SEARCH.tottus,
+    unimarc: CHAIN_SEARCH.unimarc,
+  });
+  assert.equal(SEARCH_BY_CHAIN.jumbo, undefined);
+  assert.equal(SEARCH_BY_CHAIN.coope, undefined);
 });
 
 test('el feed de ejemplo no copia el SKU de Jumbo a otras cadenas', () => {

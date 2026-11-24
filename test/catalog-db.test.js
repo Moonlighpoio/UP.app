@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url);
 const {
   CATALOG_SCHEMA_VERSION,
   CHAIN_ORDER,
+  SEARCH_BY_CHAIN,
   FRESHNESS_TTL_MS,
   buildCatalogDb,
   checkFreshness,
@@ -65,7 +66,7 @@ test('migraciones crean tablas, índices, triggers y registran 001_init.sql + 00
     ]) {
       assert.ok(objects.includes(name), name);
     }
-    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get().n, 3);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get().n, 4);
     const urlColumns = db
       .prepare('PRAGMA table_info(url_queue)')
       .all()
@@ -84,13 +85,35 @@ test('migraciones crean tablas, índices, triggers y registran 001_init.sql + 00
   }
 });
 
-test('siembra 30 productos, 180 ofertas pendientes y colas sin inventar datos', () => {
+test('siembra 30 productos, 180 ofertas pendientes y 150 enlaces derivados del identificador', () => {
   const db = seeded();
   try {
     assert.equal(db.prepare('SELECT COUNT(*) AS n FROM products').get().n, 30);
     assert.equal(db.prepare('SELECT COUNT(*) AS n FROM offers').get().n, 180);
     assert.equal(db.prepare('SELECT COUNT(*) AS n FROM match_queue').get().n, 153);
-    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM url_queue').get().n, 30);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM url_queue').get().n, 150);
+    const byChain = Object.fromEntries(
+      db
+        .prepare('SELECT chain_id, COUNT(*) AS n FROM url_queue GROUP BY chain_id')
+        .all()
+        .map((row) => [row.chain_id, row.n])
+    );
+    assert.deepEqual(byChain, {
+      jumbo: 30,
+      lider: 30,
+      santaisabel: 30,
+      tottus: 30,
+      unimarc: 30,
+    });
+    assert.equal(byChain.coope, undefined);
+    const sample = db
+      .prepare("SELECT url FROM url_queue WHERE chain_id = 'lider' ORDER BY product_id LIMIT 1")
+      .get();
+    assert.equal(
+      sample.url,
+      SEARCH_BY_CHAIN.lider + '7802810002099',
+      'la URL de búsqueda debe derivar del GTIN/PLU, nunca del nombre'
+    );
     assert.equal(
       db.prepare("SELECT COUNT(*) AS n FROM offers WHERE status = 'pending'").get().n,
       180

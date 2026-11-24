@@ -364,6 +364,16 @@ function allowedLink(raw) {
   return ok ? parsed.toString() : null;
 }
 
+/** Colas de espera/control de acceso: se pausa antes de contactar el destino. */
+function isAccessQueueRedirect(url) {
+  try {
+    const parsed = new URL(url);
+    return /queue/i.test(parsed.hostname + parsed.pathname);
+  } catch {
+    return false;
+  }
+}
+
 function createRateLimiter({ limit, windowMs, now = Date.now } = {}) {
   const hits = new Map();
   const check = (key) => {
@@ -589,6 +599,17 @@ async function verifyLink(raw, deps = {}) {
             checkedAt: new Date(now()).toISOString(),
           };
         }
+        if (isAccessQueueRedirect(next)) {
+          return {
+            ok: false,
+            status: res.status,
+            chain,
+            paused: true,
+            error: 'Redirección a cola de espera/control de acceso; verificación pausada, sin evasión',
+            finalUrl: next,
+            checkedAt: new Date(now()).toISOString(),
+          };
+        }
         const validated = allowedLink(next);
         // Se rechaza ANTES de contactar al destino: `redirect: 'manual'` evita
         // que fetch siga la redirección por detrás de esta validación.
@@ -596,6 +617,8 @@ async function verifyLink(raw, deps = {}) {
           return {
             ok: false,
             status: 0,
+            chain,
+            paused: true,
             error: 'Redirección a host no permitido',
             finalUrl: next,
             checkedAt: new Date(now()).toISOString(),
@@ -620,6 +643,8 @@ async function verifyLink(raw, deps = {}) {
         return {
           ok: false,
           status: 0,
+          chain,
+          paused: true,
           error: 'Redirección a host no permitido',
           finalUrl,
           checkedAt: new Date(now()).toISOString(),

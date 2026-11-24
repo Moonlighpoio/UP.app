@@ -151,8 +151,32 @@ test('verifyLink rechaza redirecciones a hosts no permitidos', async () => {
   });
   assert.equal(result.ok, false);
   assert.equal(result.error, 'Redirección a host no permitido');
+  assert.equal(result.paused, true);
   assert.equal(result.finalUrl, 'https://evil.com/interior');
   assert.equal(cache.size, 0);
+});
+
+test('verifyLink pausa ante una cola de espera sin contactar el destino', async () => {
+  let calls = 0;
+  const fakeFetch = async () => {
+    calls += 1;
+    return {
+      status: 302,
+      ok: false,
+      headers: {
+        get: (name) => (name === 'location' ? 'https://www.lider.cl/queue-it/await?id=123' : null),
+      },
+    };
+  };
+  const result = await verifyLink('https://www.lider.cl/supermercado/busqueda?ft=123', {
+    ...SAFE_LINK_DEPS,
+    fetch: fakeFetch,
+    cache: new Map(),
+  });
+  assert.equal(calls, 1);
+  assert.equal(result.paused, true);
+  assert.match(result.error, /cola de espera|control de acceso/);
+  assert.equal(result.finalUrl, 'https://www.lider.cl/queue-it/await?id=123');
 });
 
 test('verifyLink acepta redirecciones dentro de la whitelist', async () => {
@@ -216,6 +240,7 @@ test('verifyLink rechaza un salto hostil ANTES de contactarlo', async () => {
   assert.deepEqual(contacted, ['https://www.jumbo.cl/inicio']);
   assert.equal(result.ok, false);
   assert.equal(result.error, 'Redirección a host no permitido');
+  assert.equal(result.paused, true);
   assert.equal(result.finalUrl, 'https://evil.com/interior');
 });
 

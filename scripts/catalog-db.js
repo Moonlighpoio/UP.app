@@ -44,6 +44,14 @@ const DOMAIN_BY_CHAIN = {
   santaisabel: 'santaisabel.cl',
   coope: 'coope.cl',
 };
+// Espejo verificable de CHAIN_SEARCH en src/links.js. Jumbo usa ficha canónica
+// y Coope no tiene patrón confirmado: ninguno de los dos entra aquí.
+const SEARCH_BY_CHAIN = Object.freeze({
+  lider: 'https://www.lider.cl/supermercado/busqueda?ft=',
+  santaisabel: 'https://www.santaisabel.cl/busca?ft=',
+  tottus: 'https://www.tottus.cl/tottus/busqueda?ft=',
+  unimarc: 'https://www.unimarc.cl/busqueda?ft=',
+});
 const DATA_POLICY =
   'Solo datos autorizados. URL canónica o búsqueda exacta por SKU/GTIN/PLU verificado; nunca por nombre. ' +
   '403/429 pausa el conector y requiere renegociar acceso.';
@@ -390,11 +398,14 @@ function seedCatalog(db, legacy = loadLegacy()) {
             updated_at: stamp,
           });
         }
-        if (sourceUrl) {
+        const searchPrefix = SEARCH_BY_CHAIN[chainId];
+        const queueUrl =
+          sourceUrl || (searchPrefix ? searchPrefix + encodeURIComponent(value) : null);
+        if (queueUrl) {
           putUrl.run({
             product_id: product.id,
             chain_id: chainId,
-            url: sourceUrl,
+            url: queueUrl,
             status: 'pending',
             http_status: null,
             checked_at: null,
@@ -762,6 +773,33 @@ function validateDb(db) {
       errors.push(`match_queue sobrante: ${key}`);
     }
   }
+  const urlByKey = new Map();
+  for (const row of db.prepare('SELECT * FROM url_queue').all()) {
+    const key = `${row.product_id}/${row.chain_id}`;
+    const offer = offersByKey.get(key);
+    if (!offer) {
+      errors.push(`url_queue huérfano (sin oferta): ${key}`);
+      continue;
+    }
+    if (urlByKey.has(key)) errors.push(`url_queue duplicado: ${key}`);
+    urlByKey.set(key, row);
+    const prefix = SEARCH_BY_CHAIN[row.chain_id];
+    const expected =
+      row.chain_id === 'jumbo'
+        ? offer.canonical_url
+        : prefix
+          ? prefix + encodeURIComponent(offer.identifier_value)
+          : null;
+    if (!expected) errors.push(`url_queue sin patrón verificado: ${key}`);
+    else if (row.url !== expected) errors.push(`url_queue no derivado del identificador: ${key}`);
+  }
+  for (const row of rows) {
+    const key = `${row.product_id}/${row.chain_id}`;
+    const expectedUrl = row.chain_id === 'jumbo' || Boolean(SEARCH_BY_CHAIN[row.chain_id]);
+    if (expectedUrl && !urlByKey.has(key)) errors.push(`url_queue ausente: ${key}`);
+    if (!expectedUrl && urlByKey.has(key)) errors.push(`url_queue sobrante: ${key}`);
+  }
+
   let catalog = null;
   if (!errors.length) {
     catalog = readCatalog(db);
@@ -796,6 +834,7 @@ module.exports = {
   CATALOG_SCHEMA_VERSION,
   FEED_VERSION,
   CHAIN_ORDER,
+  SEARCH_BY_CHAIN,
   OFFER_STATUSES,
   IDENTIFIER_KINDS,
   DATA_POLICY,
