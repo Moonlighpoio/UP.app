@@ -17,6 +17,10 @@ const {
   LINK_CACHE_MS,
 } = require('../server.js');
 
+// Fase 4: los tests de redirección/HEAD inyectan robots permitido y throttle
+// nulo; la política real se prueba en test/link-policy.test.js.
+const SAFE_LINK_DEPS = { robots: { allowed: true }, throttle: { wait: async () => 0 } };
+
 let base;
 
 before(async () => {
@@ -97,7 +101,7 @@ test('verifyLink usa caché de 5 minutos y la respeta', async () => {
     calls += 1;
     return { ok: true, status: 200, url: 'https://www.jumbo.cl/x' };
   };
-  const deps = { fetch: fakeFetch, now: () => now, cache };
+  const deps = { ...SAFE_LINK_DEPS, fetch: fakeFetch, now: () => now, cache };
 
   const first = await verifyLink('https://www.jumbo.cl/x', deps);
   assert.equal(first.cached, undefined);
@@ -127,6 +131,7 @@ test('verifyLink reintenta HEAD → GET ante 403/405/501', async () => {
         : { ok: true, status: 200, url: 'https://www.jumbo.cl/x' };
     };
     const result = await verifyLink('https://www.jumbo.cl/x', {
+      ...SAFE_LINK_DEPS,
       fetch: fakeFetch,
       cache: new Map(),
     });
@@ -139,7 +144,11 @@ test('verifyLink reintenta HEAD → GET ante 403/405/501', async () => {
 test('verifyLink rechaza redirecciones a hosts no permitidos', async () => {
   const cache = new Map();
   const fakeFetch = async () => ({ ok: true, status: 200, url: 'https://evil.com/interior' });
-  const result = await verifyLink('https://www.jumbo.cl/x', { fetch: fakeFetch, cache });
+  const result = await verifyLink('https://www.jumbo.cl/x', {
+    ...SAFE_LINK_DEPS,
+    fetch: fakeFetch,
+    cache,
+  });
   assert.equal(result.ok, false);
   assert.equal(result.error, 'Redirección a host no permitido');
   assert.equal(result.finalUrl, 'https://evil.com/interior');
@@ -152,7 +161,11 @@ test('verifyLink acepta redirecciones dentro de la whitelist', async () => {
     status: 200,
     url: 'https://www.jumbo.cl/ficha-final',
   });
-  const result = await verifyLink('https://jumbo.cl/x', { fetch: fakeFetch, cache: new Map() });
+  const result = await verifyLink('https://jumbo.cl/x', {
+    ...SAFE_LINK_DEPS,
+    fetch: fakeFetch,
+    cache: new Map(),
+  });
   assert.equal(result.ok, true);
   assert.equal(result.finalUrl, 'https://www.jumbo.cl/ficha-final');
 });
@@ -172,6 +185,7 @@ test('verifyLink usa redirect: manual, timeout único y valida cada salto', asyn
     return { ok: true, status: 200, url: 'https://www.jumbo.cl/final' };
   };
   const result = await verifyLink('https://www.jumbo.cl/inicio', {
+    ...SAFE_LINK_DEPS,
     fetch: fakeFetch,
     cache: new Map(),
   });
@@ -195,6 +209,7 @@ test('verifyLink rechaza un salto hostil ANTES de contactarlo', async () => {
     return redirectResponse('https://evil.com/interior');
   };
   const result = await verifyLink('https://www.jumbo.cl/inicio', {
+    ...SAFE_LINK_DEPS,
     fetch: fakeFetch,
     cache: new Map(),
   });
@@ -211,6 +226,7 @@ test('verifyLink limita la cadena de redirecciones', async () => {
     return redirectResponse('/loop');
   };
   const result = await verifyLink('https://www.jumbo.cl/inicio', {
+    ...SAFE_LINK_DEPS,
     fetch: fakeFetch,
     cache: new Map(),
   });
@@ -225,8 +241,119 @@ test('verifyLink rechaza 3xx sin cabecera Location', async () => {
     url: 'https://www.jumbo.cl/x',
     headers: { get: () => null },
   });
-  const result = await verifyLink('https://www.jumbo.cl/x', { fetch: fakeFetch, cache: new Map() });
+  const result = await verifyLink('https://www.jumbo.cl/x', {
+    ...SAFE_LINK_DEPS,
+    fetch: fakeFetch,
+    cache: new Map(),
+  });
   assert.equal(result.error, 'Redirección sin destino válido');
+});
+
+test('verifyLink pausa por robots.txt sin contactar la ficha', async () => {
+  const checked = [];
+  const result = await verifyLink('https://www.jumbo.cl/x', {
+    robotsGuard: {
+      check: async (url) => {
+        checked.push(url);
+        return {
+          allowed: false,
+          status: 200,
+          error: 'robots.txt desautoriza esta ruta',
+          robotsUrl: 'https://www.jumbo.cl/robots.txt',
+          checkedAt: '2026-11-24T12:00:00.000Z',
+        };
+      },
+    },
+    throttle: { wait: async () => 0 },
+    fetch: async () => {
+      throw new Error('no debió contactar la ficha');
+    },
+    cache: new Map(),
+  });
+  assert.deepEqual(checked, ['https://www.jumbo.cl/x']);
+  assert.equal(result.ok, false);
+  assert.equal(result.paused, true);
+  assert.equal(result.robotsPaused, true);
+  assert.equal(result.robotsStatus, 'paused');
+  assert.equal(result.robotsCheckedAt, '2026-11-24T12:00:00.000Z');
+  assert.match(result.error, /desautoriza/);
+});
+
+test('verifyLink espacia robots.txt, reintento GET y cada salto por dominio', async () => {
+  const origins = [];
+  const fetched = [];
+  let firstHead = true;
+  const fakeFetch = async (url, options) => {
+    fetched.push(`${options.method} ${url}`);
+    if (url.endsWith('/robots.txt')) return { status: 200, text: async () => '' };
+    if (url === 'https://www.jumbo.cl/x' && firstHead) {
+      firstHead = false;
+      return { status: 405, ok: false, headers: { get: () => null } };
+    }
+    if (url === 'https://www.jumbo.cl/x') {
+      return {
+        status: 302,
+        ok: false,
+        headers: { get: (name) => (name === 'location' ? 'https://www.jumbo.cl/y' : null) },
+      };
+    }
+    return { status: 200, ok: true, url, headers: { get: () => null } };
+  };
+  const result = await verifyLink('https://www.jumbo.cl/x', {
+    fetch: fakeFetch,
+    cache: new Map(),
+    throttle: {
+      wait: async (origin) => {
+        origins.push(origin);
+      },
+    },
+    robotsGuard: {
+      check: async (_url, deps) => {
+        await deps.fetch('https://www.jumbo.cl/robots.txt', { method: 'GET' });
+        return { allowed: true };
+      },
+    },
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.finalUrl, 'https://www.jumbo.cl/y');
+  assert.deepEqual(origins, Array(4).fill('https://www.jumbo.cl'));
+  assert.deepEqual(fetched, [
+    'GET https://www.jumbo.cl/robots.txt',
+    'HEAD https://www.jumbo.cl/x',
+    'GET https://www.jumbo.cl/x',
+    'HEAD https://www.jumbo.cl/y',
+  ]);
+});
+
+test('verifyLink envía condicionales y acepta 304 como verificación válida', async () => {
+  let options;
+  const result = await verifyLink('https://www.jumbo.cl/x', {
+    ...SAFE_LINK_DEPS,
+    robots: {
+      allowed: true,
+      status: 200,
+      robotsUrl: 'https://www.jumbo.cl/robots.txt',
+      checkedAt: '2026-11-24T12:00:00.000Z',
+    },
+    conditional: { 'If-None-Match': '"v1"' },
+    fetch: async (_url, opts) => {
+      options = opts;
+      return {
+        status: 304,
+        ok: false,
+        url: 'https://www.jumbo.cl/x',
+        headers: { get: (name) => (name.toLowerCase() === 'etag' ? '"v1"' : null) },
+      };
+    },
+    cache: new Map(),
+  });
+  assert.equal(options.headers['If-None-Match'], '"v1"');
+  assert.equal(result.ok, true);
+  assert.equal(result.notModified, true);
+  assert.equal(result.etag, '"v1"');
+  assert.equal(result.robotsStatus, 'allowed');
+  assert.equal(result.robotsUrl, 'https://www.jumbo.cl/robots.txt');
+  assert.equal(result.robotsCheckedAt, '2026-11-24T12:00:00.000Z');
 });
 
 test('createRateLimiter respeta límite, ventana y Retry-After', () => {

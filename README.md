@@ -12,7 +12,7 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 >
 > 🔒 **Privacidad y contenidos:** el repo y la demo son públicos para recibir opiniones. Las **fotos referenciales de los 30 productos** fueron restauradas desde la captura original y las descripciones son textos neutrales creados por UP; los SVG propios por categoría se conservan como *fallback*. Las imágenes se usan sólo para demostración: validar derechos antes de cualquier uso comercial. Los nombres, SKU/GTIN y URLs canónicas siguen siendo datos de referencia necesarios para el *deep link*. Ver [Imágenes, textos y origen de los datos](#imágenes-textos-y-origen-de-los-datos). **Esto no es asesoría legal.**
 
-**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [catálogo SQLite / Fase 2](#131-catálogo-sqlite-versionado-fase-2) · [procedencia y frescura / Fase 3](#132-procedencia-y-frescura-fase-3) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
+**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [catálogo SQLite / Fase 2](#131-catálogo-sqlite-versionado-fase-2) · [procedencia y frescura / Fase 3](#132-procedencia-y-frescura-fase-3) · [verificación de enlaces / Fase 4](#133-verificación-de-enlaces-fase-4) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
 
 ---
 
@@ -554,7 +554,7 @@ El CSP del servidor local usa `script-src 'self'` y no depende de CDNs de estilo
 
 > ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
 
-La suite completa tiene **105 tests** (58 de fases anteriores + 24 de Fase 9 + 6 del rediseño de filtros + 4 de mapeo de identificadores + 7 de SQLite/Fase 2 + 6 de procedencia/frescura). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
+La suite completa tiene **113 tests** (58 de fases anteriores + 24 de Fase 9 + 6 del rediseño de filtros + 4 de mapeo de identificadores + 7 de SQLite/Fase 2 + 6 de procedencia/frescura + 8 de verificación de enlaces). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
 
 ---
 
@@ -566,7 +566,7 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 105 tests: dinero, deep links, servidor, seguridad, filtros, a11y, feeds y catálogo
+npm test           # 113 tests: dinero, deep links, servidor, seguridad, filtros, a11y, feeds, catálogo y política de enlaces
 npm run format     # aplica Prettier a lib/, src/, test/ y eslint.config.js
 ```
 
@@ -662,7 +662,7 @@ La metadata de integración expone `mode`, `source`, `ageSeconds`, `stale`, `fee
 Verificación local:
 
 ```bash
-npm run lint && npm run format:check && npm test   # 105/105 en verde (tras Fase 3)
+npm run lint && npm run format:check && npm test   # 113/113 en verde (tras Fase 4)
 npm start                                          # puerto 3100
 curl -sS http://localhost:3100/api/health
 curl -sS 'http://localhost:3100/api/prices?q=leche' | python3 -m json.tool
@@ -688,7 +688,7 @@ Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se r
 | `products` | 30 productos con identificador canónico, `unit_*`, `promos_json` y `sort_index`. |
 | `offers` | 180 filas (30 × 6 cadenas): `price` entero CLP > 0, `status`, `source_url`, `captured_at`, `price_captured_at` y `exact`. |
 | `match_queue` | 153 pendientes de SKU propio verificado por cadena (150 de fallback universal + 3 PLU). |
-| `url_queue` | 30 fichas canónicas de Jumbo a verificar en Fase 4. |
+| `url_queue` | 30 fichas canónicas de Jumbo; verificadas en Fase 4 sin tocar precios. |
 | Índices | `idx_products_gtin`, `idx_offers_gtin`, `idx_offers_chain_sku`, `idx_offers_product_url`, `idx_url_queue_product_url`. |
 | Estados | `verified`, `pending`, `unavailable`, `broken`, `stale`, `paused`. `verified` exige `sourceUrl` + `capturedAt` + `priceCapturedAt` (CHECK en SQL). |
 
@@ -700,10 +700,10 @@ Comandos (sin red, sin scraping):
 npm run build-catalog      # reconstruye la BD desde db/legacy/ y regenera artefactos
 npm run export-catalog     # regenera catalog.json + demo.js desde la BD actual
 npm run validate-catalog   # valida esquema, migraciones, índices, EAN-13, estados y artefactos
-npm test                   # 105/105 (7 de SQLite + 6 de procedencia/frescura)
+npm test                   # 113/113 (7 de SQLite + 6 de procedencia/frescura + 8 de enlaces)
 ```
 
-`server.js` lee la BD en `/api/prices` (`meta.source: data/catalog.sqlite`) y bloquea el acceso estático a `*.sqlite`. El front-end y el carrito/checkout no cambiaron: `src/links.js` sólo añadió `plu` como tercer fallback de búsqueda exacta, para no romper los 5/5 enlaces de esos tres productos a granel. **Todavía no existen** `npm run verify-links` (Fase 4) ni `npm run sync` (Fase 6); no se han creado stubs que simulen éxito.
+`server.js` lee la BD en `/api/prices` (`meta.source: data/catalog.sqlite`) y bloquea el acceso estático a `*.sqlite`. El front-end y el carrito/checkout no cambiaron: `src/links.js` sólo añadió `plu` como tercer fallback de búsqueda exacta, para no romper los 5/5 enlaces de esos tres productos a granel. `npm run verify-links` ya existe y se ejecutó en Fase 4 (§13.3); **todavía no existe** `npm run sync` (Fase 6) y no se han creado stubs que simulen éxito.
 
 ---
 
@@ -731,10 +731,41 @@ npm run migrate-catalog   # aplica 002 a la BD ya versionada y regenera artefact
 npm run check-freshness   # 0 verified vencidos · 180 pending · falla si hay contradicción
 npm run validate-catalog  # añade triggers, match_queue y meta.freshness a la validación
 npm run build-catalog     # reconstrucción desde cero, determinista (hash estable tras 2 ejecuciones)
-npm test                  # 105/105 (6 tests nuevos de Fase 3)
+npm test                  # 113/113 tras Fase 4 (6 nuevos en Fase 3 + 8 en Fase 4)
 ```
 
-Riesgos y decisiones: el archivo SQLite migrado *in situ* y el reconstruido desde `db/legacy/` tienen bytes distintos, pero exportan exactamente el mismo `catalog.json`/`demo.js` y pasan la misma validación; se prefiere la reconstrucción para reproducibilidad. No se creó `npm run verify-links` (Fase 4) ni `npm run sync` (Fase 6), y la cadena piloto sigue sin elegirse: no se va a inventar una autorización de acceso ni un precio verificable.
+Riesgos y decisiones: el archivo SQLite migrado *in situ* y el reconstruido desde `db/legacy/` tienen bytes distintos, pero exportan exactamente el mismo `catalog.json`/`demo.js` y pasan la misma validación; se prefiere la reconstrucción para reproducibilidad. La cadena piloto de Fase 4 ya fue elegida y ejecutada (§13.3); `npm run sync` (Fase 6) sigue sin crearse y no se inventa una autorización de acceso ni un precio verificable.
+
+---
+
+## 13.3 Verificación de enlaces (Fase 4)
+
+> Piloto elegido por el usuario: **Jumbo**. No se amplió a otra cadena. Verificar una ficha **no verifica un precio**: el precio sigue siendo referencial y las 180 ofertas siguen `pending`.
+
+Se añadió `db/migrations/003_link_verification.sql` (`etag`, `last_modified`, `final_url`, `robots_status`, `robots_checked_at` en `url_queue`) y una política compartida en `lib/link-policy.js`, inyectable en tests. `server.js` y `scripts/verify-links.js` la usan antes de cualquier petición:
+
+| Control | implementación |
+|---|---|
+| `robots.txt` | Se lee una vez por origen antes de tocar la ficha; se aplica el grupo del UA `UP-Prototype/1.0` (o `*`), regla más específica y `Crawl-delay`. `?` se trata como literal: la regla real `Disallow: *?*?` **no** bloquea las fichas `/p` sin query. |
+| Ritmo | Una petición cada **1,5–2 s** por dominio, con jitter; aplica a `robots.txt`, HEAD, GET y cada salto de redirección. |
+| Fallo seguro | 403/429 en robots o en la ficha → `paused` + aviso, nunca `broken`; circuit breaker con `Retry-After` y backoff con jitter. No se evita ni se reintenta agresivamente. |
+| Condicionales | `If-None-Match` / `If-Modified-Since` cuando hay `etag`/`last_modified`; un `304` cuenta como enlace verificado. |
+| Superficie | `npm run verify-links [-- --dry-run] [-- --limit=N]` escribe **sólo** `url_queue`; jamás cambia `status`, `sourceUrl` ni `priceCapturedAt` de `offers`. |
+
+Comandos ejecutados:
+
+```bash
+npm run migrate-catalog                    # aplica 001 + 002 + 003 y regenera artefactos
+npm run verify-links -- --dry-run --limit=3
+npm run verify-links                       # corrida real del piloto Jumbo
+npm run validate-catalog && npm run check-freshness && npm test
+npm run build-catalog && shasum -a 256 data/catalog.sqlite data/catalog.json data/demo.js
+npm run build-catalog && shasum -a 256 data/catalog.sqlite data/catalog.json data/demo.js
+```
+
+Resultado de la corrida real: **30/30 fichas `url_queue.verified`**, `http_status = 200`, `robots_status = allowed`, `final_url` idéntico a la canónica y `robots_checked_at = 2026-11-24T22:43:25.083Z`. Jumbo no devolvió `ETag` ni `Last-Modified` en esas respuestas, por lo que esas dos columnas quedaron `NULL` (no se inventaron). **30/30 ofertas Jumbo siguen `pending` y 0 precios verificados en toda la BD.** Un primer dry-run pausó las 3 fichas por un bug de escapado de `?` en el parser de robots: se corrigió con test de regresión y la corrida definitiva quedó sin pausas, rotas ni no disponibles. CI no ejecuta esta CLI por red; Pages sigue siendo estático e idéntico.
+
+Riesgos y decisiones: robots.txt permitía las rutas `/p` del catálogo, pero eso **no equivale a una validación legal de términos de uso**; el asistente no es asesor legal y cualquier integración comercial requiere revisión y autorización explícitas. El rebuild determinista tras 003 dio hashes estables (`catalog.sqlite` `954fad20…`, `catalog.json` `6a71ad94…`, `demo.js` `82baf5de…`). Reconstruir desde `db/legacy/` reinicia `url_queue` a `pending`: para conservar la evidencia se versiona la BD verificada y, si se reconstruye, hay que repetir la CLI con autorización. No se creó `npm run sync`: queda para Fase 6.
 
 ---
 
@@ -768,7 +799,8 @@ Riesgos y decisiones: el archivo SQLite migrado *in situ* y el reconstruido desd
 | Mapeo de identificadores | este commit | GTIN en las 5 cadenas, patrones VTEX corregidos, 5/5 filas comprables y pausas 403/429 sin bloqueo |
 | Corrección Fase 1 · Contraste | `2e442e3` | Tokens exactos, foco visible y toast sin fade; 25/25 pares WCAG |
 | Corrección Fase 2 · Catálogo | `92e716f` | SQLite versionado, 30/180/153/30, Node 24 LTS y artefactos derivados |
-| Corrección Fase 3 · Procedencia | este commit | Migración 002, triggers, TTL 15 min, `match_queue` coherente y 105/105 tests |
+| Corrección Fase 3 · Procedencia | `cbfe28a` | Migración 002, triggers, TTL 15 min, `match_queue` coherente y 105/105 tests |
+| Corrección Fase 4 · Enlaces | este commit | Migración 003, robots + ritmo 1,5–2 s, piloto Jumbo 30/30 en `url_queue`, ofertas `pending` y 113/113 tests |
 
 ### 14.2 Checklist de verificación
 
@@ -776,9 +808,10 @@ Riesgos y decisiones: el archivo SQLite migrado *in situ* y el reconstruido desd
 npm ci
 npm run lint
 npm run format:check
-npm test                          # 105/105
+npm test                          # 113/113
 npm run validate-catalog
 npm run check-freshness
+# npm run verify-links -- --dry-run --limit=3   # manual, piloto Jumbo; no se ejecuta en CI
 npx prettier --check styles.css
 npm start                         # http://localhost:3100
 curl -sS http://localhost:3100/api/health

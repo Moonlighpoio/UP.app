@@ -36,6 +36,13 @@ const {
   createFeedCache,
   normalizeFeed,
 } = require('./lib/feed.js');
+const {
+  createRobotsGuard,
+  createDomainThrottle,
+  conditionalHeaders,
+  originOf,
+  backoffWithJitter,
+} = require('./lib/link-policy.js');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 3100);
@@ -55,6 +62,8 @@ const LINK_ALLOWLIST = Object.values(LINK_DOMAINS).flat();
 const LINK_CACHE_MS = 5 * 60 * 1000;
 const linkCache = new Map();
 const UA = 'UP-Prototype/1.0 (feed autorizado; +info: README)';
+const linkRobots = createRobotsGuard();
+const linkThrottle = createDomainThrottle();
 
 // Integración de datos: TTL y pausa configurable por entorno, sin dependencias nuevas.
 const FEED_SCHEMA_VERSION = '2026-11-24';
@@ -389,6 +398,8 @@ function resetIntegrationState() {
   feedCache.reset();
   upstreamBreaker.reset();
   linkBreaker.reset();
+  linkRobots.reset();
+  linkThrottle.reset();
 }
 
 function clientIp(req) {
@@ -413,9 +424,23 @@ function rateLimited(res, check, req) {
   return true;
 }
 
+function responseHeader(res, name) {
+  return res?.headers && typeof res.headers.get === 'function' ? res.headers.get(name) : null;
+}
+
+/** Retry-After si viene; si no, backoff exponencial con jitter según fallos previos. */
+function pauseRetryMs(breaker, chain, headerValue, now) {
+  const parsed = parseRetryAfterMs(headerValue, now);
+  if (Number.isFinite(parsed)) return parsed;
+  let failures = 0;
+  if (chain && typeof breaker.snapshot === 'function') {
+    failures = breaker.snapshot()[chain]?.failures || 0;
+  }
+  return backoffWithJitter(failures);
+}
+
 function redirectLocation(res, currentUrl) {
-  const location =
-    res.headers && typeof res.headers.get === 'function' ? res.headers.get('location') : null;
+  const location = responseHeader(res, 'location');
   if (!location) return null;
   try {
     return new URL(location, currentUrl).toString();
@@ -424,8 +449,13 @@ function redirectLocation(res, currentUrl) {
   }
 }
 
-async function fetchRedirectSafe(doFetch, url, signal) {
-  const options = { method: 'HEAD', redirect: 'manual', signal, headers: { 'User-Agent': UA } };
+async function fetchRedirectSafe(doFetch, url, signal, extraHeaders = {}) {
+  const options = {
+    method: 'HEAD',
+    redirect: 'manual',
+    signal,
+    headers: { 'User-Agent': UA, ...extraHeaders },
+  };
   let res = await doFetch(url, options);
   // Algunos sites responden 403/405/501 al HEAD; se reintenta con GET.
   if (HEAD_RETRY_STATUSES.has(res.status)) {
@@ -468,19 +498,75 @@ async function verifyLink(raw, deps = {}) {
     };
   }
 
+  // Toda petición de red (robots, HEAD, GET y cada salto) pasa por el mismo
+  // espaciador por dominio: máximo una cada 1–2 s, con Crawl-delay si aplica.
+  const throttle = deps.throttle || linkThrottle;
+  let crawlDelayMs = 0;
+  const pacedFetch = async (url, options) => {
+    await throttle.wait(originOf(url), crawlDelayMs);
+    return doFetch(url, options);
+  };
+
+  // robots.txt se consulta ANTES de la ficha. 403/429 o una regla Disallow
+  // pausan la verificación: nunca se interpreta como enlace roto ni se evade.
+  const robotsGuard = deps.robotsGuard || linkRobots;
+  const robots = deps.robots || (await robotsGuard.check(cacheKey, { fetch: pacedFetch, now }));
+  const robotsMeta = {
+    robotsStatus: robots.allowed ? 'allowed' : 'paused',
+    robotsUrl: robots.robotsUrl || null,
+    robotsCheckedAt: robots.checkedAt || null,
+  };
+  if (!robots.allowed) {
+    let path = '';
+    try {
+      path = new URL(cacheKey).pathname;
+    } catch {
+      path = cacheKey;
+    }
+    return {
+      ok: false,
+      status: robots.status || 0,
+      chain,
+      paused: true,
+      robotsPaused: true,
+      error: robots.error || `robots.txt desautoriza ${path}; verificación omitida`,
+      checkedAt: new Date(now()).toISOString(),
+      ...robotsMeta,
+      retryAfterMs: robots.retryAfterMs || null,
+    };
+  }
+
+  crawlDelayMs = robots.crawlDelayMs || 0;
+  const conditional =
+    deps.conditional || conditionalHeaders(deps.etag, deps.lastModified);
+
   let currentUrl = cacheKey;
   let hops = 0;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
   try {
     while (true) {
-      const res = await fetchRedirectSafe(doFetch, currentUrl, controller.signal);
+      const res = await fetchRedirectSafe(pacedFetch, currentUrl, controller.signal, conditional);
+      if (res.status === 304) {
+        if (chain) breaker.recordSuccess(chain);
+        const payload = {
+          ok: true,
+          status: 304,
+          notModified: true,
+          finalUrl: currentUrl,
+          hops,
+          etag: responseHeader(res, 'etag') || deps.etag || null,
+          lastModified: responseHeader(res, 'last-modified') || deps.lastModified || null,
+          checkedAt: new Date(now()).toISOString(),
+          ...robotsMeta,
+        };
+        cache.set(cacheKey, { payload, at: now() });
+        return payload;
+      }
       if (PAUSE_STATUSES.has(res.status)) {
-        const header =
-          res.headers && typeof res.headers.get === 'function'
-            ? res.headers.get('retry-after')
-            : null;
-        if (chain) breaker.recordFailure(chain, parseRetryAfterMs(header, now));
+        const header = responseHeader(res, 'retry-after');
+        const retryMs = pauseRetryMs(breaker, chain, header, now);
+        if (chain) breaker.recordFailure(chain, retryMs);
         return {
           ok: false,
           status: res.status,
@@ -489,6 +575,7 @@ async function verifyLink(raw, deps = {}) {
           error: `Acceso pausado por ${chain || 'la cadena'} (HTTP ${res.status}); no se marca enlace roto`,
           finalUrl: currentUrl,
           checkedAt: new Date(now()).toISOString(),
+          retryAfterMs: retryMs,
         };
       }
       if (REDIRECT_STATUSES.has(res.status)) {
@@ -544,7 +631,10 @@ async function verifyLink(raw, deps = {}) {
         status: res.status,
         finalUrl,
         hops,
+        etag: responseHeader(res, 'etag'),
+        lastModified: responseHeader(res, 'last-modified'),
         checkedAt: new Date(now()).toISOString(),
+        ...robotsMeta,
       };
       cache.set(cacheKey, { payload, at: now() });
       return payload;

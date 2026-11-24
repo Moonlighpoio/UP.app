@@ -21,6 +21,7 @@ const {
 
 const NOW = '2026-11-24T12:00:00.000Z';
 const T = Date.parse(NOW);
+const SAFE_LINK_DEPS = { robots: { allowed: true }, throttle: { wait: async () => 0 } };
 
 function feedFixture(overrides = {}) {
   return {
@@ -387,6 +388,7 @@ test('verifyLink con 403 persistente pausa la cadena y no contacta el host nueva
   const breaker = createCircuitBreaker({ threshold: 1, cooldownMs: 60_000, now: () => T });
   const cache = new Map();
   const first = await verifyLink('https://www.jumbo.cl/x', {
+    ...SAFE_LINK_DEPS,
     fetch: async () => ({ ok: false, status: 403, url: 'https://www.jumbo.cl/x' }),
     cache,
     breaker,
@@ -395,10 +397,12 @@ test('verifyLink con 403 persistente pausa la cadena y no contacta el host nueva
   assert.equal(first.paused, true);
   assert.equal(first.status, 403);
   assert.equal(cache.size, 0);
+  assert.ok(first.retryAfterMs >= 1000 && first.retryAfterMs <= 1300);
   assert.equal(breaker.snapshot().jumbo.state, 'open');
 
   let calls = 0;
   const second = await verifyLink('https://www.jumbo.cl/x', {
+    ...SAFE_LINK_DEPS,
     fetch: async () => {
       calls += 1;
       return { ok: true, status: 200, url: 'https://www.jumbo.cl/x' };
@@ -415,6 +419,7 @@ test('verifyLink con 403 persistente pausa la cadena y no contacta el host nueva
 test('verifyLink con 429 usa Retry-After y no marca el enlace como roto', async () => {
   const breaker = createCircuitBreaker({ threshold: 1, cooldownMs: 60_000, now: () => T });
   const result = await verifyLink('https://www.jumbo.cl/x', {
+    ...SAFE_LINK_DEPS,
     fetch: async () => ({
       ok: false,
       status: 429,
@@ -427,6 +432,7 @@ test('verifyLink con 429 usa Retry-After y no marca el enlace como roto', async 
   });
   assert.equal(result.paused, true);
   assert.equal(result.ok, false);
+  assert.equal(result.retryAfterMs, 45_000);
   assert.equal(breaker.snapshot().jumbo.nextRetryInMs, 45_000);
   assert.match(result.error, /pausado/);
 });
@@ -434,6 +440,7 @@ test('verifyLink con 429 usa Retry-After y no marca el enlace como roto', async 
 test('verifyLink con 403 en HEAD y 200 en GET cierra el breaker normalmente', async () => {
   const breaker = createCircuitBreaker({ threshold: 1, cooldownMs: 60_000, now: () => T });
   const result = await verifyLink('https://www.jumbo.cl/x', {
+    ...SAFE_LINK_DEPS,
     fetch: async (_url, opts) => ({
       ok: opts.method === 'GET',
       status: opts.method === 'GET' ? 200 : 403,
