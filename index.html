@@ -587,11 +587,11 @@
       aria-labelledby="checkout-title"
       class="hidden up-modal"
     >
-      <div class="up-modal-card up-receipt">
+      <div class="up-modal-card up-checkout-card">
         <div class="up-modal-head">
           <div>
-            <span class="up-eyebrow">CONFIRMACIÓN</span>
-            <h2 id="checkout-title">Orden confirmada</h2>
+            <span class="up-eyebrow">COMPRA SEGURA</span>
+            <h2 id="checkout-title">Paso 1 de 4 · Resumen</h2>
           </div>
           <button
             id="close-checkout-modal"
@@ -604,7 +604,109 @@
             </svg>
           </button>
         </div>
-        <div class="up-modal-body">
+
+        <nav class="up-checkout-steps" aria-label="Pasos de la compra">
+          <ol id="checkout-step-labels">
+            <li data-step-label="1" aria-current="step"><span>1</span> Resumen</li>
+            <li data-step-label="2"><span>2</span> Entrega</li>
+            <li data-step-label="3"><span>3</span> Pago</li>
+            <li data-step-label="4"><span>4</span> Confirmación</li>
+          </ol>
+        </nav>
+
+        <div id="checkout-wizard" class="up-modal-body">
+          <section data-step-panel="1" aria-label="Resumen de la orden">
+            <h3>Tus supermercados</h3>
+            <div id="checkout-summary-list" class="up-breakdown"></div>
+            <div class="up-checkout-total">
+              <span>Total a pagar</span>
+              <strong class="price" data-checkout-total>$0</strong>
+            </div>
+            <p class="up-modal-note">
+              El fee de UP (1%) ya está descontado del pago a cada cadena; no se cobra dos veces.
+            </p>
+            <div class="up-checkout-actions">
+              <button id="checkout-back-to-cart" type="button" class="up-btn-secondary">
+                Volver al carrito
+              </button>
+              <button id="checkout-to-delivery" type="button" class="up-btn-primary">
+                Continuar a entrega
+              </button>
+            </div>
+          </section>
+
+          <section data-step-panel="2" aria-label="Datos de entrega" hidden>
+            <h3>¿Cómo quieres recibir tu compra?</h3>
+            <fieldset class="up-checkout-options">
+              <legend class="up-sr-only">Modalidad de entrega</legend>
+              <label class="up-checkout-option">
+                <input type="radio" name="delivery-mode" value="domicilio" checked />
+                <span>
+                  <b>Despacho a domicilio</b>
+                  <small>Cada supermercado despacha su carrito por separado.</small>
+                </span>
+              </label>
+              <label class="up-checkout-option">
+                <input type="radio" name="delivery-mode" value="retiro" />
+                <span>
+                  <b>Retiro en tienda</b>
+                  <small>Retira en sucursal según disponibilidad de cada cadena.</small>
+                </span>
+              </label>
+            </fieldset>
+            <label class="up-checkout-field">
+              <span>Dirección o comuna</span>
+              <input type="text" placeholder="Ej. Providencia, Santiago" autocomplete="off" />
+            </label>
+            <p class="up-modal-note">Datos de demostración: no se envían a ningún servidor.</p>
+            <div class="up-checkout-actions">
+              <button id="checkout-back-to-summary" type="button" class="up-btn-secondary">
+                Volver a resumen
+              </button>
+              <button id="checkout-to-payment" type="button" class="up-btn-primary">
+                Continuar a pago
+              </button>
+            </div>
+          </section>
+
+          <section data-step-panel="3" aria-label="Medio de pago" hidden>
+            <h3>Elige cómo pagar</h3>
+            <fieldset class="up-checkout-options">
+              <legend class="up-sr-only">Medio de pago</legend>
+              <label class="up-checkout-option">
+                <input type="radio" name="payment-method" value="tarjeta" checked />
+                <span>
+                  <b>Tarjeta de débito o crédito</b>
+                  <small>Pago único; las boletas se reparten por supermercado.</small>
+                </span>
+              </label>
+              <label class="up-checkout-option">
+                <input type="radio" name="payment-method" value="wallet" />
+                <span>
+                  <b>Billetera digital</b>
+                  <small>Simulación de pago con proveedor externo.</small>
+                </span>
+              </label>
+            </fieldset>
+            <div class="up-checkout-total">
+              <span>Total a pagar</span>
+              <strong class="price" data-checkout-total>$0</strong>
+            </div>
+            <p class="up-modal-note">
+              Pagarás <span data-checkout-total>$0</span>. UP retiene el 1% de intermediación.
+            </p>
+            <div class="up-checkout-actions">
+              <button id="checkout-back-to-delivery" type="button" class="up-btn-secondary">
+                Volver a entrega
+              </button>
+              <button id="checkout-confirm-btn" type="button" class="up-btn-primary">
+                Confirmar pago
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <div id="checkout-receipt" class="up-modal-body up-receipt" hidden>
           <div class="up-receipt-code">
             <div>
               <span>Código de orden</span>

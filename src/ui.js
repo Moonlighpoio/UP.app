@@ -489,9 +489,10 @@ export function renderCartUI() {
 
   if (!storeGroups.length) {
     container.innerHTML = `
-      <div class="h-full flex flex-col items-center justify-center text-center py-16 px-4">
-        <p class="font-dot text-[20px] uppercase text-white">TU CARRITO UP ESTÁ VACÍO</p>
-        <p class="font-sans text-[13px] text-muted mt-2">Selecciona productos del catálogo para armar tus sub-carritos por supermercado.</p>
+      <div class="up-cart-empty">
+        <span class="up-cart-empty-icon" aria-hidden="true">UP</span>
+        <h3>Tu carrito está vacío</h3>
+        <p>Agrega productos desde el catálogo para comparar precios entre supermercados.</p>
       </div>`;
     checkoutBtn.disabled = true;
   } else {
@@ -499,50 +500,68 @@ export function renderCartUI() {
     container.innerHTML = storeGroups
       .map(
         (group) => `
-      <div class="rounded-[8px] bg-[#141414] tech-border overflow-hidden">
-        <div class="bg-stage px-4 py-3 tech-border-b flex items-center justify-between">
-          <span class="font-mono text-[12px] font-semibold uppercase text-white">CARRITO ${esc(group.store.short)}</span>
-          <span class="font-dot text-[16px] text-signal">${formatCLP(group.subtotal)}</span>
-        </div>
-        <div class="px-4 py-2.5 bg-utility/60 tech-border-b">
-          <div class="flex items-center justify-between text-[10px] font-mono uppercase mb-1.5">
+      <section class="up-cart-group" aria-label="Carrito ${esc(group.store.name)}">
+        <header class="up-cart-group-head">
+          <div>
+            <span class="up-eyebrow">SUPERMERCADO</span>
+            <h3>${esc(group.store.name)}</h3>
+          </div>
+          <strong class="price">${formatCLP(group.subtotal)}</strong>
+        </header>
+
+        <div class="up-cart-progress-wrap">
+          <div class="up-cart-progress-copy">
             ${
               group.isFreeShipping
-                ? '<span class="text-signal font-semibold">✓ DESPACHO GRATIS DESBLOQUEADO</span>'
-                : `<span class="text-soft">AGREGA <strong class="text-white">${formatCLP(group.missingForFree)}</strong> EN ${esc(group.store.short)} PARA DESPACHO GRATIS</span>`
+                ? `<span class="up-cart-progress-ok">✓ Despacho gratis desbloqueado</span>`
+                : `<span>Agrega <strong class="price">${formatCLP(group.missingForFree)}</strong> para despacho gratis</span>`
             }
-            <span class="text-muted">${group.progressPct}%</span>
+            <span class="price">${group.progressPct}%</span>
           </div>
-          <div class="w-full h-1.5 bg-stage rounded-[8px] overflow-hidden">
-            <div class="h-full ${group.isFreeShipping ? 'bg-signal' : 'bg-white'} transition-all duration-300" style="width: ${group.progressPct}%"></div>
+          <div
+            class="up-cart-progress"
+            role="progressbar"
+            aria-label="Progreso de despacho gratis en ${esc(group.store.name)}"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="${group.progressPct}"
+          >
+            <div class="up-cart-progress-bar${group.isFreeShipping ? ' up-cart-progress-bar--full' : ''}" style="width: ${group.progressPct}%"></div>
           </div>
         </div>
-        <div class="divide-y divide-rule/40">
+
+        <ul class="up-cart-items">
           ${group.items
-            .map(
-              (item) => `
-            <div class="p-3.5 flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <p class="font-sans text-[13px] text-white truncate">${esc(item.product.name)}</p>
-                <p class="font-mono text-[11px] text-muted mt-0.5">${formatCLP(item.unitPrice)} c/u</p>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <div class="flex items-center bg-stage tech-border rounded-[4px]">
-                  <button type="button" data-qty-key="${esc(item.key)}" data-delta="-1" class="cart-qty-btn w-7 h-7 flex items-center justify-center font-mono text-[13px] text-soft hover:text-signal">−</button>
-                  <span class="w-6 text-center font-mono text-[11px] text-white">${item.qty}</span>
-                  <button type="button" data-qty-key="${esc(item.key)}" data-delta="1" class="cart-qty-btn w-7 h-7 flex items-center justify-center font-mono text-[13px] text-soft hover:text-signal">+</button>
+            .map((item) => {
+              const image = safeAssetUrl(item.product.image);
+              const thumb = image
+                ? `<img src="${esc(image)}" alt="" width="56" height="56" loading="lazy" decoding="async" />`
+                : `<span aria-hidden="true">${esc(item.product.category.slice(0, 1).toUpperCase())}</span>`;
+              return `
+              <li class="up-cart-item">
+                <span class="up-cart-thumb" aria-hidden="true">${thumb}</span>
+                <div class="up-cart-item-info">
+                  <p>${esc(item.product.name)}</p>
+                  <span>${formatCLP(item.unitPrice)} c/u</span>
                 </div>
-                <button type="button" data-remove-key="${esc(item.key)}" aria-label="Eliminar ${esc(item.product.name)}" class="cart-remove-btn text-muted hover:text-signal font-mono text-[11px] px-1" title="Eliminar">✕</button>
-              </div>
-            </div>`
-            )
+                <div class="up-cart-item-controls">
+                  <div class="up-qty" role="group" aria-label="Cantidad de ${esc(item.product.name)}">
+                    <button type="button" data-qty-key="${esc(item.key)}" data-delta="-1" aria-label="Disminuir ${esc(item.product.name)}" class="cart-qty-btn">−</button>
+                    <span aria-live="polite">${item.qty}</span>
+                    <button type="button" data-qty-key="${esc(item.key)}" data-delta="1" aria-label="Aumentar ${esc(item.product.name)}" class="cart-qty-btn">+</button>
+                  </div>
+                  <button type="button" data-remove-key="${esc(item.key)}" aria-label="Eliminar ${esc(item.product.name)}" class="cart-remove-btn">✕</button>
+                </div>
+              </li>`;
+            })
             .join('')}
-        </div>
-        <div class="px-4 py-2 bg-stage/60 flex items-center justify-between font-mono text-[10px] uppercase text-muted">
-          <span>DESPACHO ${esc(group.store.short)}</span>
-          <span class="${group.isFreeShipping ? 'text-signal' : 'text-soft'}">${group.isFreeShipping ? 'GRATIS' : formatCLP(group.shipping)}</span>
-        </div>
-      </div>`
+        </ul>
+
+        <footer class="up-cart-group-foot">
+          <span>Despacho ${esc(group.store.name)}</span>
+          <strong>${group.isFreeShipping ? 'Gratis' : formatCLP(group.shipping)}</strong>
+        </footer>
+      </section>`
       )
       .join('');
 

@@ -8,7 +8,7 @@ import { applyDemoData } from './catalog.js';
 import { refreshPrices } from './api.js';
 import { initCart } from './cart.js';
 import { initCompare, openCompareModal, closeCompareModal } from './compare.js';
-import { finishCheckout, processUnifiedCheckout } from './checkout.js';
+import { finishCheckout, initCheckout, startCheckout } from './checkout.js';
 import {
   applyUrlFilters,
   clearFilter,
@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCart({ notify: showToast, render: renderCartUI });
   initUI({ onOpenCompare: openCompareModal });
   initCompare({ notify: showToast });
+  initCheckout();
 
   const priceHooks = { notify: showToast, renderAll, refreshActiveModal };
 
@@ -316,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.id === 'cart-drawer-backdrop') closeCartDrawer();
   });
 
-  $('checkout-btn').addEventListener('click', processUnifiedCheckout);
+  $('checkout-btn').addEventListener('click', startCheckout);
   $('close-checkout-modal').addEventListener('click', closeCheckoutModal);
   $('finish-order-btn').addEventListener('click', finishCheckout);
 
