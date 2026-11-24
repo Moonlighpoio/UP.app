@@ -5,6 +5,7 @@ import { $, esc, formatCLP } from './utils.js';
 import { clearCart } from './state.js';
 import { calculateCartTotals } from './cart.js';
 import { showToast, closeCartDrawer, closeCheckoutModal, renderCartUI } from './ui.js';
+import { openDialog } from './a11y.js';
 
 export function processUnifiedCheckout() {
   const { storeGroups, upFee, payoutTotal, grandTotal } = calculateCartTotals();
@@ -30,8 +31,7 @@ export function processUnifiedCheckout() {
 
   $('checkout-fee').textContent = formatCLP(upFee);
   $('checkout-grand-total').textContent = formatCLP(grandTotal);
-  $('checkout-modal').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  openDialog($('checkout-modal'), 'close-checkout-modal');
   showToast(`SPLIT PAYMENT: ${formatCLP(payoutTotal)} A TIENDAS · ${formatCLP(upFee)} A UP`);
 }
 

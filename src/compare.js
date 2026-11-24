@@ -7,6 +7,7 @@ import { getProductStats, unitPriceFor } from './catalog.js';
 import { linkMarkup } from './ui.js';
 import { offerLink, verifyLink } from './links.js';
 import { addToCart } from './cart.js';
+import { openDialog, closeDialog } from './a11y.js';
 
 const hooks = { notify: () => {} };
 
@@ -105,12 +106,10 @@ export function openCompareModal(productId) {
     });
   });
 
-  $('compare-modal').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  openDialog($('compare-modal'), 'close-compare-modal');
 }
 
 export function closeCompareModal() {
-  $('compare-modal').classList.add('hidden');
-  document.body.style.overflow = '';
+  closeDialog($('compare-modal'));
   setActiveProduct(null);
 }

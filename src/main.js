@@ -10,6 +10,7 @@ import { initCart } from './cart.js';
 import { initCompare, openCompareModal, closeCompareModal } from './compare.js';
 import { finishCheckout, processUnifiedCheckout } from './checkout.js';
 import { freeShippingChainIds, resetAdvancedFilters } from './filters.js';
+import { trapDialogTab } from './a11y.js';
 import {
   showToast,
   renderCategories,
@@ -132,9 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.accordion-icon').forEach((i) => {
         i.textContent = '+';
       });
+      document.querySelectorAll('.accordion-trigger').forEach((b) => {
+        b.setAttribute('aria-expanded', 'false');
+      });
       if (!isOpen) {
         content.classList.remove('hidden');
         icon.textContent = '−';
+        trigger.setAttribute('aria-expanded', 'true');
       }
     });
   });
@@ -144,6 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCompareModal();
       closeCartDrawer();
       closeCheckoutModal();
+      return;
     }
+    trapDialogTab(e);
   });
 });

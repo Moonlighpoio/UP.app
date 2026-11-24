@@ -214,6 +214,7 @@ UP.app/
 │   ├── cart.js                  # Carrito: resuelve productos y delega en money.js
 │   ├── money.js                 # Matemática de dinero pura (fee, payout, totales, CLP)
 │   ├── filters.js               # Filtros por cadena/despacho y orden (incluye precio unitario)
+│   ├── a11y.js                  # Foco, diálogos con aria-modal y trampa de Tab
 │   ├── compare.js               # Modal comparador con precio por unidad por cadena
 │   ├── checkout.js              # Checkout simulado y split 99%/1%
 │   ├── ui.js                    # Toasts, render y paneles
@@ -238,6 +239,7 @@ UP.app/
 ├── test/
 │   ├── money.test.js            # Dinero puro, redondeo y formato CLP
 │   ├── links.test.js            # Canónica, SKU/GTIN y nunca por nombre
+│   ├── a11y.test.js             # Marcado accesible, CSS de foco y reduced-motion
 │   ├── catalog.test.js          # Heurística de unidades y precio unitario
 │   ├── filters.test.js          # Cadena, despacho gratis, precios y orden
 │   ├── server.test.js           # /api/*, SSRF, caché, HEAD→GET, saltos, rate limit y headers
@@ -479,7 +481,7 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 50 tests: dinero, deep links, servidor, seguridad y filtros
+npm test           # 58 tests: dinero, deep links, servidor, seguridad, filtros y accesibilidad
 npm run format     # aplica Prettier a src/, test/ y eslint.config.js
 ```
 
@@ -525,3 +527,23 @@ La lógica vive en `src/filters.js`; la UI solo renderiza el resultado y cablea 
 > ℹ️ En el feed de demo los 30 productos tienen precio en las 5 cadenas visibles: filtrar por cadena no reduce el conteo, pero **sí cambia el precio y la cadena mostrados**. Los tests de `test/filters.test.js` cubren el caso general con un fixture donde sí hay productos sin precio en la cadena elegida.
 
 Verificación headless frente al baseline `8258045`: mismos estilos y flujo (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $3.990 / $6.080`). Controles nuevos: 6 opciones de cadena (TODAS + 5), opción `unit-asc`, etiqueta que pasa de `DESDE (TOTTUS)` a `PRECIO (LIDER)`, orden unitario cambiante, toggle bloqueado con carrito vacío, `GRATIS` al superar el umbral y reset restaurando todo. Sin errores JS.
+
+---
+
+## 12. Accesibilidad y rendimiento
+
+Nuevo módulo `src/a11y.js`, **sin dependencias**: centraliza el foco de los tres diálogos y la trampa de `Tab`. `Escape` sigue cerrando y devuelve el foco al elemento que abrió el diálogo.
+
+| Mejora | Implementación |
+|---|---|
+| **Saltar al catálogo** | Enlace `.skip-link` oculto hasta recibir foco (`top: -100px → 8px`). |
+| **Tarjetas por teclado** | `role="button"`, `tabindex="0"`, `aria-label="Comparar …"`; `Enter` y `Espacio` abren el comparador. |
+| **Diálogos** | `role="dialog"`, `aria-modal="true"` y `aria-labelledby` en comparador, carrito y comprobante. El foco entra al botón de cierre y `Tab`/`Shift+Tab` cicla dentro. |
+| **Foco visible** | `body :focus-visible { outline: 2px solid #ffc700 !important }`, incluso donde Tailwind aplica `focus:outline-none`. Medido en Chrome: `rgb(255, 199, 0)` en el buscador (antes, transparente). |
+| **Estados y nombres** | `aria-pressed` en categorías y despacho gratis, `aria-expanded`/`aria-controls` en el acordeón, `aria-live` en resultados y toast, `aria-label` en búsqueda, orden y cierres. Todos los SVG decorativos son `aria-hidden="true"`. |
+| **Movimiento reducido** | `@media (prefers-reduced-motion: reduce)` anula animaciones, transiciones y scroll suave. |
+| **Rendimiento** | Listeners **delegados** en la grilla: 2 en vez de 30 por render. `decoding="async"` en imágenes. CLS medido con `PerformanceObserver`: `0.003`, idéntico al baseline. |
+
+Verificación headless frente al baseline `3fab230`: mismos estilos y flujo (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $3.990 / $6.080`), CLS `0.003` en ambas versiones. Comportamiento nuevo confirmado: salto visible al enfocarse, tarjeta enfocable con `Enter`, foco en `close-compare-modal` al abrir, `Shift+Tab` dentro del modal, `Escape` cierra y devuelve el foco a la tarjeta, acordeón con `aria-expanded` y foco amarillo. Sin errores JS ni violaciones de CSP.
+
+> ℹ️ `domContentLoadedEventEnd` varió entre ejecuciones (758–920 ms) por el CDN externo de Tailwind y Google Fonts, así que no se reporta como mejora: la señal estable es el CLS idéntico y la reducción de listeners. `test/a11y.test.js` verifica el marcado y las reglas CSS sin agregar paquetes.

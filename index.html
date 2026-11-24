@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#181818" />
   <title>UP — Comparador de Supermercados Chile | Pago Unificado</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23040404'/%3E%3Ctext x='32' y='43' font-family='monospace' font-size='30' font-weight='bold' text-anchor='middle' fill='%23ffc700'%3EUP%3C/text%3E%3C/svg%3E" />
 
@@ -19,6 +20,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="relative min-h-screen selection:bg-signal selection:text-ink">
+  <a href="#catalogo" class="skip-link">Saltar al catálogo</a>
 
   <!-- Ambient Mechanical Dot Field -->
   <div class="ambient-dot-field" aria-hidden="true"></div>
@@ -28,7 +30,7 @@
     <nav class="pointer-events-auto mx-auto max-w-[576px] min-h-[48px] chrome-glass rounded-[8px] px-3 py-1.5 flex items-center justify-between gap-2">
       <!-- Left: Menu / Quick Jump -->
       <a href="#catalogo" class="flex items-center gap-2 text-[11px] font-mono uppercase text-white hover:text-signal transition-colors px-2 py-1.5 rounded-[4px]" title="Ir al catálogo">
-        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+        <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
           <line x1="2" y1="4.5" x2="14" y2="4.5" />
           <line x1="2" y1="8" x2="14" y2="8" />
           <line x1="2" y1="11.5" x2="10" y2="11.5" />
@@ -38,7 +40,7 @@
 
       <!-- Center: Minimalist Dynamic Golden UP Logo (Continuous Line Cart + UP) -->
       <a href="#top" class="flex items-center gap-2 group" aria-label="UP Inicio">
-        <svg class="h-7 w-auto" viewBox="0 0 132 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg aria-hidden="true" class="h-7 w-auto" viewBox="0 0 132 42" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M4 10H12L18 27H42L49 12" stroke="#ffc700" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M20 24C28 22 36 16 44 6M44 6H37M44 6V13" stroke="#ffc700" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
           <circle cx="22" cy="34" r="2.6" stroke="#ffc700" stroke-width="2"/>
@@ -52,7 +54,7 @@
       <!-- Right: Search Trigger + Unified Cart Button -->
       <div class="flex items-center gap-1.5">
         <button id="nav-search-btn" type="button" class="p-2 text-white hover:text-signal transition-colors rounded-[4px]" title="Buscar producto">
-          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="9" cy="9" r="6" />
             <path d="M13.5 13.5L17.5 17.5" stroke-linecap="round" />
           </svg>
@@ -78,7 +80,7 @@
           <span id="sync-timestamp" class="hidden sm:inline text-soft">SINCRONIZADO HACE INSTANTES</span>
         </div>
         <button id="refresh-prices-btn" type="button" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] utility-surface text-white hover:border-signal hover:text-signal transition-colors">
-          <svg id="sync-icon" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg aria-hidden="true" id="sync-icon" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M16.5 10A6.5 6.5 0 1 1 14.6 5.4M16.5 3.5V6.5H13.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span>ACTUALIZAR PRECIOS</span>
@@ -99,13 +101,14 @@
           <!-- Search Bar in Hero -->
           <div class="pt-2 max-w-[560px]">
             <div class="relative flex items-center">
-              <svg class="w-4 h-4 text-muted absolute left-4 pointer-events-none" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <svg aria-hidden="true" class="w-4 h-4 text-muted absolute left-4 pointer-events-none" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="9" cy="9" r="6" />
                 <path d="M13.5 13.5L17.5 17.5" stroke-linecap="round" />
               </svg>
               <input
                 id="main-search-input"
-                type="text"
+                type="search"
+                aria-label="Buscar productos por nombre, categoría o presentación"
                 placeholder="BUSCAR PRODUCTO (EJ: COCA-COLA, ARROZ, ACEITE, CONFORT...)"
                 class="w-full h-[48px] pl-11 pr-28 bg-utility text-white placeholder-muted font-mono text-[12px] uppercase rounded-[6px] tech-border focus:outline-none focus:border-signal transition-colors"
               />
@@ -139,7 +142,7 @@
         <!-- Right: Rim-lit Technical Object / Engineering Point Graphic -->
         <div class="lg:col-span-5">
           <div class="relative bg-[#070707] rounded-[8px] tech-border p-6 sm:p-8 overflow-hidden">
-            <svg class="w-full h-auto max-h-[300px]" viewBox="0 0 360 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg aria-hidden="true" class="w-full h-auto max-h-[300px]" viewBox="0 0 360 280" fill="none" xmlns="http://www.w3.org/2000/svg">
               <ellipse cx="180" cy="140" rx="145" ry="72" stroke="#595a5a" stroke-width="1" stroke-dasharray="2 6" transform="rotate(-12 180 140)"/>
               <ellipse cx="180" cy="140" rx="115" ry="52" stroke="#ffc700" stroke-opacity="0.45" stroke-width="1" stroke-dasharray="2 8" transform="rotate(14 180 140)"/>
               <rect x="112" y="74" width="136" height="132" rx="8" fill="#121212" stroke="#595a5a" stroke-width="0.75"/>
@@ -179,8 +182,8 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <span id="results-count" class="font-mono text-[11px] uppercase text-muted">0 PRODUCTOS</span>
-        <select id="sort-select" class="h-[40px] px-3 bg-utility text-white font-mono text-[11px] uppercase rounded-[4px] tech-border focus:outline-none focus:border-signal">
+        <span id="results-count" aria-live="polite" class="font-mono text-[11px] uppercase text-muted">0 PRODUCTOS</span>
+        <select id="sort-select" aria-label="Ordenar resultados" class="h-[40px] px-3 bg-utility text-white font-mono text-[11px] uppercase rounded-[4px] tech-border focus:outline-none focus:border-signal">
           <option value="default">ORDEN: DESTACADOS</option>
           <option value="price-asc">PRECIO: MENOR A MAYOR</option>
           <option value="price-desc">PRECIO: MAYOR A MENOR</option>
@@ -190,7 +193,7 @@
       </div>
     </div>
 
-    <div id="category-filters" class="flex flex-wrap gap-2 mb-4"></div>
+    <div id="category-filters" role="group" aria-label="Filtrar por categoría" class="flex flex-wrap gap-2 mb-4"></div>
 
     <div class="flex flex-wrap items-center gap-2 mb-10">
       <select id="chain-filter" aria-label="Filtrar por cadena" class="h-[40px] px-3 bg-utility text-white font-mono text-[11px] uppercase rounded-[4px] tech-border focus:outline-none focus:border-signal"></select>
@@ -222,29 +225,29 @@
 
     <div class="divide-y divide-rule tech-border-b" id="faq-accordion">
       <div>
-        <button type="button" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
+        <button type="button" aria-expanded="false" aria-controls="faq-1" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
           <span>01 / ¿CÓMO VERIFICO QUE EL PRECIO ES REAL?</span>
           <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
         </button>
-        <div class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
+        <div id="faq-1" role="region" class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
           Cada fila incluye <strong class="text-white">VER EN TIENDA ↗</strong>. Si existe una ficha canónica se usa esa URL; si no, se construye una <strong class="text-white">búsqueda exacta por SKU o GTIN</strong>. Nunca se busca por nombre genérico. Un 404 marca el producto para re-indexación.
         </div>
       </div>
       <div>
-        <button type="button" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
+        <button type="button" aria-expanded="false" aria-controls="faq-2" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
           <span>02 / ¿CÓMO FUNCIONA EL PAGO DIVIDIDO Y EL 1%?</span>
           <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
         </button>
-        <div class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
+        <div id="faq-2" role="region" class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
           UP agrupa tus compras en sub-carritos por franquicia y procesa un único pago. El <strong class="text-white">Split Payment</strong> dispersa el 99% del subtotal a cada supermercado (que emite su boleta) y UP retiene solo un <strong class="text-signal">1% de intermediación</strong>. El fee no se agrega al cobro: ya está descontado de la liquidación.
         </div>
       </div>
       <div>
-        <button type="button" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
+        <button type="button" aria-expanded="false" aria-controls="faq-3" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
           <span>03 / ¿CÓMO OPTIMIZO EL DESPACHO GRATIS?</span>
           <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
         </button>
-        <div class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
+        <div id="faq-3" role="region" class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
           Dentro del Carrito UP verás una barra de progreso por supermercado con el monto exacto que falta para desbloquear despacho gratis. Cada franquicia mantiene su propio umbral y plazo de entrega.
         </div>
       </div>
@@ -301,14 +304,14 @@
   </div>
 
   <!-- MODAL DE COMPARACIÓN -->
-  <div id="compare-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md">
+  <div id="compare-modal" role="dialog" aria-modal="true" aria-labelledby="modal-product-name" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md">
     <div class="relative w-full max-w-[780px] max-h-[92vh] overflow-y-auto bg-canvas tech-border rounded-[8px] shadow-2xl">
       <div class="sticky top-0 z-10 bg-stage/95 backdrop-blur-md px-5 py-4 tech-border-b flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <span id="modal-product-index" class="font-dot text-[15px] text-signal">(01)</span>
           <span id="modal-product-category" class="font-mono text-[11px] uppercase text-muted px-2 py-0.5 rounded-[4px] utility-surface">BEBIDAS</span>
         </div>
-        <button id="close-compare-modal" type="button" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono text-[14px]">✕</button>
+        <button id="close-compare-modal" type="button" aria-label="Cerrar comparador" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono text-[14px]">✕</button>
       </div>
 
       <div class="p-5 sm:p-6">
@@ -339,14 +342,14 @@
   </div>
 
   <!-- CARRITO MULTI-SUPERMERCADO -->
-  <div id="cart-drawer-backdrop" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex justify-end">
+  <div id="cart-drawer-backdrop" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex justify-end">
     <aside id="cart-drawer" class="w-full max-w-[480px] h-full bg-canvas tech-border-l flex flex-col shadow-2xl">
       <div class="bg-stage px-5 py-4 tech-border-b flex items-center justify-between">
         <div>
-          <span class="font-dot text-[20px] uppercase text-white">CARRITO UNIFICADO UP</span>
+          <span id="cart-drawer-title" class="font-dot text-[20px] uppercase text-white">CARRITO UNIFICADO UP</span>
           <p class="font-mono text-[10px] uppercase text-muted mt-0.5">SUB-CARRITOS POR FRANQUICIA · SPLIT PAYMENT</p>
         </div>
-        <button id="close-cart-btn" type="button" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono text-[14px]">✕</button>
+        <button id="close-cart-btn" type="button" aria-label="Cerrar carrito" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono text-[14px]">✕</button>
       </div>
 
       <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-5"></div>
@@ -381,14 +384,14 @@
   </div>
 
   <!-- MODAL DE CONFIRMACIÓN: BOLETA DIVIDIDA -->
-  <div id="checkout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md">
+  <div id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md">
     <div class="w-full max-w-[540px] max-h-[90vh] overflow-y-auto bg-canvas tech-border rounded-[8px] shadow-2xl">
       <div class="bg-stage px-5 py-4 tech-border-b flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-signal"></span>
-          <span class="font-dot text-[18px] uppercase text-white">ORDEN CONFIRMADA // SPLIT PAYMENT</span>
+          <span id="checkout-title" class="font-dot text-[18px] uppercase text-white">ORDEN CONFIRMADA // SPLIT PAYMENT</span>
         </div>
-        <button id="close-checkout-modal" type="button" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono">✕</button>
+        <button id="close-checkout-modal" type="button" aria-label="Cerrar comprobante" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono">✕</button>
       </div>
 
       <div class="p-5 sm:p-6 space-y-5">
@@ -431,7 +434,7 @@
   </div>
 
   <!-- TOAST -->
-  <div id="toast" class="fixed top-20 right-4 z-50 transform translate-x-[140%] transition-transform duration-300 bg-stage tech-border border-signal/70 px-4 py-3 rounded-[6px] shadow-2xl flex items-center gap-3 max-w-[340px]">
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true" class="fixed top-20 right-4 z-50 transform translate-x-[140%] transition-transform duration-300 bg-stage tech-border border-signal/70 px-4 py-3 rounded-[6px] shadow-2xl flex items-center gap-3 max-w-[340px]">
     <span class="w-2 h-2 rounded-full bg-signal shrink-0"></span>
     <span id="toast-message" class="font-mono text-[11px] uppercase text-white">PRODUCTO AGREGADO AL CARRITO</span>
   </div>

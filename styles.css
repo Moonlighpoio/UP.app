@@ -27,6 +27,43 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Accesibilidad: enlace para saltar al contenido (solo visible al enfocarlo) */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: 4px;
+  background: var(--color-yellow);
+  color: var(--color-ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* Foco siempre visible, incluso donde Tailwind usa focus:outline-none. */
+body :focus-visible {
+  outline: 2px solid var(--color-yellow) !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Ambient Dot Field Overlay */
 .ambient-dot-field {
   position: fixed;

@@ -8,6 +8,7 @@ import { state, getLinkVerification, hasReindex } from './state.js';
 import { unitPriceFor } from './catalog.js';
 import { offerLink, reindexKey } from './links.js';
 import { calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
+import { openDialog, closeDialog } from './a11y.js';
 import {
   matchesFilters,
   sortProducts,
@@ -36,7 +37,7 @@ export function renderCategories() {
     .map((cat) => {
       const active = state.selectedCategory === cat;
       return `
-      <button type="button" data-category="${esc(cat)}" class="cat-btn h-[40px] px-4 rounded-[4px] font-mono text-[12px] uppercase transition-all ${
+      <button type="button" data-category="${esc(cat)}" aria-pressed="${active}" class="cat-btn h-[40px] px-4 rounded-[4px] font-mono text-[12px] uppercase transition-all ${
         active
           ? 'bg-signal text-ink font-semibold'
           : 'utility-surface text-soft hover:text-white hover:border-white/40'
@@ -97,7 +98,7 @@ export function renderProducts() {
       const unit = unitPriceFor(product, shown.price);
       const image = safeAssetUrl(product.image);
       return `
-      <article data-product-id="${esc(product.id)}" class="product-card group cursor-pointer bg-[#141414] tech-border rounded-[8px] overflow-hidden flex flex-col transition-all duration-200">
+      <article data-product-id="${esc(product.id)}" role="button" tabindex="0" aria-label="Comparar ${esc(product.name)}" class="product-card group cursor-pointer bg-[#141414] tech-border rounded-[8px] overflow-hidden flex flex-col transition-all duration-200">
         <div class="relative bg-stage h-[176px] flex items-center justify-center p-6 tech-border-b overflow-hidden">
           <div class="product-stage-glow absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none" style="background: radial-gradient(circle at center, rgba(255,199,0,0.12) 0%, rgba(0,0,0,0) 70%);"></div>
           <span class="absolute top-3 left-3 font-dot text-[14px] text-muted group-hover:text-signal transition-colors">(${esc(product.index)})</span>
@@ -105,7 +106,7 @@ export function renderProducts() {
           <div class="transform group-hover:scale-105 transition-transform duration-300 flex items-center justify-center h-full">
             ${
               image
-                ? `<img src="${esc(image)}" alt="${esc(product.name)}" loading="lazy" class="max-h-full max-w-full object-contain" />`
+                ? `<img src="${esc(image)}" alt="${esc(product.name)}" loading="lazy" decoding="async" class="max-h-full max-w-full object-contain" />`
                 : getProductSVG(product.icon)
             }
           </div>
@@ -134,9 +135,18 @@ export function renderProducts() {
     })
     .join('');
 
-  grid.querySelectorAll('.product-card').forEach((card) => {
-    card.addEventListener('click', () => uiHooks.onOpenCompare(card.dataset.productId));
-  });
+  // Delegación: 2 listeners para 30 tarjetas en vez de 30 listeners por render.
+  grid.onclick = (e) => {
+    const card = e.target.closest('.product-card');
+    if (card) uiHooks.onOpenCompare(card.dataset.productId);
+  };
+  grid.onkeydown = (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest('.product-card');
+    if (!card) return;
+    e.preventDefault();
+    uiHooks.onOpenCompare(card.dataset.productId);
+  };
 }
 
 export function linkMarkup(product, chainId) {
@@ -257,7 +267,7 @@ export function renderCartUI() {
                   <span class="w-6 text-center font-mono text-[11px] text-white">${item.qty}</span>
                   <button type="button" data-qty-key="${esc(item.key)}" data-delta="1" class="cart-qty-btn w-7 h-7 flex items-center justify-center font-mono text-[13px] text-soft hover:text-signal">+</button>
                 </div>
-                <button type="button" data-remove-key="${esc(item.key)}" class="cart-remove-btn text-muted hover:text-signal font-mono text-[11px] px-1" title="Eliminar">✕</button>
+                <button type="button" data-remove-key="${esc(item.key)}" aria-label="Eliminar ${esc(item.product.name)}" class="cart-remove-btn text-muted hover:text-signal font-mono text-[11px] px-1" title="Eliminar">✕</button>
               </div>
             </div>`
             )
@@ -295,16 +305,13 @@ export function renderCartUI() {
 }
 
 export function openCartDrawer() {
-  $('cart-drawer-backdrop').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  openDialog($('cart-drawer-backdrop'), 'close-cart-btn');
 }
 
 export function closeCartDrawer() {
-  $('cart-drawer-backdrop').classList.add('hidden');
-  document.body.style.overflow = '';
+  closeDialog($('cart-drawer-backdrop'));
 }
 
 export function closeCheckoutModal() {
-  $('checkout-modal').classList.add('hidden');
-  document.body.style.overflow = '';
+  closeDialog($('checkout-modal'));
 }

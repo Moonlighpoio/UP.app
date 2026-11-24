@@ -13,6 +13,7 @@ const browserGlobals = {
   URL: 'readonly',
   AbortController: 'readonly',
   AbortSignal: 'readonly',
+  requestAnimationFrame: 'readonly',
   tailwind: 'readonly',
 };
 
