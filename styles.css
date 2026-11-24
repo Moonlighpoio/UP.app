@@ -1658,6 +1658,14 @@ body :focus-visible {
 .up-compare-row.up-unconfirmed .up-unconfirmed-label {
   color: var(--color-text-muted);
 }
+.up-referential-label {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
 .up-compare-price {
   font-size: 20px;
 }

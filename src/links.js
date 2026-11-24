@@ -8,8 +8,8 @@ import { state, getLinkVerification, setLinkVerification, addReindex } from './s
 
 export const CHAIN_SEARCH = {
   lider: 'https://www.lider.cl/supermercado/busqueda?ft=',
-  jumbo: 'https://www.jumbo.cl/busqueda?ft=',
-  santaisabel: 'https://www.santaisabel.cl/busqueda?ft=',
+  jumbo: 'https://www.jumbo.cl/busca?ft=',
+  santaisabel: 'https://www.santaisabel.cl/busca?ft=',
   tottus: 'https://www.tottus.cl/tottus/busqueda?ft=',
   unimarc: 'https://www.unimarc.cl/busqueda?ft=',
 };
@@ -32,6 +32,11 @@ export function offerLink(product, chainId) {
   return { url: null, canonical: false, token: null, kind: 'none' };
 }
 
+/** Sólo bloquea la compra si no hay identificador o si la ficha canónica está rota. */
+export function isPurchaseBlocked(product, chainId, broken = false) {
+  return Boolean(broken || !offerLink(product, chainId).token);
+}
+
 export function reindexKey(productId, chainId) {
   return productId + '|' + chainId;
 }
@@ -51,7 +56,7 @@ export async function verifyLink(url, productId, chainId, quiet, hooks = {}) {
     });
     const json = await res.json();
     setLinkVerification(url, Object.assign({}, json, { loading: false }));
-    if (!json.ok) addReindex(reindexKey(productId, chainId));
+    if (!json.ok && !json.paused) addReindex(reindexKey(productId, chainId));
   } catch (err) {
     setLinkVerification(url, { ok: false, status: 0, error: err.message, loading: false });
     addReindex(reindexKey(productId, chainId));

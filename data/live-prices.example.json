@@ -187,7 +187,7 @@
           "chainId": "lider",
           "price": 2190,
           "capturedAt": "2026-11-23T10:30:00-03:00",
-          "sku": "391",
+          "sku": null,
           "gtin": "7801610001622",
           "url": null,
           "exact": true
@@ -205,7 +205,7 @@
           "chainId": "tottus",
           "price": 2090,
           "capturedAt": "2026-11-23T10:30:00-03:00",
-          "sku": "391",
+          "sku": null,
           "gtin": "7801610001622",
           "url": null,
           "exact": true
@@ -233,7 +233,7 @@
           "price": 2250,
           "capturedAt": "2026-11-23T10:30:00-03:00",
           "sku": null,
-          "gtin": null,
+          "gtin": "7801610001622",
           "url": null,
           "exact": false
         }
@@ -304,7 +304,7 @@
           "price": 1050,
           "capturedAt": "2026-11-23T10:30:00-03:00",
           "sku": null,
-          "gtin": null,
+          "gtin": "7801209000015",
           "url": null,
           "exact": false
         }
@@ -328,7 +328,7 @@
           "price": 990,
           "capturedAt": "2026-11-23T10:30:00-03:00",
           "sku": null,
-          "gtin": null,
+          "gtin": "24851794",
           "url": null,
           "exact": false
         },
@@ -346,7 +346,7 @@
           "price": 890,
           "capturedAt": "2026-11-23T10:30:00-03:00",
           "sku": null,
-          "gtin": null,
+          "gtin": "24851794",
           "url": null,
           "exact": false
         },
@@ -355,7 +355,7 @@
           "price": 1090,
           "capturedAt": "2026-11-23T10:30:00-03:00",
           "sku": null,
-          "gtin": null,
+          "gtin": "24851794",
           "url": null,
           "exact": false
         },
@@ -364,7 +364,7 @@
           "price": 1150,
           "capturedAt": "2026-11-23T10:30:00-03:00",
           "sku": null,
-          "gtin": null,
+          "gtin": "24851794",
           "url": null,
           "exact": false
         },
@@ -373,7 +373,7 @@
           "price": 950,
           "capturedAt": "2026-11-23T10:30:00-03:00",
           "sku": null,
-          "gtin": null,
+          "gtin": "24851794",
           "url": null,
           "exact": false
         }
@@ -398,7 +398,7 @@
           "chainId": "lider",
           "price": 3990,
           "capturedAt": "2026-11-23T10:30:00-03:00",
-          "sku": "8801",
+          "sku": null,
           "gtin": "7804632001108",
           "url": null,
           "exact": true
@@ -416,7 +416,7 @@
           "chainId": "tottus",
           "price": 3790,
           "capturedAt": "2026-11-23T10:30:00-03:00",
-          "sku": "8801",
+          "sku": null,
           "gtin": "7804632001108",
           "url": null,
           "exact": true
@@ -444,7 +444,7 @@
           "price": 3890,
           "capturedAt": "2026-11-23T10:30:00-03:00",
           "sku": null,
-          "gtin": null,
+          "gtin": "7804632001108",
           "url": null,
           "exact": false
         }

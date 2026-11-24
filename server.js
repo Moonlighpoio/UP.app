@@ -403,7 +403,12 @@ function rateLimited(res, check, req) {
   send(
     res,
     429,
-    JSON.stringify({ error: 'Demasiadas solicitudes', retryAfter: result.retryAfter })
+    JSON.stringify({
+      ok: false,
+      paused: true,
+      error: 'Demasiadas solicitudes',
+      retryAfter: result.retryAfter,
+    })
   );
   return true;
 }

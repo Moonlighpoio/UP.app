@@ -77,13 +77,13 @@ sku_mapping(product_id, chain_id, retailer_sku, retailer_gtin, canonical_url,
 **Reglas obligatorias:**
 
 - Se usa **siempre** `sku_mapping.canonical_url` cuando existe; tiene prioridad y se verifica con `/api/verify-link`.
-- Si no hay URL canónica pero hay `sku` o `gtin`, se genera una **búsqueda exacta por ese identificador** (`CHAIN_SEARCH` en `src/links.js`, patrón `busqueda?ft=`). La UI lo rotula **“Búsqueda SKU exacta”** y no lo trata como enlace roto aunque la cadena responda con un antibot.
+- Si no hay URL canónica pero hay `sku` o `gtin`, se genera una **búsqueda exacta por ese identificador** (`CHAIN_SEARCH` en `src/links.js`; `/busca?ft=` en Jumbo y Santa Isabel, `/busqueda?ft=` en las demás). La UI lo rotula **“Búsqueda SKU exacta”**, muestra el precio como **referencial** y no lo trata como enlace roto aunque la cadena responda con un antibot.
 - **Nunca** se genera una URL de búsqueda por nombre de producto.
 - Si no hay URL ni SKU/GTIN, se muestra **“Sin SKU mapeado”** y se encola para re-indexación.
-- Si `GET /api/verify-link` devuelve 404 u otro estado no OK, se marca `product_id + chain_id` para **re-indexación inmediata**. La fila se rotula **“⚠ Enlace roto · reindexar”** y el botón *Agregar* se deshabilita para no mostrar un precio engañoso.
+- Si `GET /api/verify-link` devuelve 404 u otro estado no OK **sin `paused: true`**, se marca `product_id + chain_id` para **re-indexación inmediata**. La fila se rotula **“⚠ Enlace roto · reindexar”** y el botón *Agregar* se deshabilita para no mostrar un precio engañoso. Un **403/429** o un límite de solicitudes devuelve `paused: true`: la fila dice **“Verificación en pausa”**, no entra en re-indexación y *Agregar* sigue habilitado.
 - La URL se actualiza en la tabla, no se reconstruye con `slug + id` a ciegas, porque los slugs cambian cuando la cadena renueva su catálogo.
 
-En el prototipo, los 30 productos tienen `sku`, `gtin`, `url` y `verifiedAt` en `product.skus.jumbo` como **referencia de *deep link***, sin haber copiado el contenido de esas fichas. Las otras cadenas quedan con `sku/url: null` y son **pendientes de mapeo**; cuando se completa un SKU sin URL, se ejemplifica el fallback de búsqueda exacta.
+En el prototipo, los 30 productos tienen `sku`, `gtin`, `url` y `verifiedAt` en `product.skus.jumbo` como **referencia de *deep link***, sin haber copiado el contenido de esas fichas. Las otras 4 cadenas de la UI (Lider, Tottus, Unimarc y Santa Isabel) tienen el **GTIN universal** mapeado en `skus[chain].gtin`: no se inventa un SKU propio de cada retailer, pero las 5 filas del comparador tienen enlace exacto y botón *Agregar* habilitado (con etiqueta **“Precio referencial”** salvo en la ficha canónica de Jumbo). Coope queda mapeado en el feed, sin patrón de búsqueda propio en la UI.
 
 ### Carritos múltiples y pago unificado
 
@@ -367,14 +367,14 @@ El conector de datos debe entregar, **además del precio**, el SKU/GTIN, un `cap
 > El formato legado (`prices` + `skus` con `verifiedAt`) sigue aceptándose, pero los feeds nuevos deben usar `offers[]` (ver §3.2.1).
 
 - Si hay `url`, se usa la **ficha canónica** (`VER EN TIENDA ↗`) y se verifica.
-- Si no hay `url` pero hay `sku`/`gtin`, se genera una **búsqueda exacta** con el patrón de la cadena, p. ej. `https://www.jumbo.cl/busqueda?ft=391`. La UI la rotula **“Búsqueda SKU exacta”** y muestra el identificador usado. **Está prohibido buscar por nombre.**
+- Si no hay `url` pero hay `sku`/`gtin`, se genera una **búsqueda exacta** con el patrón de la cadena, p. ej. `https://www.jumbo.cl/busca?ft=391`. La UI la rotula **“Búsqueda SKU exacta”** y muestra el identificador usado. **Está prohibido buscar por nombre.**
 - Si no hay ningún identificador, aparece **“Sin SKU mapeado”** y se encola para re-indexación.
 - En el prototipo, el botón **Verificar** de cada fila (y el refresco global) llama a `GET /api/verify-link?url=...`. El servidor:
   1. valida que el dominio esté en una lista blanca de supermercados (evita SSRF);
   2. usa `redirect: 'manual'` y valida **cada salto** contra la whitelist (máx. 5) **antes de contactarlo**; una URL relativa se resuelve contra el salto actual;
   3. hace `HEAD` con un timeout único de 8 s y reintenta con `GET` si responde 403/405/501; si el `GET` confirma **403/429**, pausa la cadena con circuit breaker y devuelve `{ ok: false, paused: true, chain, status, error, checkedAt }` en vez de declarar un enlace roto;
   4. guarda el resultado en caché por 5 minutos;
-  5. limita a **10 verificaciones/minuto por IP** (HTTP 429 + `Retry-After`);
+  5. limita a **10 verificaciones/minuto por IP** (HTTP 429 + `Retry-After` y cuerpo `{ ok: false, paused: true }`);
   6. devuelve `{ ok, status, finalUrl, hops, checkedAt, cached }` en el caso normal.
 - Si la URL canónica responde **404** u otro estado no OK, la fila se marca, aparece una alerta global, el texto pasa a **“Precio no confirmado”** y el botón *Agregar* se deshabilita. Un **403/429** confirmado no entra en esa categoría: es una pausa que se reanuda tras el enfriamiento o el `Retry-After`. Las búsquedas SKU exactas tampoco se marcan como rotas por respuestas antibot.
 
@@ -542,7 +542,7 @@ El CSP del servidor local usa `script-src 'self'` y no depende de CDNs de estilo
 
 > ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
 
-La suite completa tiene **88 tests** (58 de fases anteriores + 24 de Fase 9 + 6 del rediseño de filtros). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
+La suite completa tiene **92 tests** (58 de fases anteriores + 24 de Fase 9 + 6 del rediseño de filtros + 4 de mapeo de identificadores). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
 
 ---
 
@@ -554,7 +554,7 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 88 tests: dinero, deep links, servidor, seguridad, filtros, a11y y feeds
+npm test           # 92 tests: dinero, deep links, servidor, seguridad, filtros, a11y y feeds
 npm run format     # aplica Prettier a lib/, src/, test/ y eslint.config.js
 ```
 
@@ -628,6 +628,8 @@ Verificación headless del rediseño: salto visible al enfocarse, foco inicial e
 
 **Lighthouse móvil** (`http://localhost:3100`, Chrome headless): **Performance 93** y **Accesibilidad 100** (FCP 2.2 s, LCP 2.7 s, CLS 0.077), con 0 fallos de `color-contrast` y `label-content-name-mismatch`. En la **demo pública** (`https://moonlighpoio.github.io/UP.app/`): **Performance 99** y **Accesibilidad 100** (FCP 1.1 s, LCP 1.2 s, CLS 0), con las 30 fotos WebP y 0 recursos externos. Objetivo ≥90 / ≥95 cumplido incluso con las fotos referenciales restauradas.
 
+Verificación del comparador con Chrome headless: las **5 filas** tienen enlace, **5/5 botones Agregar** están habilitados, 4 filas muestran *Precio referencial · búsqueda exacta por GTIN* y la ficha canónica de Jumbo muestra *Ficha 391*. Al agregar la primera fila el contador del carrito pasa a 1, sin errores JS. Captura: `up-sku-mapping.png`.
+
 > ℹ️ Se retiró Tailwind y su CDN: el CSS propio en `styles.css` es la única fuente de estilos. Inter se sirve localmente con `font-display: swap`; `test/a11y.test.js` verifica el marcado y las reglas CSS sin agregar paquetes.
 
 ---
@@ -648,7 +650,7 @@ La metadata de integración expone `mode`, `source`, `ageSeconds`, `stale`, `fee
 Verificación local:
 
 ```bash
-npm run lint && npm run format:check && npm test   # 88/88 en verde
+npm run lint && npm run format:check && npm test   # 92/92 en verde
 npm start                                          # puerto 3100
 curl -sS http://localhost:3100/api/health
 curl -sS 'http://localhost:3100/api/prices?q=leche' | python3 -m json.tool
@@ -691,7 +693,8 @@ Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se r
 | Rediseño 6 · Carrito | `bb3d96a` | Drawer agrupado, progreso y checkout de 4 pasos |
 | Rediseño 7 · Pulido | `690ff5f` | A11y, sin fuentes heredadas, CI con CSS y documentación |
 | Restauración de imágenes | `686d7d5` | 30 fotos referenciales en WebP, rutas reactivadas e Inter local para conservar Lighthouse ≥90 |
-| Verificación pública | este commit | Build de Pages en el mismo SHA, 30/30 fotos cargadas y Lighthouse 99/100 en la demo |
+| Verificación pública | `cb444bb` | Build de Pages en el mismo SHA, 30/30 fotos cargadas y Lighthouse 99/100 en la demo |
+| Mapeo de identificadores | este commit | GTIN en las 5 cadenas, patrones VTEX corregidos, 5/5 filas comprables y pausas 403/429 sin bloqueo |
 
 ### 14.2 Checklist de verificación
 
@@ -699,7 +702,7 @@ Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se r
 npm ci
 npm run lint
 npm run format:check
-npm test                          # 88/88
+npm test                          # 92/92
 npx prettier --check styles.css
 npm start                         # http://localhost:3100
 curl -sS http://localhost:3100/api/health

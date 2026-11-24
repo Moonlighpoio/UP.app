@@ -416,7 +416,7 @@ export function renderProducts() {
 export function linkMarkup(product, chainId) {
   const link = offerLink(product, chainId);
   const v = link.canonical && link.url ? getLinkVerification(link.url) : null;
-  const broken = !!(v && !v.loading && !v.ok);
+  const broken = !!(v && !v.loading && !v.ok && !v.paused);
   const verified = !!(v && !v.loading && v.ok);
   const pending = hasReindex(reindexKey(product.id, chainId));
 
@@ -434,6 +434,10 @@ export function linkMarkup(product, chainId) {
   } else if (verified) {
     stateText = 'Verificado ✓';
     stateAttr = 'ok';
+    action = '';
+  } else if (v && v.paused) {
+    stateText = 'Verificación en pausa';
+    stateAttr = 'search';
     action = '';
   } else if (v && v.loading) {
     stateText = 'Verificando…';

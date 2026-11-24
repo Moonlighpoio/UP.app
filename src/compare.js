@@ -5,7 +5,7 @@ import { $, esc, formatCLP, getProductSVG, safeAssetUrl } from './utils.js';
 import { getProduct, setActiveProduct, addReindex } from './state.js';
 import { getProductStats, unitPriceFor } from './catalog.js';
 import { linkMarkup } from './ui.js';
-import { offerLink, verifyLink } from './links.js';
+import { offerLink, isPurchaseBlocked, verifyLink } from './links.js';
 import { addToCart } from './cart.js';
 import { openDialog, closeDialog } from './a11y.js';
 
@@ -40,11 +40,13 @@ export function openCompareModal(productId) {
       const isBest = idx === 0;
       const diff = entry.price - stats.minPrice;
       const linkInfo = linkMarkup(product, entry.storeId);
-      const unconfirmed = linkInfo.broken || !offerLink(product, entry.storeId).canonical;
+      const link = offerLink(product, entry.storeId);
+      const blocked = isPurchaseBlocked(product, entry.storeId, linkInfo.broken);
+      const referential = !blocked && !link.canonical;
       const unit = unitPriceFor(product, entry.price);
 
       return `
-      <tr class="up-compare-row${isBest ? ' up-best' : ''}${unconfirmed ? ' up-unconfirmed' : ''}">
+      <tr class="up-compare-row${isBest ? ' up-best' : ''}${blocked || referential ? ' up-unconfirmed' : ''}${referential ? ' up-referential' : ''}">
         <th scope="row">
           <span class="up-compare-store">
             <span class="up-rank" aria-hidden="true">${idx + 1}</span>
@@ -55,7 +57,13 @@ export function openCompareModal(productId) {
                 : `<span class="up-diff">+${formatCLP(diff)}</span>`
             }
           </span>
-          ${unconfirmed ? '<span class="up-unconfirmed-label">Precio no confirmado</span>' : ''}
+          ${
+            blocked
+              ? '<span class="up-unconfirmed-label">Precio no confirmado</span>'
+              : referential
+                ? '<span class="up-referential-label">Precio referencial · búsqueda exacta por GTIN</span>'
+                : ''
+          }
           ${linkInfo.html}
         </th>
         <td><strong class="price up-compare-price">${formatCLP(entry.price)}</strong></td>
@@ -66,7 +74,7 @@ export function openCompareModal(productId) {
             <select id="qty-${esc(product.id)}-${entry.storeId}" aria-label="Cantidad para ${esc(entry.store.name)}">
               <option value="1">1 u</option><option value="2">2 u</option><option value="3">3 u</option><option value="6">6 u</option>
             </select>
-            <button type="button" data-add-product="${esc(product.id)}" data-add-store="${entry.storeId}" ${unconfirmed ? 'disabled' : ''} class="up-btn-primary up-compare-add add-to-cart-btn">
+            <button type="button" data-add-product="${esc(product.id)}" data-add-store="${entry.storeId}" ${blocked ? 'disabled' : ''} class="up-btn-primary up-compare-add add-to-cart-btn">
               Agregar
             </button>
           </span>
