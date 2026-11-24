@@ -10,6 +10,10 @@
     "source": "db/legacy/demo-2026-11-23.json",
     "catalogSource": "data/catalog.sqlite",
     "dataPolicy": "Solo datos autorizados. URL canónica o búsqueda exacta por SKU/GTIN/PLU verificado; nunca por nombre. 403/429 pausa el conector y requiere renegociar acceso.",
+    "freshness": {
+      "ttlMs": 900000,
+      "policy": "Toda oferta verified necesita sourceUrl+capturedAt (identificador) y priceSourceUrl+priceCapturedAt (precio). Pasado el TTL de 15 min pasa a stale; pending nunca muestra precio verificado ni entra en \"mejor precio\"."
+    },
     "counts": {
       "products": 30,
       "offers": 180,
@@ -184,6 +188,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -201,6 +206,7 @@
           "canonicalUrl": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p",
           "sourceUrl": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -218,6 +224,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -235,6 +242,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -252,6 +260,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -269,6 +278,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -308,6 +318,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -325,6 +336,7 @@
           "canonicalUrl": "https://www.jumbo.cl/bebida-cocacola-zero-15-l-botella-desechable/p",
           "sourceUrl": "https://www.jumbo.cl/bebida-cocacola-zero-15-l-botella-desechable/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -342,6 +354,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -359,6 +372,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -376,6 +390,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -393,6 +408,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -430,6 +446,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -447,6 +464,7 @@
           "canonicalUrl": "https://www.jumbo.cl/leche-entera-colun-caja-1-l-natural/p",
           "sourceUrl": "https://www.jumbo.cl/leche-entera-colun-caja-1-l-natural/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -464,6 +482,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -481,6 +500,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -498,6 +518,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -515,6 +536,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -554,6 +576,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -571,6 +594,7 @@
           "canonicalUrl": "https://www.jumbo.cl/huevos-grandes-blancos-cintazul-bandeja-12-unid/p",
           "sourceUrl": "https://www.jumbo.cl/huevos-grandes-blancos-cintazul-bandeja-12-unid/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -588,6 +612,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -605,6 +630,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -622,6 +648,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -639,6 +666,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -676,6 +704,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -693,6 +722,7 @@
           "canonicalUrl": "https://www.jumbo.cl/arroz-grado-1-banquete-1-kg-premium-grano-largo-y-ancho/p",
           "sourceUrl": "https://www.jumbo.cl/arroz-grado-1-banquete-1-kg-premium-grano-largo-y-ancho/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -710,6 +740,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -727,6 +758,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -744,6 +776,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -761,6 +794,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -798,6 +832,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -815,6 +850,7 @@
           "canonicalUrl": "https://www.jumbo.cl/pan-de-molde-centeno-vollkorn-bolsa-500-g-con/p",
           "sourceUrl": "https://www.jumbo.cl/pan-de-molde-centeno-vollkorn-bolsa-500-g-con/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -832,6 +868,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -849,6 +886,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -866,6 +904,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -883,6 +922,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -920,6 +960,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -937,6 +978,7 @@
           "canonicalUrl": "https://www.jumbo.cl/aceite-maravilla-chef-1-l/p",
           "sourceUrl": "https://www.jumbo.cl/aceite-maravilla-chef-1-l/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -954,6 +996,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -971,6 +1014,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -988,6 +1032,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1005,6 +1050,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1044,6 +1090,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1061,6 +1108,7 @@
           "canonicalUrl": "https://www.jumbo.cl/cafe-gold-premier-grano-forte-250-g/p",
           "sourceUrl": "https://www.jumbo.cl/cafe-gold-premier-grano-forte-250-g/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -1078,6 +1126,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1095,6 +1144,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1112,6 +1162,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1129,6 +1180,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1168,6 +1220,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -1185,6 +1238,7 @@
           "canonicalUrl": "https://www.jumbo.cl/palta-hass-jumbo-granel/p",
           "sourceUrl": "https://www.jumbo.cl/palta-hass-jumbo-granel/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -1202,6 +1256,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -1219,6 +1274,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -1236,6 +1292,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -1253,6 +1310,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -1290,6 +1348,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1307,6 +1366,7 @@
           "canonicalUrl": "https://www.jumbo.cl/pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-bandeja/p",
           "sourceUrl": "https://www.jumbo.cl/pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-bandeja/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -1324,6 +1384,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1341,6 +1402,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1358,6 +1420,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1375,6 +1438,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1412,6 +1476,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1429,6 +1494,7 @@
           "canonicalUrl": "https://www.jumbo.cl/mantequilla-con-sal-colun-250-g/p",
           "sourceUrl": "https://www.jumbo.cl/mantequilla-con-sal-colun-250-g/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -1446,6 +1512,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1463,6 +1530,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1480,6 +1548,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1497,6 +1566,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1534,6 +1604,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1551,6 +1622,7 @@
           "canonicalUrl": "https://www.jumbo.cl/limon-jumbo-malla-1-kg/p",
           "sourceUrl": "https://www.jumbo.cl/limon-jumbo-malla-1-kg/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -1568,6 +1640,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1585,6 +1658,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1602,6 +1676,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1619,6 +1694,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1658,6 +1734,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1675,6 +1752,7 @@
           "canonicalUrl": "https://www.jumbo.cl/toalla-papel-nova-ultra-dh-26mt-2un-1939056/p",
           "sourceUrl": "https://www.jumbo.cl/toalla-papel-nova-ultra-dh-26mt-2un-1939056/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -1692,6 +1770,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1709,6 +1788,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1726,6 +1806,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1743,6 +1824,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1780,6 +1862,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1797,6 +1880,7 @@
           "canonicalUrl": "https://www.jumbo.cl/leche-descremada-surlat-caja-1-l-sin-lactosa/p",
           "sourceUrl": "https://www.jumbo.cl/leche-descremada-surlat-caja-1-l-sin-lactosa/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -1814,6 +1898,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1831,6 +1916,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1848,6 +1934,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1865,6 +1952,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1902,6 +1990,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1919,6 +2008,7 @@
           "canonicalUrl": "https://www.jumbo.cl/agua-purificada-sin-gas-benedictino-6-5-l/p",
           "sourceUrl": "https://www.jumbo.cl/agua-purificada-sin-gas-benedictino-6-5-l/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -1936,6 +2026,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1953,6 +2044,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1970,6 +2062,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -1987,6 +2080,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2024,6 +2118,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -2041,6 +2136,7 @@
           "canonicalUrl": "https://www.jumbo.cl/tomate-larga-vida-granel/p",
           "sourceUrl": "https://www.jumbo.cl/tomate-larga-vida-granel/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -2058,6 +2154,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -2075,6 +2172,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -2092,6 +2190,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -2109,6 +2208,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -2146,6 +2246,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2163,6 +2264,7 @@
           "canonicalUrl": "https://www.jumbo.cl/papas-jumbo-malla-2-kg/p",
           "sourceUrl": "https://www.jumbo.cl/papas-jumbo-malla-2-kg/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -2180,6 +2282,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2197,6 +2300,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2214,6 +2318,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2231,6 +2336,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2268,6 +2374,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2285,6 +2392,7 @@
           "canonicalUrl": "https://www.jumbo.cl/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-2017687/p",
           "sourceUrl": "https://www.jumbo.cl/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-2017687/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -2302,6 +2410,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2319,6 +2428,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2336,6 +2446,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2353,6 +2464,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2390,6 +2502,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2407,6 +2520,7 @@
           "canonicalUrl": "https://www.jumbo.cl/zanahoria-jumbo-1-kg/p",
           "sourceUrl": "https://www.jumbo.cl/zanahoria-jumbo-1-kg/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -2424,6 +2538,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2441,6 +2556,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2458,6 +2574,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2475,6 +2592,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2512,6 +2630,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2529,6 +2648,7 @@
           "canonicalUrl": "https://www.jumbo.cl/yoghurt-natural-danone-150-g/p",
           "sourceUrl": "https://www.jumbo.cl/yoghurt-natural-danone-150-g/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -2546,6 +2666,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2563,6 +2684,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2580,6 +2702,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2597,6 +2720,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2634,6 +2758,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2651,6 +2776,7 @@
           "canonicalUrl": "https://www.jumbo.cl/azucar-blanca-granulada-iansa-1-kg/p",
           "sourceUrl": "https://www.jumbo.cl/azucar-blanca-granulada-iansa-1-kg/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -2668,6 +2794,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2685,6 +2812,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2702,6 +2830,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2719,6 +2848,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2758,6 +2888,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2775,6 +2906,7 @@
           "canonicalUrl": "https://www.jumbo.cl/papel-higienico-elite-ultra-doble-hoja-18-rollos-50-m-c-u/p",
           "sourceUrl": "https://www.jumbo.cl/papel-higienico-elite-ultra-doble-hoja-18-rollos-50-m-c-u/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -2792,6 +2924,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2809,6 +2942,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2826,6 +2960,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2843,6 +2978,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2880,6 +3016,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2897,6 +3034,7 @@
           "canonicalUrl": "https://www.jumbo.cl/spaghetti-n-5-talliani-bolsa-400-g-con-huevos-frescos/p",
           "sourceUrl": "https://www.jumbo.cl/spaghetti-n-5-talliani-bolsa-400-g-con-huevos-frescos/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -2914,6 +3052,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2931,6 +3070,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2948,6 +3088,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -2965,6 +3106,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3002,6 +3144,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3019,6 +3162,7 @@
           "canonicalUrl": "https://www.jumbo.cl/bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bio-rollo/p",
           "sourceUrl": "https://www.jumbo.cl/bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bio-rollo/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -3036,6 +3180,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3053,6 +3198,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3070,6 +3216,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3087,6 +3234,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3124,6 +3272,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3141,6 +3290,7 @@
           "canonicalUrl": "https://www.jumbo.cl/carne-molida-vacuno-10-500g-prodj-1995701/p",
           "sourceUrl": "https://www.jumbo.cl/carne-molida-vacuno-10-500g-prodj-1995701/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -3158,6 +3308,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3175,6 +3326,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3192,6 +3344,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3209,6 +3362,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3246,6 +3400,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -3263,6 +3418,7 @@
           "canonicalUrl": "https://www.jumbo.cl/manzana-fuji-granel-2/p",
           "sourceUrl": "https://www.jumbo.cl/manzana-fuji-granel-2/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -3280,6 +3436,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -3297,6 +3454,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -3314,6 +3472,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -3331,6 +3490,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
@@ -3368,6 +3528,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3385,6 +3546,7 @@
           "canonicalUrl": "https://www.jumbo.cl/cif-cr-bio-multiuso-original-bot-750-g-1956146/p",
           "sourceUrl": "https://www.jumbo.cl/cif-cr-bio-multiuso-original-bot-750-g-1956146/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -3402,6 +3564,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3419,6 +3582,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3436,6 +3600,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3453,6 +3618,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3490,6 +3656,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3507,6 +3674,7 @@
           "canonicalUrl": "https://www.jumbo.cl/choclo-la-crianza-bolsa-400-g-premium-tiernos-congelado-2/p",
           "sourceUrl": "https://www.jumbo.cl/choclo-la-crianza-bolsa-400-g-premium-tiernos-congelado-2/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -3524,6 +3692,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3541,6 +3710,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3558,6 +3728,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3575,6 +3746,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3614,6 +3786,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3631,6 +3804,7 @@
           "canonicalUrl": "https://www.jumbo.cl/alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-1925888/p",
           "sourceUrl": "https://www.jumbo.cl/alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-1925888/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -3648,6 +3822,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3665,6 +3840,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3682,6 +3858,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3699,6 +3876,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3736,6 +3914,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3753,6 +3932,7 @@
           "canonicalUrl": "https://www.jumbo.cl/serum-dove-2088443/p",
           "sourceUrl": "https://www.jumbo.cl/serum-dove-2088443/p",
           "capturedAt": "2026-11-23",
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
@@ -3770,6 +3950,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3787,6 +3968,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3804,6 +3986,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
@@ -3821,6 +4004,7 @@
           "canonicalUrl": null,
           "sourceUrl": null,
           "capturedAt": null,
+          "priceSourceUrl": null,
           "priceCapturedAt": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"

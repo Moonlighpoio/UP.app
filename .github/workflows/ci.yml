@@ -34,5 +34,8 @@ jobs:
       - name: Validar catálogo SQLite y artefactos
         run: npm run validate-catalog
 
+      - name: Verificar procedencia y frescura
+        run: npm run check-freshness
+
       - name: Tests
         run: npm test

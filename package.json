@@ -10,6 +10,8 @@
     "build-catalog": "node scripts/build-catalog.js",
     "export-catalog": "node scripts/export-catalog.js",
     "validate-catalog": "node scripts/validate-catalog.js",
+    "migrate-catalog": "node scripts/migrate-catalog.js",
+    "check-freshness": "node scripts/check-freshness.js",
     "lint": "npm run lint:syntax && eslint .",
     "lint:syntax": "node --check server.js && node --check data/demo.js && for f in lib/*.js scripts/*.js src/*.js test/*.js; do node --check \"$f\"; done",
     "format": "prettier --write 'lib/**/*.js' 'scripts/**/*.js' 'src/**/*.js' 'test/**/*.js' eslint.config.js",

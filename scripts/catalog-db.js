@@ -1,13 +1,15 @@
 /**
- * UP · Catálogo SQLite versionado (Fase 2), sin dependencias externas.
+ * UP · Catálogo SQLite versionado (Fases 2 y 3), sin dependencias externas.
  * ---------------------------------------------------------------------------
  * Fuente de verdad: data/catalog.sqlite.
  * data/catalog.json y data/demo.js son ARTEFACTOS derivados: se regeneran con
  * `npm run build-catalog` o `npm run export-catalog` y nunca se editan a mano.
  *
  * Regla de fallo seguro: todo precio heredado es referencial, por eso cada
- * oferta sembrada queda en status `pending` (sin priceCapturedAt). Un registro
- * `verified` exige sourceUrl + capturedAt + priceCapturedAt (CHECK en SQL).
+ * oferta sembrada queda en status `pending` (sin priceSourceUrl ni
+ * priceCapturedAt). Un registro `verified` exige las dos parejas de
+ * procedencia (ficha/SKU y precio) y no puede estar vencido: pasado el TTL
+ * pasa a `stale`. Triggers en SQL impiden marcar `verified` sin trazabilidad.
  * Los códigos PLU de 8 dígitos NO se disfrazan de GTIN EAN-13.
  */
 const fs = require('node:fs');
@@ -19,6 +21,11 @@ const Database = sqlite.Database || sqlite.DatabaseSync;
 const ROOT = path.resolve(__dirname, '..');
 const CATALOG_SCHEMA_VERSION = '1.0.0';
 const FEED_VERSION = '2026-11-24';
+const FRESHNESS_TTL_MS = 15 * 60 * 1000; // Alineado con UP_FEED_TTL_MS en lib/feed.js.
+const FRESHNESS_POLICY =
+  'Toda oferta verified necesita sourceUrl+capturedAt (identificador) y ' +
+  'priceSourceUrl+priceCapturedAt (precio). Pasado el TTL de 15 min pasa a stale; ' +
+  'pending nunca muestra precio verificado ni entra en "mejor precio".';
 const CHAIN_ORDER = ['lider', 'jumbo', 'tottus', 'unimarc', 'santaisabel', 'coope'];
 const OFFER_STATUSES = Object.freeze([
   'verified',
@@ -71,6 +78,81 @@ function isPlu(value) {
 
 function isPositiveInt(value) {
   return Number.isInteger(value) && value > 0;
+}
+
+/**
+ * Estado de frescura de un timestamp ISO 8601. `future` es un error de datos:
+ * ningún precio puede capturarse en el futuro.
+ */
+function freshnessInfo(iso, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
+  if (typeof iso !== 'string' || !iso.trim()) return { state: 'missing', ageMs: null };
+  const captured = Date.parse(iso);
+  if (!Number.isFinite(captured)) return { state: 'invalid', ageMs: null };
+  const current = now();
+  if (captured > current) return { state: 'future', ageMs: 0 };
+  const ageMs = current - captured;
+  return { state: ageMs > ttlMs ? 'stale' : 'fresh', ageMs };
+}
+
+/**
+ * Pasa a `stale` las ofertas `verified` cuyo precio ya no es fresco.
+ * Sólo degrada: nunca rehabilita un registro sin nueva evidencia.
+ */
+function applyFreshness(db, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
+  const verified = db
+    .prepare("SELECT id, price_captured_at FROM offers WHERE status = 'verified'")
+    .all();
+  const stamp = new Date(now()).toISOString();
+  const update = db.prepare("UPDATE offers SET status = 'stale', updated_at = ? WHERE id = ?");
+  let changed = 0;
+  db.exec('BEGIN');
+  try {
+    for (const row of verified) {
+      if (freshnessInfo(row.price_captured_at, { now, ttlMs }).state !== 'fresh') {
+        update.run(stamp, row.id);
+        changed += 1;
+      }
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  return { checked: verified.length, changed };
+}
+
+/** Comprueba procedencia, frescura y coherencia de estados en la BD. */
+function checkFreshness(db, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
+  const errors = [];
+  const rows = db.prepare('SELECT * FROM offers').all();
+  const summary = { verified: 0, pending: 0, stale: 0, other: 0 };
+  for (const row of rows) {
+    const label = `${row.product_id}/${row.chain_id}`;
+    if (row.status === 'verified') {
+      summary.verified += 1;
+      if (!row.source_url || !row.captured_at || !row.price_source_url || !row.price_captured_at) {
+        errors.push(`${label}: verified sin las dos parejas de procedencia`);
+      }
+      const fresh = freshnessInfo(row.price_captured_at, { now, ttlMs });
+      if (fresh.state !== 'fresh') {
+        const detail = fresh.state === 'stale' ? 'stale (vencido)' : fresh.state;
+        errors.push(`${label}: verified con precio ${detail}; ejecutar reconciliación`);
+      }
+    } else if (row.status === 'pending') {
+      summary.pending += 1;
+      if (row.price_source_url || row.price_captured_at) {
+        errors.push(`${label}: pending con precio capturado (contradicción de estado)`);
+      }
+    } else if (row.status === 'stale') {
+      summary.stale += 1;
+      if (!row.price_source_url || !row.price_captured_at) {
+        errors.push(`${label}: stale sin procedencia de precio`);
+      }
+    } else {
+      summary.other += 1;
+    }
+  }
+  return { errors, summary, ttlMs };
 }
 
 function migrationFiles() {
@@ -196,12 +278,12 @@ function seedCatalog(db, legacy = loadLegacy()) {
   const putOffer = db.prepare(`
     INSERT INTO offers (
       product_id, chain_id, sku, gtin, plu, identifier_kind, identifier_value, price,
-      currency, status, canonical_url, source_url, captured_at, price_captured_at,
-      exact, note, created_at, updated_at
+      currency, status, canonical_url, source_url, captured_at, price_source_url,
+      price_captured_at, exact, note, created_at, updated_at
     ) VALUES (
       @product_id, @chain_id, @sku, @gtin, @plu, @identifier_kind, @identifier_value, @price,
-      @currency, @status, @canonical_url, @source_url, @captured_at, @price_captured_at,
-      @exact, @note, @created_at, @updated_at
+      @currency, @status, @canonical_url, @source_url, @captured_at, @price_source_url,
+      @price_captured_at, @exact, @note, @created_at, @updated_at
     )
   `);
   const putMatch = db.prepare(`
@@ -283,6 +365,7 @@ function seedCatalog(db, legacy = loadLegacy()) {
           canonical_url: sourceUrl,
           source_url: sourceUrl,
           captured_at: capturedAt,
+          price_source_url: null,
           price_captured_at: null,
           exact: chainId === 'jumbo' && mapping.exact === true ? 1 : 0,
           note: noteForChain,
@@ -404,6 +487,7 @@ function readCatalog(db) {
         canonicalUrl: offer.canonical_url,
         sourceUrl: offer.source_url,
         capturedAt: offer.captured_at,
+        priceSourceUrl: offer.price_source_url,
         priceCapturedAt: offer.price_captured_at,
         exact: offer.exact === 1,
         note: offer.note,
@@ -430,6 +514,7 @@ function readCatalog(db) {
       source: LEGACY_SOURCE,
       catalogSource: DB_SOURCE,
       dataPolicy: DATA_POLICY,
+      freshness: { ttlMs: FRESHNESS_TTL_MS, policy: FRESHNESS_POLICY },
       counts,
     },
     chains,
@@ -488,7 +573,7 @@ function toFrontPayload(catalog) {
 function renderDemoJs(catalog) {
   const header = [
     '/**',
-    ' * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (Fase 2).',
+    ' * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (Fases 2 y 3).',
     ' * No editar a mano: npm run build-catalog o npm run export-catalog.',
     ' * Precios referenciales; todas las ofertas están `pending`. Ver README.',
     ' */',
@@ -499,13 +584,20 @@ function renderDemoJs(catalog) {
 }
 
 /** Validación estructural del catálogo exportado (errores = bloqueantes). */
-function validateCatalogObject(catalog) {
+function validateCatalogObject(catalog, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
   const errors = [];
   if (!catalog || typeof catalog !== 'object') return ['catálogo ausente'];
   if (catalog.schemaVersion !== CATALOG_SCHEMA_VERSION) {
     errors.push(`schemaVersion esperado ${CATALOG_SCHEMA_VERSION}, got ${catalog.schemaVersion}`);
   }
   if (!catalog.meta || !catalog.meta.counts) errors.push('meta.counts ausente');
+  if (
+    !catalog.meta?.freshness ||
+    catalog.meta.freshness.ttlMs !== FRESHNESS_TTL_MS ||
+    typeof catalog.meta.freshness.policy !== 'string'
+  ) {
+    errors.push('meta.freshness ausente o inválido');
+  }
   if (!catalog.chains || !Array.isArray(catalog.stores) || !Array.isArray(catalog.products)) {
     errors.push('chains/stores/products ausentes');
     return errors;
@@ -552,8 +644,27 @@ function validateCatalogObject(catalog) {
         errors.push(`${product.id}/${offer.chainId}: status inválido`);
       }
       if (offer.status === 'verified') {
-        if (!offer.sourceUrl || !offer.capturedAt || !offer.priceCapturedAt) {
-          errors.push(`${product.id}/${offer.chainId}: verified sin sourceUrl/capturedAt`);
+        if (
+          !offer.sourceUrl ||
+          !offer.capturedAt ||
+          !offer.priceSourceUrl ||
+          !offer.priceCapturedAt
+        ) {
+          errors.push(
+            `${product.id}/${offer.chainId}: verified sin las dos parejas de procedencia`
+          );
+        }
+        const fresh = freshnessInfo(offer.priceCapturedAt, { now, ttlMs });
+        if (fresh.state !== 'fresh') {
+          errors.push(`${product.id}/${offer.chainId}: verified con precio ${fresh.state}`);
+        }
+      } else if (offer.status === 'pending') {
+        if (offer.priceSourceUrl || offer.priceCapturedAt) {
+          errors.push(`${product.id}/${offer.chainId}: pending con precio capturado`);
+        }
+      } else if (offer.status === 'stale') {
+        if (!offer.priceSourceUrl || !offer.priceCapturedAt) {
+          errors.push(`${product.id}/${offer.chainId}: stale sin procedencia de precio`);
         }
       }
       if (offer.gtin !== null && !isEan13(offer.gtin)) {
@@ -591,6 +702,10 @@ function validateDb(db) {
   if (migrations !== migrationFiles().length) {
     errors.push(`migraciones aplicadas ${migrations}/${migrationFiles().length}`);
   }
+  const triggers = new Set(objects.filter((row) => row.type === 'trigger').map((row) => row.name));
+  for (const name of ['offers_verified_provenance_insert', 'offers_verified_provenance_update']) {
+    if (!triggers.has(name)) errors.push(`falta trigger ${name}`);
+  }
   const badProducts = db.prepare('SELECT id, gtin FROM products WHERE gtin IS NOT NULL').all();
   for (const row of badProducts) {
     if (!isEan13(row.gtin)) errors.push(`${row.id}: gtin inválido en BD`);
@@ -603,9 +718,48 @@ function validateDb(db) {
     }
     if (
       row.status === 'verified' &&
-      (!row.source_url || !row.captured_at || !row.price_captured_at)
+      (!row.source_url || !row.captured_at || !row.price_source_url || !row.price_captured_at)
     ) {
       errors.push(`${row.product_id}/${row.chain_id}: verified sin trazabilidad`);
+    }
+  }
+  const { errors: freshnessErrors } = checkFreshness(db);
+  errors.push(...freshnessErrors.map((error) => `freshness: ${error}`));
+
+  const productsById = new Map(
+    db
+      .prepare('SELECT id, gtin, identifier_kind, identifier_value FROM products')
+      .all()
+      .map((row) => [row.id, row])
+  );
+  const offersByKey = new Map(rows.map((row) => [`${row.product_id}/${row.chain_id}`, row]));
+  const matchByKey = new Map();
+  for (const row of db.prepare('SELECT * FROM match_queue').all()) {
+    const key = `${row.product_id}/${row.chain_id}`;
+    if (matchByKey.has(key)) errors.push(`match_queue duplicado: ${key}`);
+    matchByKey.set(key, row);
+    const product = productsById.get(row.product_id);
+    const offer = offersByKey.get(key);
+    if (!product) errors.push(`match_queue huérfano (sin producto): ${key}`);
+    if (!offer) errors.push(`match_queue huérfano (sin oferta): ${key}`);
+    if (!CHAIN_ORDER.includes(row.chain_id)) errors.push(`match_queue cadena desconocida: ${key}`);
+    if (product && product.identifier_kind === 'plu') {
+      if (row.plu !== product.identifier_value || row.gtin !== null) {
+        errors.push(`match_queue PLU inconsistente: ${key}`);
+      }
+    } else if (product && (row.gtin !== product.gtin || row.plu !== null)) {
+      errors.push(`match_queue GTIN inconsistente: ${key}`);
+    }
+  }
+  for (const row of rows) {
+    const product = productsById.get(row.product_id);
+    if (!product) continue;
+    const key = `${row.product_id}/${row.chain_id}`;
+    const needsMatch = row.chain_id !== 'jumbo' || product.identifier_kind === 'plu';
+    if (needsMatch && !matchByKey.has(key)) {
+      errors.push(`match_queue ausente: ${key}`);
+    } else if (!needsMatch && matchByKey.has(key)) {
+      errors.push(`match_queue sobrante: ${key}`);
     }
   }
   let catalog = null;
@@ -645,6 +799,8 @@ module.exports = {
   OFFER_STATUSES,
   IDENTIFIER_KINDS,
   DATA_POLICY,
+  FRESHNESS_TTL_MS,
+  FRESHNESS_POLICY,
   DB_FILE,
   LEGACY_FILE,
   CATALOG_JSON_FILE,
@@ -654,6 +810,9 @@ module.exports = {
   ean13CheckDigit,
   isEan13,
   isPlu,
+  freshnessInfo,
+  applyFreshness,
+  checkFreshness,
   applyMigrations,
   buildCatalogDb,
   createCatalogDb,

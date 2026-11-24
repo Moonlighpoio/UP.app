@@ -12,7 +12,7 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 >
 > 🔒 **Privacidad y contenidos:** el repo y la demo son públicos para recibir opiniones. Las **fotos referenciales de los 30 productos** fueron restauradas desde la captura original y las descripciones son textos neutrales creados por UP; los SVG propios por categoría se conservan como *fallback*. Las imágenes se usan sólo para demostración: validar derechos antes de cualquier uso comercial. Los nombres, SKU/GTIN y URLs canónicas siguen siendo datos de referencia necesarios para el *deep link*. Ver [Imágenes, textos y origen de los datos](#imágenes-textos-y-origen-de-los-datos). **Esto no es asesoría legal.**
 
-**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [catálogo SQLite / Fase 2](#131-catálogo-sqlite-versionado-fase-2) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
+**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [catálogo SQLite / Fase 2](#131-catálogo-sqlite-versionado-fase-2) · [procedencia y frescura / Fase 3](#132-procedencia-y-frescura-fase-3) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
 
 ---
 
@@ -554,7 +554,7 @@ El CSP del servidor local usa `script-src 'self'` y no depende de CDNs de estilo
 
 > ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
 
-La suite completa tiene **92 tests** (58 de fases anteriores + 24 de Fase 9 + 6 del rediseño de filtros + 4 de mapeo de identificadores). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
+La suite completa tiene **105 tests** (58 de fases anteriores + 24 de Fase 9 + 6 del rediseño de filtros + 4 de mapeo de identificadores + 7 de SQLite/Fase 2 + 6 de procedencia/frescura). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
 
 ---
 
@@ -566,13 +566,13 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 92 tests: dinero, deep links, servidor, seguridad, filtros, a11y y feeds
+npm test           # 105 tests: dinero, deep links, servidor, seguridad, filtros, a11y, feeds y catálogo
 npm run format     # aplica Prettier a lib/, src/, test/ y eslint.config.js
 ```
 
-El workflow `.github/workflows/ci.yml` corre en **cada push y pull request** con Node 20: `npm ci` → `npm run lint` → `npm run format:check` → `npx prettier --check styles.css` → `npm test`. El badge de CI está arriba de este README; el badge de Demo consulta la URL pública.
+El workflow `.github/workflows/ci.yml` corre en **cada push y pull request** con Node 24 LTS: `npm ci` → `npm run lint` → `npm run format:check` → `npx prettier --check styles.css` → `npm run check-contrast` → `npm run validate-catalog` → `npm run check-freshness` → `npm test`. El badge de CI está arriba de este README; el badge de Demo consulta la URL pública.
 
-> ℹ️ Se mantiene **ESLint 9** por la decisión aprobada. npm avisa que la rama 9 está deprecated (latest: 10.x, que exige Node ≥20.19); la actualización a 10 queda como decisión futura y no afecta al prototipo ni a la CI con Node 20.
+> ℹ️ Se mantiene **ESLint 9** por la decisión aprobada. npm avisa que la rama 9 está deprecated (latest: 10.x); con Node 24 LTS no hay bloqueo. La actualización a 10 queda como decisión futura y no afecta al prototipo ni a la CI.
 
 ### Despliegue de la demo (GitHub Pages)
 
@@ -662,7 +662,7 @@ La metadata de integración expone `mode`, `source`, `ageSeconds`, `stale`, `fee
 Verificación local:
 
 ```bash
-npm run lint && npm run format:check && npm test   # 99/99 en verde (tras Fase 2)
+npm run lint && npm run format:check && npm test   # 105/105 en verde (tras Fase 3)
 npm start                                          # puerto 3100
 curl -sS http://localhost:3100/api/health
 curl -sS 'http://localhost:3100/api/prices?q=leche' | python3 -m json.tool
@@ -700,10 +700,41 @@ Comandos (sin red, sin scraping):
 npm run build-catalog      # reconstruye la BD desde db/legacy/ y regenera artefactos
 npm run export-catalog     # regenera catalog.json + demo.js desde la BD actual
 npm run validate-catalog   # valida esquema, migraciones, índices, EAN-13, estados y artefactos
-npm test                   # 99/99 (incluye 7 tests de SQLite)
+npm test                   # 105/105 (7 de SQLite + 6 de procedencia/frescura)
 ```
 
 `server.js` lee la BD en `/api/prices` (`meta.source: data/catalog.sqlite`) y bloquea el acceso estático a `*.sqlite`. El front-end y el carrito/checkout no cambiaron: `src/links.js` sólo añadió `plu` como tercer fallback de búsqueda exacta, para no romper los 5/5 enlaces de esos tres productos a granel. **Todavía no existen** `npm run verify-links` (Fase 4) ni `npm run sync` (Fase 6); no se han creado stubs que simulen éxito.
+
+---
+
+## 13.2 Procedencia y frescura (Fase 3)
+
+> Esta es la **Fase 3 del plan de corrección de contraste/datos**, no la Fase 3 histórica de módulos ES de la tabla de entregas. No introduce precios nuevos, no consulta cadenas y no cambia el comportamiento visible de la demo.
+
+La migración `db/migrations/002_price_provenance.sql` separa la procedencia de la **ficha/identificador** de la procedencia del **precio**:
+
+| Pareja | Columnas | Uso |
+|---|---|---|
+| Identificador | `source_url` + `captured_at` | De dónde salió el SKU/GTIN/PLU y la URL canónica. |
+| Precio | `price_source_url` + `price_captured_at` | De dónde salió el monto; debe venir de un feed autorizado. |
+
+Un registro `verified` exige **las dos parejas**. Dos triggers (`offers_verified_provenance_insert` y `offers_verified_provenance_update`) lo imprimen incluso si alguien escribe directamente en SQLite: no se puede marcar `verified` “porque sí”. Las ofertas heredadas siguen siendo las mismas **180 `pending`** con `priceSourceUrl = null` y `priceCapturedAt = null`: ningún precio referencial se vuelve verificado.
+
+La frescura usa el mismo TTL de **15 min** que `lib/feed.js` (`UP_FEED_TTL_MS`). `freshnessInfo` clasifica `fresh | stale | missing | invalid | future`; `future` se trata como error de datos. `applyFreshness(db)` **sólo degrada** `verified → stale`: nunca rehabilita un precio sin evidencia nueva. `checkFreshness(db)` es de sólo lectura y falla si hay un `verified` vencido, un `pending` con precio capturado o un `stale` sin procedencia.
+
+`validateDb` también audita la coherencia de `match_queue`: una fila por cadena no-Jumbo y una adicional por cada producto PLU en Jumbo (153 en total), sin huérfanos, duplicados ni identificadores contradictorios con la oferta y el producto. El export `data/catalog.json` incorpora `priceSourceUrl` por oferta y `meta.freshness` (`ttlMs` + política); el objeto que consume el front-end no cambia, por lo que `data/demo.js` mantiene los mismos datos y sólo actualiza su cabecera generada.
+
+Comandos (sin red):
+
+```bash
+npm run migrate-catalog   # aplica 002 a la BD ya versionada y regenera artefactos
+npm run check-freshness   # 0 verified vencidos · 180 pending · falla si hay contradicción
+npm run validate-catalog  # añade triggers, match_queue y meta.freshness a la validación
+npm run build-catalog     # reconstrucción desde cero, determinista (hash estable tras 2 ejecuciones)
+npm test                  # 105/105 (6 tests nuevos de Fase 3)
+```
+
+Riesgos y decisiones: el archivo SQLite migrado *in situ* y el reconstruido desde `db/legacy/` tienen bytes distintos, pero exportan exactamente el mismo `catalog.json`/`demo.js` y pasan la misma validación; se prefiere la reconstrucción para reproducibilidad. No se creó `npm run verify-links` (Fase 4) ni `npm run sync` (Fase 6), y la cadena piloto sigue sin elegirse: no se va a inventar una autorización de acceso ni un precio verificable.
 
 ---
 
@@ -735,6 +766,9 @@ npm test                   # 99/99 (incluye 7 tests de SQLite)
 | Restauración de imágenes | `686d7d5` | 30 fotos referenciales en WebP, rutas reactivadas e Inter local para conservar Lighthouse ≥90 |
 | Verificación pública | `cb444bb` | Build de Pages en el mismo SHA, 30/30 fotos cargadas y Lighthouse 99/100 en la demo |
 | Mapeo de identificadores | este commit | GTIN en las 5 cadenas, patrones VTEX corregidos, 5/5 filas comprables y pausas 403/429 sin bloqueo |
+| Corrección Fase 1 · Contraste | `2e442e3` | Tokens exactos, foco visible y toast sin fade; 25/25 pares WCAG |
+| Corrección Fase 2 · Catálogo | `92e716f` | SQLite versionado, 30/180/153/30, Node 24 LTS y artefactos derivados |
+| Corrección Fase 3 · Procedencia | este commit | Migración 002, triggers, TTL 15 min, `match_queue` coherente y 105/105 tests |
 
 ### 14.2 Checklist de verificación
 
@@ -742,7 +776,9 @@ npm test                   # 99/99 (incluye 7 tests de SQLite)
 npm ci
 npm run lint
 npm run format:check
-npm test                          # 92/92
+npm test                          # 105/105
+npm run validate-catalog
+npm run check-freshness
 npx prettier --check styles.css
 npm start                         # http://localhost:3100
 curl -sS http://localhost:3100/api/health
