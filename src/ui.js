@@ -2,7 +2,7 @@
  * UP · Render, toasts y avisos descartables.
  * Toda la manipulación del DOM de la demo vive aquí.
  */
-import { $, esc, formatCLP, norm, getProductSVG } from './utils.js';
+import { $, esc, formatCLP, norm, getProductSVG, safeAssetUrl } from './utils.js';
 import { STATIC_DEMO } from './config.js';
 import { state, getLinkVerification, hasReindex } from './state.js';
 import { getProductStats } from './catalog.js';
@@ -78,6 +78,7 @@ export function renderProducts() {
   grid.innerHTML = filtered
     .map((product) => {
       const stats = getProductStats(product);
+      const image = safeAssetUrl(product.image);
       return `
       <article data-product-id="${esc(product.id)}" class="product-card group cursor-pointer bg-[#141414] tech-border rounded-[8px] overflow-hidden flex flex-col transition-all duration-200">
         <div class="relative bg-stage h-[176px] flex items-center justify-center p-6 tech-border-b overflow-hidden">
@@ -86,8 +87,8 @@ export function renderProducts() {
           <span class="absolute top-3 right-3 font-mono text-[10px] uppercase text-muted px-2 py-0.5 rounded-[4px] bg-utility">${esc(product.category)}</span>
           <div class="transform group-hover:scale-105 transition-transform duration-300 flex items-center justify-center h-full">
             ${
-              product.image
-                ? `<img src="${esc(product.image)}" alt="${esc(product.name)}" loading="lazy" class="max-h-full max-w-full object-contain" />`
+              image
+                ? `<img src="${esc(image)}" alt="${esc(product.name)}" loading="lazy" class="max-h-full max-w-full object-contain" />`
                 : getProductSVG(product.icon)
             }
           </div>

@@ -237,7 +237,8 @@ UP.app/
 ├── test/
 │   ├── money.test.js            # Dinero puro, redondeo y formato CLP
 │   ├── links.test.js            # Canónica, SKU/GTIN y nunca por nombre
-│   ├── server.test.js           # /api/*, whitelist SSRF, caché y HEAD→GET
+│   ├── server.test.js           # /api/*, SSRF, caché, HEAD→GET, saltos, rate limit y headers
+│   ├── security.test.js         # Saneamiento de URLs y escape HTML
 │   └── package.json             # {"type":"module"} para los tests ESM
 └── README.md
 ```
@@ -295,9 +296,11 @@ El conector de datos debe entregar, **además del precio**, el SKU/GTIN y la URL
 - Si no hay ningún identificador, aparece **“Sin SKU mapeado”** y se encola para re-indexación.
 - En el prototipo, el botón **Verificar** de cada fila (y el refresco global) llama a `GET /api/verify-link?url=...`. El servidor:
   1. valida que el dominio esté en una lista blanca de supermercados (evita SSRF);
-  2. hace `HEAD` con timeout de 8 s y reintenta con `GET` si la tienda responde 403/405/501;
-  3. guarda el resultado en caché por 5 minutos;
-  4. devuelve `{ ok, status, finalUrl, checkedAt, cached }`.
+  2. usa `redirect: 'manual'` y valida **cada salto** contra la whitelist (máx. 5) **antes de contactarlo**; una URL relativa se resuelve contra el salto actual;
+  3. hace `HEAD` con un timeout único de 8 s y reintenta con `GET` si la tienda responde 403/405/501;
+  4. guarda el resultado en caché por 5 minutos;
+  5. limita a **10 verificaciones/minuto por IP** (HTTP 429 + `Retry-After`);
+  6. devuelve `{ ok, status, finalUrl, hops, checkedAt, cached }`.
 - Si la URL canónica responde 404 u otro error, la fila se marca, aparece una alerta global, el texto pasa a **“Precio no confirmado”** y el botón *Agregar* se deshabilita. Las búsquedas SKU exactas no se marcan como rotas por respuestas antibot.
 
 ---
@@ -440,10 +443,28 @@ Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de
 4. **Coherencia precio ↔ ficha.** Que el enlace exista no garantiza que el precio siga siendo el mismo. En producción el precio debe venir del mismo feed que entrega la URL, con `capturedAt` y TTL corto; la verificación es una capa adicional de confianza, no un reemplazo del feed.
 5. **CORS y latencia.** El navegador no puede consultar directamente jumbo.cl/lider.cl por CORS. La verificación pasa por el backend, con lista blanca de dominios para evitar SSRF.
 6. **Sin búsqueda genérica.** El fallback permitido es **solo búsqueda exacta por SKU/GTIN** (`busqueda?ft=`). Si no hay identificador, se muestra “Sin SKU mapeado” y se encola para re-indexación: nunca se arma una URL con el nombre del producto.
-7. **Costo y abuso.** Cachear 5 minutos y limitar dominios evita floods de peticiones. En producción se agregaría rate limiting por usuario y métricas de enlaces rotos.
+7. **Costo y abuso.** Cachear 5 minutos, limitar dominios, validar cada redirección y aplicar rate limiting por IP (10/min en verificaciones, 60/min en precios) evita floods de peticiones. En producción se agregaría además rate limiting por usuario autenticado y métricas de enlaces rotos.
 8. **Alta concurrencia con frescura de 15–30 min.** Mantener ~450.000 SKU actualizados exige detectar cambios en vez de descargar todo: conditional requests, feeds delta, workers con backpressure y particionado por cadena. El cuello de botella no es el usuario, sino el volumen de observación del catálogo.
 9. **Antibots sin evasión.** Un 403/429 debe interpretarse como una señal para pausar y renegociar acceso, nunca como un obstáculo técnico a sortear. Circuit breakers por cadena y User-Agent identificable son parte del diseño.
 10. **Búsqueda instantánea a escala.** Con millones de ofertas, el filtro en memoria del prototipo no sirve. Se requiere OpenSearch/Algolia con analyzer en español, facetas y autocomplete, más Redis para consultas calientes.
+
+---
+
+## 10. Seguridad y robustez del servidor
+
+| Medida | Implementación | Detalle |
+|---|---|---|
+| **SSRF** | Whitelist de dominios + `redirect: 'manual'` | Se valida cada salto (máx. 5) **antes** de hacer la petición; se rechazan IPs internas, `file://`, `jumbo.cl.evil.com` y saltos relativos hostiles. |
+| **Timeout único** | `NETWORK_TIMEOUT_MS = 8000` | Mismo `AbortController` para `HEAD`, `GET` y el feed externo; evita peticiones colgadas. |
+| **Rate limiting** | Por IP de socket | 10 verificaciones y 60 consultas de precios por minuto. Excederlo responde `429` con `Retry-After`. No se confía en `X-Forwarded-For` (spoofable). |
+| **Headers de seguridad** | En **todas** las respuestas | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` y CSP. Se eliminó `Access-Control-Allow-Origin: *`: el consumo es mismo origen. |
+| **Saneamiento DOM** | `esc`, `safeHttpUrl`, `safeAssetUrl` | Todo texto se escapa antes de `innerHTML`; los `href` solo aceptan `http/https`; las imágenes solo rutas `assets/...` o `http(s)`. Los SKU se codifican con `encodeURIComponent`. |
+
+El CSP del servidor local permite explícitamente el CDN de Tailwind, Google Fonts y los estilos inline generados por el CDN. Verificado con Chrome headless: mismos estilos calculados y mismo flujo que antes del header (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $6.080`).
+
+> ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
+
+Cobertura en `npm test`: 38 tests, incluidos salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
 
 ---
 
@@ -455,7 +476,7 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 26 tests: dinero, deep links y servidor
+npm test           # 38 tests: dinero, deep links, servidor y seguridad
 npm run format     # aplica Prettier a src/, test/ y eslint.config.js
 ```
 

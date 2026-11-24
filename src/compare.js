@@ -1,7 +1,7 @@
 /**
  * UP · Modal comparador: 5 supermercados ordenados por precio.
  */
-import { $, esc, formatCLP, getProductSVG } from './utils.js';
+import { $, esc, formatCLP, getProductSVG, safeAssetUrl } from './utils.js';
 import { getProduct, setActiveProduct, addReindex } from './state.js';
 import { getProductStats } from './catalog.js';
 import { linkMarkup } from './ui.js';
@@ -19,11 +19,12 @@ export function openCompareModal(productId) {
   if (!product) return;
   setActiveProduct(productId);
   const stats = getProductStats(product);
+  const image = safeAssetUrl(product.image);
 
   $('modal-product-index').textContent = `(${product.index})`;
   $('modal-product-category').textContent = product.category;
-  $('modal-product-art').innerHTML = product.image
-    ? `<img src="${esc(product.image)}" alt="${esc(product.name)}" class="max-h-full max-w-full object-contain" />`
+  $('modal-product-art').innerHTML = image
+    ? `<img src="${esc(image)}" alt="${esc(product.name)}" class="max-h-full max-w-full object-contain" />`
     : getProductSVG(product.icon);
   $('modal-product-name').textContent = product.name;
   $('modal-product-desc').textContent =

@@ -10,6 +10,24 @@ export const esc = (s) =>
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
   );
 
+// Saneamiento de URLs antes de inyectarlas en href/src: solo http(s) válidos.
+export function safeHttpUrl(value) {
+  if (typeof value !== 'string' || !value) return null;
+  try {
+    const parsed = new URL(value);
+    return ['http:', 'https:'].includes(parsed.protocol) ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+// Imágenes: solo rutas relativas bajo assets/ o una URL http(s) validada.
+export function safeAssetUrl(value) {
+  if (typeof value !== 'string' || !value) return null;
+  if (/^assets\/[A-Za-z0-9._/-]+$/.test(value) && !value.includes('..')) return value;
+  return safeHttpUrl(value);
+}
+
 // La única implementación de formato CLP vive en money.js (pura y testeable).
 export { formatCLP } from './money.js';
 

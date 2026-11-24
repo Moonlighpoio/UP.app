@@ -3,7 +3,19 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { server, allowedLink, verifyLink, LINK_CACHE_MS } = require('../server.js');
+const {
+  server,
+  allowedLink,
+  verifyLink,
+  createRateLimiter,
+  resetRateLimits,
+  VERIFY_RATE,
+  PRICES_RATE,
+  NETWORK_TIMEOUT_MS,
+  MAX_REDIRECTS,
+  SECURITY_HEADERS,
+  LINK_CACHE_MS,
+} = require('../server.js');
 
 let base;
 
@@ -143,4 +155,125 @@ test('verifyLink acepta redirecciones dentro de la whitelist', async () => {
   const result = await verifyLink('https://jumbo.cl/x', { fetch: fakeFetch, cache: new Map() });
   assert.equal(result.ok, true);
   assert.equal(result.finalUrl, 'https://www.jumbo.cl/ficha-final');
+});
+
+const redirectResponse = (location, url = 'https://www.jumbo.cl/inicio') => ({
+  ok: false,
+  status: 302,
+  url,
+  headers: { get: (name) => (name.toLowerCase() === 'location' ? location : null) },
+});
+
+test('verifyLink usa redirect: manual, timeout único y valida cada salto', async () => {
+  const calls = [];
+  const fakeFetch = async (url, opts) => {
+    calls.push({ url, opts });
+    if (calls.length === 1) return redirectResponse('/final', 'https://www.jumbo.cl/inicio');
+    return { ok: true, status: 200, url: 'https://www.jumbo.cl/final' };
+  };
+  const result = await verifyLink('https://www.jumbo.cl/inicio', {
+    fetch: fakeFetch,
+    cache: new Map(),
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.finalUrl, 'https://www.jumbo.cl/final');
+  assert.equal(result.hops, 1);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].url, 'https://www.jumbo.cl/final');
+  for (const call of calls) {
+    assert.equal(call.opts.redirect, 'manual');
+    assert.ok(call.opts.signal instanceof AbortSignal);
+  }
+  assert.equal(NETWORK_TIMEOUT_MS, 8000);
+});
+
+test('verifyLink rechaza un salto hostil ANTES de contactarlo', async () => {
+  const contacted = [];
+  const fakeFetch = async (url) => {
+    contacted.push(url);
+    return redirectResponse('https://evil.com/interior');
+  };
+  const result = await verifyLink('https://www.jumbo.cl/inicio', {
+    fetch: fakeFetch,
+    cache: new Map(),
+  });
+  assert.deepEqual(contacted, ['https://www.jumbo.cl/inicio']);
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'Redirección a host no permitido');
+  assert.equal(result.finalUrl, 'https://evil.com/interior');
+});
+
+test('verifyLink limita la cadena de redirecciones', async () => {
+  let calls = 0;
+  const fakeFetch = async () => {
+    calls += 1;
+    return redirectResponse('/loop');
+  };
+  const result = await verifyLink('https://www.jumbo.cl/inicio', {
+    fetch: fakeFetch,
+    cache: new Map(),
+  });
+  assert.equal(result.error, 'Demasiadas redirecciones');
+  assert.equal(calls, MAX_REDIRECTS + 1);
+});
+
+test('verifyLink rechaza 3xx sin cabecera Location', async () => {
+  const fakeFetch = async () => ({
+    ok: false,
+    status: 302,
+    url: 'https://www.jumbo.cl/x',
+    headers: { get: () => null },
+  });
+  const result = await verifyLink('https://www.jumbo.cl/x', { fetch: fakeFetch, cache: new Map() });
+  assert.equal(result.error, 'Redirección sin destino válido');
+});
+
+test('createRateLimiter respeta límite, ventana y Retry-After', () => {
+  let t = 1000;
+  const check = createRateLimiter({ limit: 2, windowMs: 1000, now: () => t });
+
+  assert.deepEqual(check('ip-1'), { allowed: true, remaining: 1, retryAfter: 1 });
+  assert.deepEqual(check('ip-1'), { allowed: true, remaining: 0, retryAfter: 1 });
+  assert.deepEqual(check('ip-1'), { allowed: false, remaining: 0, retryAfter: 1 });
+  // Otra IP tiene su propio contador.
+  assert.deepEqual(check('ip-2'), { allowed: true, remaining: 1, retryAfter: 1 });
+
+  t += 900;
+  assert.equal(check('ip-1').allowed, false);
+  t += 101;
+  assert.equal(check('ip-1').allowed, true);
+  check.reset();
+  assert.equal(check('ip-1').allowed, true);
+});
+
+test('todas las respuestas incluyen headers de seguridad', async () => {
+  for (const path of ['/api/health', '/index.html']) {
+    const res = await fetch(`${base}${path}`);
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      assert.equal(res.headers.get(name.toLowerCase()), value, `${path} → ${name}`);
+    }
+    // Ya no se permite CORS abierto: todo consumo es mismo origen.
+    assert.equal(res.headers.get('access-control-allow-origin'), null);
+  }
+});
+
+test('GET /api/verify-link devuelve 429 con Retry-After al exceder el límite', async () => {
+  resetRateLimits();
+  try {
+    const target = `${base}/api/verify-link?url=${encodeURIComponent('no-es-url')}`;
+    for (let i = 0; i < VERIFY_RATE.limit; i += 1) {
+      assert.equal((await fetch(target)).status, 200);
+    }
+    const blocked = await fetch(target);
+    assert.equal(blocked.status, 429);
+    assert.ok(Number(blocked.headers.get('retry-after')) >= 1);
+    assert.equal((await blocked.json()).error, 'Demasiadas solicitudes');
+
+    // El bucket de /api/prices es independiente.
+    assert.equal((await fetch(`${base}/api/prices`)).status, 200);
+  } finally {
+    resetRateLimits();
+  }
+  assert.ok(PRICES_RATE.limit >= VERIFY_RATE.limit);
 });
