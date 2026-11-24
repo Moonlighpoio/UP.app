@@ -12,6 +12,8 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 >
 > 🔒 **Privacidad y contenidos:** el repo y la demo son públicos para recibir opiniones. Las imágenes son ilustraciones SVG propias y las descripciones son textos neutrales creados por UP; ya no se incluyen fotos ni textos copiados de fichas de supermercados. Los nombres, SKU/GTIN y URLs canónicas siguen siendo datos de referencia necesarios para el *deep link*. Ver [Imágenes, textos y origen de los datos](#imágenes-textos-y-origen-de-los-datos). **Esto no es asesoría legal.**
 
+**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
+
 ---
 
 ## Características críticas y flujo del usuario
@@ -25,7 +27,7 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 7. **Checkout consolidado y comprobante split.** Un solo resumen con subtotales por cadena, despachos, comisión UP del 1% y un cargo final. **Confirmar pago** genera el **comprobante de boleta dividida**: 99% dispersado a supermercados, 1% retenido por UP, dispersión por franquicia y detalle de entrega coordinada.
 8. **Avisos breves.** Los eventos usan un toast deslizante que desaparece solo; no hay popups persistentes ni avisos que bloqueen el catálogo.
 
-> Implementado en **módulos ES nativos** bajo `src/` (sin bundler): `api.js`, `links.js`, `cart.js`, `compare.js`, `checkout.js`, `ui.js`, más `state.js` (estado central), `config.js`, `catalog.js`, `utils.js` y `main.js` (entrada). `index.html` solo contiene el marcado; `styles.css` tiene los tokens y estilos propios; `server.js` expone `/api/prices`, `/api/verify-link` y `/api/health`. En GitHub Pages se detecta el host `github.io` y se usa el catálogo estático sin depender del servidor local.
+> Implementado en **módulos ES nativos** bajo `src/` (sin bundler): `api.js`, `links.js`, `cart.js`, `compare.js`, `checkout.js`, `ui.js`, más `state.js` (estado central), `config.js`, `catalog.js`, `utils.js` y `main.js` (entrada). `index.html` solo contiene el marcado; `styles.css` tiene los tokens y estilos propios; `server.js` expone `/api/prices`, `/api/verify-link`, `/api/health` y `/api/feed-status`. En GitHub Pages se detecta el host `github.io` y se usa el catálogo estático sin depender del servidor local.
 
 ---
 
@@ -159,6 +161,8 @@ El alcance objetivo es la **despensa familiar chilena completa**, ya reflejada e
 
 ## Entregables y roadmap
 
+> ℹ️ **Dos numeraciones distintas:** esta tabla (fases **0–5**) es el **roadmap de producto en producción**. Las entregas **ya ejecutadas en este repositorio** se numeran **1–10** y se resumen en [§14](#14-entrega-final-y-checklist). No son la misma secuencia.
+
 | Fase | Entregable | Criterio de aceptación |
 |---|---|---|
 | **0 · Prototipo local** (hecho) | Web UP con logo, 30 productos, comparador por producto, deep links SKU/GTIN, refresco, carritos, checkout y comprobante split; toast no persistente | Corre en `localhost:3100` sin dependencias; 30 productos · 10 tiendas · 6 cadenas en el feed (5 en la UI); verificación 200/404 funcional |
@@ -189,6 +193,7 @@ Comprobar los endpoints:
 ```bash
 curl 'http://localhost:3100/api/prices?q=leche'
 curl 'http://localhost:3100/api/health'
+curl 'http://localhost:3100/api/feed-status'
 curl 'http://localhost:3100/api/verify-link?url=https%3A%2F%2Fwww.jumbo.cl%2Fbusqueda%3Fft%3D391'
 ```
 
@@ -334,20 +339,32 @@ Reglas de aceptación:
 
 ### 3.4 Deep linking y verificación del precio
 
-El conector de datos debe entregar, **además del precio**, el SKU/GTIN y la URL dinámica precisa de la ficha. En el feed se representa así:
+El conector de datos debe entregar, **además del precio**, el SKU/GTIN, un `capturedAt` y la URL canónica precisa de la ficha. En el contrato actual se representa así (el normalizador genera `prices`/`skus` para el front):
 
 ```json
-"skus": {
-  "lider": { "sku": "391", "gtin": "7801610001622", "url": null, "exact": true },
-  "jumbo": {
+"offers": [
+  {
+    "chainId": "lider",
+    "price": 2190,
+    "capturedAt": "2026-11-24T10:25:00-03:00",
+    "sku": "391",
+    "gtin": "7801610001622",
+    "url": null,
+    "exact": true
+  },
+  {
+    "chainId": "jumbo",
+    "price": 2290,
+    "capturedAt": "2026-11-24T10:25:00-03:00",
     "sku": "391",
     "gtin": "7801610001622",
     "url": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p",
-    "exact": true,
-    "verifiedAt": "2026-11-23"
+    "exact": true
   }
-}
+]
 ```
+
+> El formato legado (`prices` + `skus` con `verifiedAt`) sigue aceptándose, pero los feeds nuevos deben usar `offers[]` (ver §3.2.1).
 
 - Si hay `url`, se usa la **ficha canónica** (`VER EN TIENDA ↗`) y se verifica.
 - Si no hay `url` pero hay `sku`/`gtin`, se genera una **búsqueda exacta** con el patrón de la cadena, p. ej. `https://www.jumbo.cl/busqueda?ft=391`. La UI la rotula **“Búsqueda SKU exacta”** y muestra el identificador usado. **Está prohibido buscar por nombre.**
@@ -355,11 +372,11 @@ El conector de datos debe entregar, **además del precio**, el SKU/GTIN y la URL
 - En el prototipo, el botón **Verificar** de cada fila (y el refresco global) llama a `GET /api/verify-link?url=...`. El servidor:
   1. valida que el dominio esté en una lista blanca de supermercados (evita SSRF);
   2. usa `redirect: 'manual'` y valida **cada salto** contra la whitelist (máx. 5) **antes de contactarlo**; una URL relativa se resuelve contra el salto actual;
-  3. hace `HEAD` con un timeout único de 8 s y reintenta con `GET` si la tienda responde 403/405/501;
+  3. hace `HEAD` con un timeout único de 8 s y reintenta con `GET` si responde 403/405/501; si el `GET` confirma **403/429**, pausa la cadena con circuit breaker y devuelve `{ ok: false, paused: true, chain, status, error, checkedAt }` en vez de declarar un enlace roto;
   4. guarda el resultado en caché por 5 minutos;
   5. limita a **10 verificaciones/minuto por IP** (HTTP 429 + `Retry-After`);
-  6. devuelve `{ ok, status, finalUrl, hops, checkedAt, cached }`.
-- Si la URL canónica responde 404 u otro error, la fila se marca, aparece una alerta global, el texto pasa a **“Precio no confirmado”** y el botón *Agregar* se deshabilita. Las búsquedas SKU exactas no se marcan como rotas por respuestas antibot.
+  6. devuelve `{ ok, status, finalUrl, hops, checkedAt, cached }` en el caso normal.
+- Si la URL canónica responde **404** u otro estado no OK, la fila se marca, aparece una alerta global, el texto pasa a **“Precio no confirmado”** y el botón *Agregar* se deshabilita. Un **403/429** confirmado no entra en esa categoría: es una pausa que se reanuda tras el enfriamiento o el `Retry-After`. Las búsquedas SKU exactas tampoco se marcan como rotas por respuestas antibot.
 
 ---
 
@@ -438,7 +455,7 @@ Galería + manual de ingeniería: fría, precisa y monocromática. El amarillo `
 | **01 · Overview** | Barra de estado con badge de Demo/EN VIVO, indicador de sincronía, **Refrescar precios** y nota de datos. Filtros a la izquierda, resultados a la derecha, con comparador embebido por tarjeta. |
 | **Capítulo 01 · La promesa** | Lienzo `#181818` tras 144px de espacio. Titular serif centrado y medio cinematográfico 16:9 con acción ligera blanca. |
 | **Capítulo 02 · Mecánica** | Grilla de 12 columnas con tres bloques escalonados, números `(01)…` en DotGothic16 amarillo y puntos/líneas guía sobre las imágenes. Luego capítulos insertos de dos columnas sobre carritos y pago. |
-| **Capítulo 03 · Cobertura** | Interludio 16:9, grilla de las 6 cadenas con umbrales de despacho y macro-fotografías de material con títulos serif. |
+| **Capítulo 03 · Cobertura** | Interludio 16:9, grilla de las 6 cadenas con umbrales de despacho e ilustraciones SVG propias de material con títulos serif. |
 | **Capítulo 04 · Detalles** | Columna central con acordeón mono de 576px; solo un panel abierto a la vez. |
 | **Cierre** | Near black `#040404`, familia de productos, botón señal amarillo de 48px y footer-instrumento con enlaces DotGothic16 y controles de 48px. |
 
@@ -497,7 +514,7 @@ Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de
 
 1. **URLs dinámicas y volátiles.** El slug de una ficha cambia cuando la cadena renueva su catálogo. El conector debe persistir `productId + GTIN + URL` y actualizarla, no reconstruirla a ciegas.
 2. **Bloqueos y robots.** Varias cadenas deshabilitan rutas de búsqueda o responden 403 a clientes automatizados. Por eso la verificación es **bajo demanda**, con User-Agent identificable, timeout y caché; nunca se hace scraping oculto masivo.
-3. **Falsos 404.** Un 403/405 puede significar "bloqueo", no "producto inexistente". El servidor reintenta con `GET` antes de declarar el enlace roto.
+3. **Falsos 404 y pausas.** Un 403/405 puede significar "bloqueo", no "producto inexistente": se reintenta con `GET`. Si el 403/429 se confirma, el conector se pausa (circuit breaker + `Retry-After`) y **no** se declara enlace roto; solo un 404 u otro estado no OK tras la verificación marca la fila para re-indexación.
 4. **Coherencia precio ↔ ficha.** Que el enlace exista no garantiza que el precio siga siendo el mismo. En producción el precio debe venir del mismo feed que entrega la URL, con `capturedAt` y TTL corto; la verificación es una capa adicional de confianza, no un reemplazo del feed.
 5. **CORS y latencia.** El navegador no puede consultar directamente jumbo.cl/lider.cl por CORS. La verificación pasa por el backend, con lista blanca de dominios para evitar SSRF.
 6. **Sin búsqueda genérica.** El fallback permitido es **solo búsqueda exacta por SKU/GTIN** (`busqueda?ft=`). Si no hay identificador, se muestra “Sin SKU mapeado” y se encola para re-indexación: nunca se arma una URL con el nombre del producto.
@@ -634,3 +651,62 @@ QA ejecutado:
 - **Upstream simulado con `429` + `Retry-After: 2`:** una sola llamada al falso API (`HIT 1 /feed?q=`), `mode: demo`, breaker `open`, `nextRetryInMs ≈ 2000` y warning `API externa pausada por HTTP 429: se reanuda tras el enfriamiento`. La segunda consulta no volvió a contactar al proveedor.
 
 Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se reinician con el proceso (aceptado en el prototipo); `403/429` significan pausa y renegociación, nunca evasión ni enlace roto; `data/live-prices.json` sigue ignorado por git para no versionar datos de terceros.
+
+---
+
+## 14. Entrega final y checklist
+
+Última revisión documental: **24-11-2026**. Alcance congelado: prototipo funcional + demo pública. No existe conexión comercial con supermercados ni precios en tiempo real.
+
+### 14.1 Entregas ejecutadas en este repositorio
+
+| Entrega | Commit | Resultado |
+|---|---|---|
+| Fase 1 · Higiene y base | `9fb8b65` | CSS cargado, `package.json`, `.gitignore`, licencia, puerto `3100` |
+| Fase 2 · Contenido propio | `75c4f36` | 30 fotos eliminadas, 9 SVG propios, textos neutrales |
+| Fase 3 · Módulos ES | `7fdb6a6` | JS inline extraído a 13 módulos, estado central en `src/state.js` |
+| Fase 4 · Dinero puro | `e64b00c` | `src/money.js`, tests nativos, redirecciones finales validadas |
+| Fase 5 · Calidad | `2ba83c5` | CI, ESLint 9, Prettier 3, badges |
+| Fase 6 · Hardening | `8258045` | CSP, rate limiting, saneamiento DOM, 38 tests |
+| Fase 7 · Filtros | `3fab230` | Cadena, despacho gratis, precio unitario, 50 tests |
+| Fase 8 · A11y y render | `95793f4` | Foco/ARIA, listeners delegados, 58 tests |
+| Fase 9 · Feeds autorizados | `d9baca2` | Contrato `offers[]`, TTL, breakers, `/api/feed-status`, 82 tests |
+| Fase 10 · Documentación | este commit | README consolidado, sin cambios de comportamiento |
+
+### 14.2 Checklist de verificación
+
+```bash
+npm ci
+npm run lint
+npm run format:check
+npm test                          # 82/82
+npm start                         # http://localhost:3100
+curl -sS http://localhost:3100/api/health
+curl -sS http://localhost:3100/api/feed-status
+git status --short --branch       # limpio y alineado con origin/main
+```
+
+Además, en cada push a `main` se verifica: CI **success**, demo pública **200** con `src/main.js` servido y build de Pages en el **mismo SHA** que el commit de entrega. No se versiona `data/live-prices.json`.
+
+### 14.3 Decisiones congeladas
+
+- **Dinero:** `platformFee = Σ round(subtotalPorCadena × 0.01)`; `payout = subtotal − fee`; `totalCobrado = subtotalProductos + despachoTotal`. El fee **no** se agrega al cobro.
+- **Visual:** negro/charcoal con único acento `#ffc700`; `Libre Caslon Text`, `Inter`, `IBM Plex Mono` y `DotGothic16`. No se introducen segundos acentos ni activos propietarios de terceros.
+- **Datos:** solo feeds/APIs autorizados; URL canónica o fallback exacto por SKU/GTIN. Nunca scraping, evasión de antibots ni búsqueda por nombre.
+- **Dependencias:** cero dependencias en runtime; solo `eslint@9` y `prettier@3` como devDependencies. Módulos ES nativos, sin bundler.
+- **Deploy:** GitHub Pages desde `main` / raíz con `.nojekyll`; el front detecta `github.io` y activa modo demo estático. No cambiar la fuente de deployment.
+- **Legal:** licencia **Propietaria · todos los derechos reservados**; precios referenciales y aviso explícito de que esto no es asesoría legal.
+
+### 14.4 Límites conocidos
+
+- No hay precios reales, PSP real, emisión de DTE ni logística real: el checkout y el comprobante son simulados.
+- No hay autenticación, backend persistente ni PWA. La caché y los circuit breakers viven en memoria y se reinician con el proceso.
+- Abrir `index.html` por `file://` no funciona por CORS de módulos ES; usar `npm start` o la demo de Pages.
+- GitHub Actions avisa que las actions con Node 20 se fuerzan a Node 24 en el runner, y npm avisa que ESLint 9 está deprecated. Ambos son avisos, no fallos; la decisión de permanecer en 9 está registrada en [§9](#9-calidad-y-ci).
+
+### 14.5 Mantenimiento mínimo
+
+- **Nuevo producto:** agregarlo en `data/demo.js`, su SVG en `assets/products/` y cubrir la heurística si cambia el formato del detalle.
+- **Feed real:** seguir [§3.1](#31-api-oficial--convenio-recomendado) o [§3.2](#32-archivo-de-precios-reales); nunca commitear `data/live-prices.json`.
+- **Identidad visual:** cambiar los tokens en `:root` de `styles.css` y revalidar el contraste del acento amarillo.
+- **Deploy:** repetir los comandos de [§9](#9-calidad-y-ci) antes de dar por cerrada cualquier entrega.
