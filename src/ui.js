@@ -5,15 +5,17 @@
 import { $, esc, formatCLP, getProductSVG, safeAssetUrl } from './utils.js';
 import { STATIC_DEMO, STORES } from './config.js';
 import { state, getLinkVerification, hasReindex } from './state.js';
-import { unitPriceFor } from './catalog.js';
+import { getProductStats, unitPriceFor } from './catalog.js';
 import { offerLink, reindexKey } from './links.js';
-import { calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
+import { addToCart, calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
 import { openDialog, closeDialog } from './a11y.js';
 import {
   activeFilterChips,
   AVAILABILITY_OPTIONS,
   DELIVERY_OPTIONS,
   facetCounts,
+  hasConfirmedPrice,
+  hasOffer,
   matchesFilters,
   sortProducts,
   priceForDisplay,
@@ -22,6 +24,7 @@ import {
 } from './filters.js';
 
 const uiHooks = { onOpenCompare: () => {} };
+const cardQuantities = new Map();
 let toastTimer;
 
 export function initUI(nextHooks = {}) {
@@ -245,6 +248,14 @@ export function closeFilterSheet() {
   closeDialog($('filter-sheet-backdrop'));
 }
 
+function quantityFor(productId) {
+  return cardQuantities.get(productId) || 1;
+}
+
+function infoTip(label, text) {
+  return `<span class="up-info" tabindex="0" role="img" aria-label="${esc(label)}: ${esc(text)}">ⓘ<span class="up-info-pop" role="tooltip">${esc(text)}</span></span>`;
+}
+
 export function renderProducts() {
   const grid = $('product-grid');
   const emptyState = $('empty-state');
@@ -264,54 +275,138 @@ export function renderProducts() {
   grid.innerHTML = filtered
     .map((product) => {
       const shown = priceForDisplay(product);
+      const stats = getProductStats(product);
       const unit = unitPriceFor(product, shown.price);
       const image = safeAssetUrl(product.image);
+      const qty = quantityFor(product.id);
+      const badges = [
+        shown.best ? '<span class="up-badge up-badge--best">Mejor precio</span>' : '',
+        hasOffer(product) ? '<span class="up-badge up-badge--offer">Oferta</span>' : '',
+        hasConfirmedPrice(product)
+          ? '<span class="up-badge up-badge--verified">Precio verificado</span>'
+          : '',
+      ].join('');
+
       return `
-      <article data-product-id="${esc(product.id)}" role="button" tabindex="0" aria-label="Comparar ${esc(product.name)}" class="product-card group cursor-pointer bg-[#141414] tech-border rounded-[8px] overflow-hidden flex flex-col transition-all duration-200">
-        <div class="relative bg-stage h-[176px] flex items-center justify-center p-6 tech-border-b overflow-hidden">
-          <div class="product-stage-glow absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none" style="background: radial-gradient(circle at center, rgba(255,199,0,0.12) 0%, rgba(0,0,0,0) 70%);"></div>
-          <span class="absolute top-3 left-3 font-dot text-[14px] text-muted group-hover:text-signal transition-colors">(${esc(product.index)})</span>
-          <span class="absolute top-3 right-3 font-mono text-[10px] uppercase text-muted px-2 py-0.5 rounded-[4px] bg-utility">${esc(product.category)}</span>
-          <div class="transform group-hover:scale-105 transition-transform duration-300 flex items-center justify-center h-full">
-            ${
-              image
-                ? `<img src="${esc(image)}" alt="${esc(product.name)}" loading="lazy" decoding="async" class="max-h-full max-w-full object-contain" />`
-                : getProductSVG(product.icon)
-            }
-          </div>
+      <article data-product-id="${esc(product.id)}" class="up-product-card">
+        <div class="up-card-media">
+          <span class="up-card-index">(${esc(product.index)})</span>
+          <span class="up-card-category">${esc(product.category)}</span>
+          ${
+            image
+              ? `<img src="${esc(image)}" alt="${esc(product.name)}" width="240" height="240" loading="lazy" decoding="async" />`
+              : getProductSVG(product.icon)
+          }
         </div>
-        <div class="p-4 flex-1 flex flex-col justify-between gap-4">
-          <div>
-            <h3 class="font-serif text-[20px] leading-[1.15] text-white group-hover:text-signal transition-colors">${esc(product.name)}</h3>
-            <p class="font-mono text-[11px] uppercase text-muted mt-1.5">${esc(product.unit)} · 5 SUPERMERCADOS</p>
-            ${
-              unit
-                ? `<p class="font-mono text-[10px] uppercase text-muted mt-0.5">${formatCLP(unit.value)} ${esc(unit.label)} · ${esc(unit.quantity)} ${esc(unit.unit)}</p>`
-                : ''
-            }
-          </div>
-          <div class="pt-3 tech-border-t flex items-end justify-between gap-2">
+
+        <div class="up-card-body">
+          <div class="up-card-badges">${badges}</div>
+          <h3 class="up-card-name">${esc(product.name)}</h3>
+          <p class="up-card-unit">
+            <span>${esc(product.unit)}</span>
+            ${infoTip('Detalle técnico', 'Presentación y unidad usadas para calcular el precio por kg o litro.')}
+          </p>
+
+          <div class="up-card-price">
             <div>
-              <span class="block font-mono text-[10px] uppercase text-muted">${
-                shown.best ? 'DESDE' : 'PRECIO'
-              } (${shown.store ? esc(shown.store.short) : '—'})</span>
-              <span class="font-dot text-[22px] text-signal leading-none">${formatCLP(shown.price)}</span>
+              <span class="up-card-price-label">${
+                shown.best ? 'DESDE' : `PRECIO EN ${shown.store ? esc(shown.store.short) : '—'}`
+              }</span>
+              <strong class="price">${formatCLP(shown.price)}</strong>
             </div>
-            <span class="inline-flex items-center gap-1 font-mono text-[11px] uppercase text-white group-hover:text-signal transition-colors underline underline-offset-4">COMPARAR →</span>
+            <span class="up-card-store">${shown.store ? esc(shown.store.name) : '—'}</span>
           </div>
+
+          <div class="up-price-strip" role="group" aria-label="Precios por supermercado">
+            ${stats.sorted
+              .slice(0, 5)
+              .map(
+                (entry) => `
+                <span class="up-mini-price${
+                  shown.store && entry.storeId === shown.store.id ? ' up-mini-price--best' : ''
+                }">
+                  <small>${esc(entry.store.short)}</small>
+                  <b class="price">${formatCLP(entry.price)}</b>
+                </span>`
+              )
+              .join('')}
+          </div>
+
+          ${
+            unit
+              ? `<p class="up-card-unit-price">${formatCLP(unit.value)} ${esc(unit.label)} ${infoTip(
+                  'Precio unitario',
+                  'Cálculo de demostración a partir del precio y la presentación del producto.'
+                )}</p>`
+              : ''
+          }
+
+          <div class="up-card-actions">
+            <div class="up-qty" role="group" aria-label="Cantidad de ${esc(product.name)}">
+              <button type="button" data-card-qty="${esc(product.id)}" data-card-delta="-1" aria-label="Disminuir cantidad">−</button>
+              <span data-card-qty-value aria-live="polite">${qty}</span>
+              <button type="button" data-card-qty="${esc(product.id)}" data-card-delta="1" aria-label="Aumentar cantidad">+</button>
+            </div>
+            <button
+              type="button"
+              class="up-btn-primary up-add-btn"
+              data-add-to-cart="${esc(product.id)}"
+              data-add-store="${shown.store ? esc(shown.store.id) : ''}"
+              ${shown.store ? '' : 'disabled'}
+            >
+              Agregar
+            </button>
+          </div>
+
+          <button type="button" role="button" tabindex="0" aria-label="Comparar ${esc(product.name)}" class="up-compare-btn" data-compare="${esc(product.id)}">
+            Comparar precios
+            <span aria-hidden="true">→</span>
+          </button>
         </div>
       </article>`;
     })
     .join('');
 
-  // Delegación: 2 listeners para 30 tarjetas en vez de 30 listeners por render.
+  // Delegación: 2 listeners para todas las tarjetas, sin importar cuántas haya.
   grid.onclick = (e) => {
-    const card = e.target.closest('.product-card');
+    const qtyBtn = e.target.closest('[data-card-qty]');
+    if (qtyBtn) {
+      e.stopPropagation();
+      const id = qtyBtn.dataset.cardQty;
+      const next = Math.max(1, Math.min(99, quantityFor(id) + Number(qtyBtn.dataset.cardDelta)));
+      cardQuantities.set(id, next);
+      const card = qtyBtn.closest('.up-product-card');
+      const value = card && card.querySelector('[data-card-qty-value]');
+      if (value) value.textContent = next;
+      return;
+    }
+
+    const addBtn = e.target.closest('[data-add-to-cart]');
+    if (addBtn && addBtn.dataset.addStore) {
+      e.stopPropagation();
+      const id = addBtn.dataset.addToCart;
+      const qty = quantityFor(id);
+      cardQuantities.set(id, 1);
+      addToCart(id, addBtn.dataset.addStore, qty);
+      const card = grid.querySelector(`[data-product-id="${id}"]`);
+      const value = card && card.querySelector('[data-card-qty-value]');
+      if (value) value.textContent = 1;
+      return;
+    }
+
+    const compareBtn = e.target.closest('[data-compare]');
+    if (compareBtn) {
+      uiHooks.onOpenCompare(compareBtn.dataset.compare);
+      return;
+    }
+
+    const card = e.target.closest('.up-product-card');
     if (card) uiHooks.onOpenCompare(card.dataset.productId);
   };
   grid.onkeydown = (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    const card = e.target.closest('.product-card');
+    if (e.target.closest('button')) return;
+    const card = e.target.closest('.up-product-card');
     if (!card) return;
     e.preventDefault();
     uiHooks.onOpenCompare(card.dataset.productId);
