@@ -26,9 +26,36 @@ export function initUI(nextHooks = {}) {
 export function showToast(msg) {
   const toast = $('toast');
   $('toast-message').textContent = msg;
-  toast.classList.remove('translate-x-[140%]');
+  toast.classList.remove('up-toast-out');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.add('translate-x-[140%]'), 2800);
+  toastTimer = setTimeout(() => toast.classList.add('up-toast-out'), 2800);
+}
+
+const CATEGORY_ICONS = {
+  TODOS:
+    '<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/>',
+  'Bebidas y Licores':
+    '<path d="M5 4h10l-1 12H6L5 4Z" stroke-linejoin="round"/><path d="M4 4h12"/>',
+  'Lácteos y Frescos': '<path d="M7 7h6v10H7z" stroke-linejoin="round"/><path d="M7 7l3-3 3 3"/>',
+  'Almacén / Despensa':
+    '<path d="M4 7h12v10H4z" stroke-linejoin="round"/><path d="M4 7l2-3h8l2 3"/>',
+  'Frutas y Verduras':
+    '<path d="M16 4C9 4 4 8 4 13a3 3 0 0 0 3 3c5 0 9-5 9-12Z" stroke-linejoin="round"/><path d="M7 16c1-4 4-7 8-9"/>',
+  Carnes:
+    '<path d="M6 7a5 5 0 0 1 8 0l3 3-5 5-6-6Z" stroke-linejoin="round"/><circle cx="8" cy="8" r="1"/>',
+  'Aseo y Limpieza':
+    '<path d="M10 3v14M5 7l10 8M15 7L5 15" stroke-linecap="round"/><circle cx="10" cy="10" r="7"/>',
+  Congelados:
+    '<path d="M10 3v14M4.5 6.5l11 7M15.5 6.5l-11 7" stroke-linecap="round"/><path d="M8 5l2 2 2-2M8 15l2-2 2 2"/>',
+  Mascotas:
+    '<circle cx="6" cy="8" r="1.5"/><circle cx="10" cy="5.5" r="1.5"/><circle cx="14" cy="8" r="1.5"/><path d="M10 10c-3 0-5 2-5 4s2 2 5 2 5 0 5-2-2-4-5-4Z"/>',
+  'Cuidado Personal':
+    '<path d="M10 16s-6-3.5-6-8a3.5 3.5 0 0 1 6-2.5A3.5 3.5 0 0 1 16 8c0 4.5-6 8-6 8Z" stroke-linejoin="round"/>',
+};
+
+function categoryIcon(category) {
+  const paths = CATEGORY_ICONS[category] || CATEGORY_ICONS.TODOS;
+  return `<svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4">${paths}</svg>`;
 }
 
 export function renderCategories() {
@@ -37,15 +64,16 @@ export function renderCategories() {
     .map((cat) => {
       const active = state.selectedCategory === cat;
       return `
-      <button type="button" data-category="${esc(cat)}" aria-pressed="${active}" class="cat-btn h-[40px] px-4 rounded-[4px] font-mono text-[12px] uppercase transition-all ${
-        active
-          ? 'bg-signal text-ink font-semibold'
-          : 'utility-surface text-soft hover:text-white hover:border-white/40'
-      }">${esc(cat)}</button>`;
+      <button type="button" data-category="${esc(cat)}" aria-pressed="${active}" class="up-category${
+        active ? ' up-active' : ''
+      }">
+        ${categoryIcon(cat)}
+        <span>${esc(cat)}</span>
+      </button>`;
     })
     .join('');
 
-  container.querySelectorAll('.cat-btn').forEach((btn) => {
+  container.querySelectorAll('.up-category').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.selectedCategory = btn.dataset.category;
       renderCategories();
@@ -54,12 +82,27 @@ export function renderCategories() {
   });
 }
 
+export function renderChainStrip() {
+  const strip = $('chain-strip');
+  if (!strip) return;
+  strip.innerHTML = Object.values(STORES)
+    .map(
+      (store) => `
+      <div class="up-chain">
+        <span class="up-chain-dot" aria-hidden="true"></span>
+        <span class="up-chain-name">${esc(store.name)}</span>
+        <span class="up-chain-threshold">Despacho gratis desde ${formatCLP(store.freeShippingThreshold)}</span>
+      </div>`
+    )
+    .join('');
+}
+
 export function renderChainFilter() {
   const select = $('chain-filter');
   select.innerHTML = [
-    '<option value="TODOS">CADENA: TODAS</option>',
+    '<option value="TODOS">Todas las cadenas</option>',
     ...Object.values(STORES).map(
-      (store) => `<option value="${esc(store.id)}">CADENA: ${esc(store.short)}</option>`
+      (store) => `<option value="${esc(store.id)}">${esc(store.name)}</option>`
     ),
   ].join('');
   select.value = state.selectedChain;
@@ -70,10 +113,7 @@ export function updateFreeShippingButton() {
   if (!button) return;
   const active = state.freeShippingOnly;
   button.setAttribute('aria-pressed', String(active));
-  button.classList.toggle('bg-signal', active);
-  button.classList.toggle('text-ink', active);
-  button.classList.toggle('bg-utility', !active);
-  button.classList.toggle('text-soft', !active);
+  button.classList.toggle('up-active', active);
 }
 
 export function renderProducts() {
@@ -208,6 +248,7 @@ export function renderCartUI() {
     calculateCartTotals();
 
   $('nav-cart-count').textContent = totalItems;
+  $('nav-cart-total').textContent = formatCLP(grandTotal);
 
   const dock = $('bottom-dock');
   if (totalItems > 0) {

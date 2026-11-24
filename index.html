@@ -1,446 +1,495 @@
-<!DOCTYPE html>
-<html lang="es-CL" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#F6F6F3" />
-  <meta name="color-scheme" content="light" />
-  <title>UP — Comparador de Supermercados Chile | Pago Unificado</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23040404'/%3E%3Ctext x='32' y='43' font-family='monospace' font-size='30' font-weight='bold' text-anchor='middle' fill='%23ffc700'%3EUP%3C/text%3E%3C/svg%3E" />
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#F6F6F3" />
+    <meta name="color-scheme" content="light" />
+    <title>UP — Comparador de Supermercados Chile | Pago Unificado</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23111111'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-size='30' font-weight='bold' text-anchor='middle' fill='%23ffffff'%3EUP%3C/text%3E%3C/svg%3E"
+    />
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="src/tailwind-config.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a href="#catalogo" class="skip-link">Saltar al catálogo</a>
 
-  <!-- Estilos propios: tokens visuales y superficies (ver styles.css) -->
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body class="relative min-h-screen selection:bg-signal selection:text-ink">
-  <a href="#catalogo" class="skip-link">Saltar al catálogo</a>
-
-  <!-- Ambient Mechanical Dot Field -->
-  <div class="ambient-dot-field" aria-hidden="true"></div>
-
-  <!-- FLOATING TOP NAVIGATION (Chrome Glass, max-width 576px) -->
-  <header class="fixed top-0 left-0 right-0 z-40 px-2 pt-2 pointer-events-none">
-    <nav class="pointer-events-auto mx-auto max-w-[576px] min-h-[48px] chrome-glass rounded-[8px] px-3 py-1.5 flex items-center justify-between gap-2">
-      <!-- Left: Menu / Quick Jump -->
-      <a href="#catalogo" class="flex items-center gap-2 text-[11px] font-mono uppercase text-white hover:text-signal transition-colors px-2 py-1.5 rounded-[4px]" title="Ir al catálogo">
-        <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
-          <line x1="2" y1="4.5" x2="14" y2="4.5" />
-          <line x1="2" y1="8" x2="14" y2="8" />
-          <line x1="2" y1="11.5" x2="10" y2="11.5" />
+    <div class="up-announcement" id="demo-banner">
+      <p>Compara 5 supermercados en un solo carrito · Precios referenciales de demostración</p>
+      <button
+        type="button"
+        id="dismiss-demo-bar"
+        class="up-announcement-close"
+        aria-label="Cerrar aviso de demostración"
+      >
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
         </svg>
-        <span class="hidden sm:inline">CATÁLOGO</span>
-      </a>
+      </button>
+    </div>
 
-      <!-- Center: Minimalist Dynamic Golden UP Logo (Continuous Line Cart + UP) -->
-      <a href="#top" class="flex items-center gap-2 group" aria-label="UP Inicio">
-        <svg aria-hidden="true" class="h-7 w-auto" viewBox="0 0 132 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 10H12L18 27H42L49 12" stroke="#ffc700" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M20 24C28 22 36 16 44 6M44 6H37M44 6V13" stroke="#ffc700" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="22" cy="34" r="2.6" stroke="#ffc700" stroke-width="2"/>
-          <circle cx="38" cy="34" r="2.6" stroke="#ffc700" stroke-width="2"/>
-          <path d="M56 12V24C56 29.5 60 33 66 33C72 33 76 29.5 76 24V12" stroke="#ffc700" stroke-width="2.6" stroke-linecap="round"/>
-          <path d="M86 33V12H98C103.5 12 107 15.2 107 20C107 24.8 103.5 28 98 28H86" stroke="#ffc700" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="116" cy="31" r="2" fill="#ffc700"/>
-        </svg>
-      </a>
+    <header class="up-site-header">
+      <div class="up-container up-header-main">
+        <a href="#top" class="up-logo" aria-label="UP, volver al inicio">UP</a>
 
-      <!-- Right: Search Trigger + Unified Cart Button -->
-      <div class="flex items-center gap-1.5">
-        <button id="nav-search-btn" type="button" class="p-2 text-white hover:text-signal transition-colors rounded-[4px]" title="Buscar producto">
-          <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="9" cy="9" r="6" />
-            <path d="M13.5 13.5L17.5 17.5" stroke-linecap="round" />
-          </svg>
-        </button>
-
-        <button id="open-cart-btn" type="button" class="flex items-center gap-2 bg-white text-ink hover:bg-signal transition-colors px-3 h-[34px] rounded-[4px] font-mono text-[11px] uppercase font-medium">
-          <span>CARRITO</span>
-          <span id="nav-cart-count" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-[3px] bg-ink text-signal font-dot text-[11px]">0</span>
-        </button>
-      </div>
-    </nav>
-  </header>
-
-  <!-- HERO: BLACK IMMERSION BAND -->
-  <section id="top" class="relative z-10 bg-stage pt-24 pb-20 md:pt-32 md:pb-28 px-4 tech-border-b">
-    <div class="max-w-[1186px] mx-auto">
-      <!-- Top Technical Telemetry Bar -->
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-12 text-[11px] font-mono uppercase text-muted">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-signal signal-pulse"></span>
-          <span>CHILE / MOTOR DE PRECIOS ACTIVO</span>
-          <span class="hidden sm:inline text-rule">|</span>
-          <span id="sync-timestamp" class="hidden sm:inline text-soft">SINCRONIZADO HACE INSTANTES</span>
-        </div>
-        <button id="refresh-prices-btn" type="button" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] utility-surface text-white hover:border-signal hover:text-signal transition-colors">
-          <svg aria-hidden="true" id="sync-icon" class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M16.5 10A6.5 6.5 0 1 1 14.6 5.4M16.5 3.5V6.5H13.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span>ACTUALIZAR PRECIOS</span>
-        </button>
-      </div>
-
-      <!-- Exhibition Centerpiece -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-        <div class="lg:col-span-7 space-y-6">
-          <p class="font-dot text-[16px] uppercase text-signal tracking-wider">(00) COMPARADOR + CARRITO UNIFICADO</p>
-          <h1 class="font-serif text-[38px] sm:text-[48px] leading-[1.05] text-white font-normal">
-            Todos los supermercados de Chile. Un solo pago inteligente.
-          </h1>
-          <p class="font-sans text-[16px] leading-[1.45] text-body max-w-[540px]">
-            Busca cualquier producto de tu despensa, verifica el precio real directamente en <strong class="text-white font-medium">Lider, Jumbo, Santa Isabel, Tottus y Unimarc</strong>, y compra en un carrito unificado con despacho coordinado y solo 1% de intermediación UP.
-          </p>
-
-          <!-- Search Bar in Hero -->
-          <div class="pt-2 max-w-[560px]">
-            <div class="relative flex items-center">
-              <svg aria-hidden="true" class="w-4 h-4 text-muted absolute left-4 pointer-events-none" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="9" cy="9" r="6" />
-                <path d="M13.5 13.5L17.5 17.5" stroke-linecap="round" />
-              </svg>
-              <input
-                id="main-search-input"
-                type="search"
-                aria-label="Buscar productos por nombre, categoría o presentación"
-                placeholder="BUSCAR PRODUCTO (EJ: COCA-COLA, ARROZ, ACEITE, CONFORT...)"
-                class="w-full h-[48px] pl-11 pr-28 bg-utility text-white placeholder-muted font-mono text-[12px] uppercase rounded-[6px] tech-border focus:outline-none focus:border-signal transition-colors"
-              />
-              <button
-                id="clear-search-btn"
-                type="button"
-                class="hidden absolute right-3 px-2.5 py-1 text-[10px] font-mono uppercase bg-panel text-soft hover:text-signal rounded-[4px]"
-              >
-                LIMPIAR
-              </button>
-            </div>
-          </div>
-
-          <!-- Quick Proof Metrics -->
-          <div class="grid grid-cols-3 gap-4 pt-4 max-w-[500px] tech-border-t">
-            <div class="pt-4">
-              <div class="font-dot text-[24px] text-white">05</div>
-              <div class="font-mono text-[10px] uppercase text-muted mt-1">CADENAS CHILE</div>
-            </div>
-            <div class="pt-4">
-              <div class="font-dot text-[24px] text-signal">1.0%</div>
-              <div class="font-mono text-[10px] uppercase text-muted mt-1">FEE UP TRANSPARENTE</div>
-            </div>
-            <div class="pt-4">
-              <div class="font-dot text-[24px] text-white">100%</div>
-              <div class="font-mono text-[10px] uppercase text-muted mt-1">LINKS VERIFICABLES</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right: Rim-lit Technical Object / Engineering Point Graphic -->
-        <div class="lg:col-span-5">
-          <div class="relative bg-[#070707] rounded-[8px] tech-border p-6 sm:p-8 overflow-hidden">
-            <svg aria-hidden="true" class="w-full h-auto max-h-[300px]" viewBox="0 0 360 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="180" cy="140" rx="145" ry="72" stroke="#595a5a" stroke-width="1" stroke-dasharray="2 6" transform="rotate(-12 180 140)"/>
-              <ellipse cx="180" cy="140" rx="115" ry="52" stroke="#ffc700" stroke-opacity="0.45" stroke-width="1" stroke-dasharray="2 8" transform="rotate(14 180 140)"/>
-              <rect x="112" y="74" width="136" height="132" rx="8" fill="#121212" stroke="#595a5a" stroke-width="0.75"/>
-              <path d="M138 118H148L156 146H198L208 122" stroke="#ffc700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M158 142C170 138 184 128 196 110M196 110H186M196 110V120" stroke="#ffc700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="162" cy="158" r="4" stroke="#ffffff" stroke-width="1.8"/>
-              <circle cx="192" cy="158" r="4" stroke="#ffffff" stroke-width="1.8"/>
-              <path d="M112 104H64V88" stroke="#9b9d9d" stroke-width="0.75" stroke-dasharray="2 2"/>
-              <rect x="61" y="85" width="6" height="6" stroke="#ffc700" stroke-width="1"/>
-              <text x="16" y="76" fill="#d8d9d9" font-family="IBM Plex Mono" font-size="9">[DEEP LINKING]</text>
-              <path d="M248 168H292V186" stroke="#9b9d9d" stroke-width="0.75" stroke-dasharray="2 2"/>
-              <rect x="289" y="186" width="6" height="6" stroke="#ffc700" stroke-width="1"/>
-              <text x="234" y="206" fill="#d8d9d9" font-family="IBM Plex Mono" font-size="9">[SPLIT PAYMENT 1%]</text>
-              <text x="144" y="190" fill="#9b9d9d" font-family="DotGothic16" font-size="11">UP // CL-2026</text>
+        <div class="up-search" role="search">
+          <button
+            id="nav-search-btn"
+            type="button"
+            aria-label="Buscar productos"
+            aria-pressed="false"
+            class="up-search-icon-btn"
+          >
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="9" cy="9" r="6" />
+              <path d="M13.5 13.5L17.5 17.5" stroke-linecap="round" />
             </svg>
-            <div class="mt-4 flex items-center justify-between text-[11px] font-mono uppercase text-muted tech-border-t pt-3">
-              <span>DESPACHO COORDINADO</span>
-              <span class="text-signal">LIDER · JUMBO · TOTTUS · UNIMARC · STA ISABEL</span>
+          </button>
+          <input
+            id="main-search-input"
+            type="search"
+            aria-label="Buscar productos por nombre, categoría o presentación"
+            placeholder="Busca leche, arroz, detergente…"
+            aria-controls="search-suggestions"
+            autocomplete="off"
+          />
+          <kbd class="up-kbd" aria-hidden="true">/</kbd>
+          <button
+            id="clear-search-btn"
+            type="button"
+            class="up-search-clear hidden"
+            aria-label="Limpiar búsqueda"
+          >
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
+          <ul
+            id="search-suggestions"
+            class="up-suggestions"
+            role="listbox"
+            aria-label="Sugerencias de productos"
+            hidden
+          ></ul>
+        </div>
+
+        <div class="up-header-actions">
+          <div class="up-location" title="Ubicación de demostración">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M10 18s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" stroke-linejoin="round" />
+              <circle cx="10" cy="8" r="2" />
+            </svg>
+            <span>Santiago</span>
+          </div>
+          <button
+            id="open-cart-btn"
+            type="button"
+            class="up-header-cart"
+            aria-label="Abrir carrito"
+          >
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 4h2l2 9h8l2-6H6" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="8" cy="16" r="1.2" />
+              <circle cx="15" cy="16" r="1.2" />
+            </svg>
+            <span class="up-header-cart-label">Carrito</span>
+            <span id="nav-cart-count" class="up-cart-count">0</span>
+            <span id="nav-cart-total" class="price up-header-cart-total">$0</span>
+          </button>
+        </div>
+      </div>
+
+      <nav class="up-category-nav" aria-label="Categorías de productos">
+        <div id="category-filters" role="group" aria-label="Filtrar por categoría" class="up-categories"></div>
+      </nav>
+    </header>
+
+    <section id="top" class="up-hero">
+      <div class="up-container up-hero-inner">
+        <div class="up-hero-copy">
+          <span class="up-eyebrow">DESPENSA CHILE · 5 SUPERMERCADOS</span>
+          <h1>Compara precios. Llena tu carrito. Paga una sola vez.</h1>
+          <p>
+            Encuentra el mejor precio de cada producto, arma carritos por supermercado y revisa tu
+            ahorro antes de pagar.
+          </p>
+        </div>
+
+        <div class="up-hero-side">
+          <div class="up-hero-metrics">
+            <div class="up-metric">
+              <strong class="price" data-price>5</strong>
+              <span>cadenas</span>
+            </div>
+            <div class="up-metric">
+              <strong class="price" data-price>30</strong>
+              <span>productos</span>
+            </div>
+            <div class="up-metric">
+              <strong class="price" data-price>1%</strong>
+              <span>fee UP</span>
+            </div>
+          </div>
+          <div class="up-benefits">
+            <div class="up-benefit">
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 5h14M5 10h10M7 15h6" stroke-linecap="round" />
+              </svg>
+              <span>Compara</span>
+            </div>
+            <div class="up-benefit">
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 4h2l2 9h8l2-6H6" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="8" cy="16" r="1.1" />
+                <circle cx="15" cy="16" r="1.1" />
+              </svg>
+              <span>Carrito por tienda</span>
+            </div>
+            <div class="up-benefit">
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2.5" y="5" width="15" height="10" rx="2" />
+                <path d="M2.5 9h15" />
+              </svg>
+              <span>Pago unificado</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- MAIN CATALOG SECTION -->
-  <main id="catalogo" class="relative z-10 max-w-[1320px] mx-auto px-3 sm:px-6 py-16 md:py-24">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-      <div>
-        <span class="font-dot text-[16px] text-signal uppercase">(01) DESPENSA CHILE</span>
-        <h2 class="font-serif text-[32px] sm:text-[40px] leading-[1.05] text-white mt-2">
-          Catálogo en tiempo real
-        </h2>
-        <p class="font-sans text-[14px] text-muted mt-2">
-          Presiona cualquier producto para comparar los 5 supermercados, verificar el link oficial y agregar a tu carrito UP.
-        </p>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <span id="results-count" aria-live="polite" class="font-mono text-[11px] uppercase text-muted">0 PRODUCTOS</span>
-        <select id="sort-select" aria-label="Ordenar resultados" class="h-[40px] px-3 bg-utility text-white font-mono text-[11px] uppercase rounded-[4px] tech-border focus:outline-none focus:border-signal">
-          <option value="default">ORDEN: DESTACADOS</option>
-          <option value="price-asc">PRECIO: MENOR A MAYOR</option>
-          <option value="price-desc">PRECIO: MAYOR A MENOR</option>
-          <option value="savings-desc">MAYOR AHORRO</option>
-          <option value="unit-asc">MENOR PRECIO UNITARIO</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="category-filters" role="group" aria-label="Filtrar por categoría" class="flex flex-wrap gap-2 mb-4"></div>
-
-    <div class="flex flex-wrap items-center gap-2 mb-10">
-      <select id="chain-filter" aria-label="Filtrar por cadena" class="h-[40px] px-3 bg-utility text-white font-mono text-[11px] uppercase rounded-[4px] tech-border focus:outline-none focus:border-signal"></select>
-      <button id="free-shipping-toggle" type="button" aria-pressed="false" class="h-[40px] px-4 rounded-[4px] utility-surface text-soft font-mono text-[11px] uppercase hover:text-white transition-colors">
-        DESPACHO GRATIS EN CARRITO
-      </button>
-      <span class="font-mono text-[9px] uppercase text-muted">FILTROS AVANZADOS · SE APLICAN AL INSTANTE</span>
-    </div>
-
-    <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"></div>
-
-    <div id="empty-state" class="hidden text-center py-20 smoked-glass rounded-[8px]">
-      <p class="font-dot text-[20px] text-white uppercase">SIN RESULTADOS EN DESPENSA</p>
-      <p class="font-sans text-[14px] text-muted mt-2">No encontramos productos que coincidan con tu búsqueda.</p>
-      <button id="reset-filters-btn" type="button" class="mt-6 inline-flex items-center justify-center bg-white text-ink hover:bg-signal transition-colors px-4 h-[40px] rounded-[4px] font-mono text-[12px] uppercase">
-        VER TODOS LOS PRODUCTOS
-      </button>
-    </div>
-  </main>
-
-  <!-- HOW IT WORKS -->
-  <section id="como-funciona" class="relative z-10 max-w-[576px] mx-auto px-4 py-16 md:py-24">
-    <div class="text-center mb-10">
-      <span class="font-dot text-[16px] text-signal uppercase">(02) ARQUITECTURA UP</span>
-      <h2 class="font-serif text-[32px] sm:text-[40px] leading-[1.05] text-white mt-2">
-        Transparencia verificable
-      </h2>
-    </div>
-
-    <div class="divide-y divide-rule tech-border-b" id="faq-accordion">
-      <div>
-        <button type="button" aria-expanded="false" aria-controls="faq-1" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
-          <span>01 / ¿CÓMO VERIFICO QUE EL PRECIO ES REAL?</span>
-          <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
-        </button>
-        <div id="faq-1" role="region" class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
-          Cada fila incluye <strong class="text-white">VER EN TIENDA ↗</strong>. Si existe una ficha canónica se usa esa URL; si no, se construye una <strong class="text-white">búsqueda exacta por SKU o GTIN</strong>. Nunca se busca por nombre genérico. Un 404 marca el producto para re-indexación.
-        </div>
-      </div>
-      <div>
-        <button type="button" aria-expanded="false" aria-controls="faq-2" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
-          <span>02 / ¿CÓMO FUNCIONA EL PAGO DIVIDIDO Y EL 1%?</span>
-          <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
-        </button>
-        <div id="faq-2" role="region" class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
-          UP agrupa tus compras en sub-carritos por franquicia y procesa un único pago. El <strong class="text-white">Split Payment</strong> dispersa el 99% del subtotal a cada supermercado (que emite su boleta) y UP retiene solo un <strong class="text-signal">1% de intermediación</strong>. El fee no se agrega al cobro: ya está descontado de la liquidación.
-        </div>
-      </div>
-      <div>
-        <button type="button" aria-expanded="false" aria-controls="faq-3" class="accordion-trigger w-full py-4 flex items-center justify-between text-left font-mono text-[14px] uppercase text-soft hover:text-white transition-colors">
-          <span>03 / ¿CÓMO OPTIMIZO EL DESPACHO GRATIS?</span>
-          <span class="accordion-icon text-signal font-dot text-[18px]">+</span>
-        </button>
-        <div id="faq-3" role="region" class="accordion-content hidden pb-6 font-sans text-[14px] leading-[1.5] text-muted">
-          Dentro del Carrito UP verás una barra de progreso por supermercado con el monto exacto que falta para desbloquear despacho gratis. Cada franquicia mantiene su propio umbral y plazo de entrega.
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- INSTRUMENT-PANEL ENDING -->
-  <footer class="relative z-10 bg-ink pt-20 pb-28 sm:pb-16 px-6 tech-border-t">
-    <div class="max-w-[1186px] mx-auto flex flex-col items-center text-center">
-      <div class="space-y-4 mb-14">
-        <a href="#catalogo" class="block font-dot text-[32px] sm:text-[40px] leading-none uppercase text-white hover:text-signal transition-colors">CATÁLOGO</a>
-        <a href="#como-funciona" class="block font-dot text-[32px] sm:text-[40px] leading-none uppercase text-white hover:text-signal transition-colors">ARQUITECTURA</a>
-        <button type="button" id="footer-cart-link" class="block mx-auto font-dot text-[32px] sm:text-[40px] leading-none uppercase text-signal hover:text-white transition-colors">CARRITO UP</button>
-      </div>
-
-      <div class="w-full max-w-[320px] flex flex-col gap-[2px] mb-16">
-        <div class="flex items-center justify-between h-[48px] px-4 utility-surface rounded-[6px] font-mono text-[11px] uppercase text-white">
-          <span>REGIÓN ACTIVA</span>
-          <span class="text-signal">CHILE (CLP $)</span>
-        </div>
-        <div class="flex items-center justify-between h-[48px] px-4 utility-surface rounded-[6px] font-mono text-[11px] uppercase text-white">
-          <span>INTERMEDIACIÓN UP</span>
-          <span class="text-soft">1.0% RETENIDO</span>
-        </div>
-        <div class="flex items-center justify-between h-[48px] px-4 utility-surface rounded-[6px] font-mono text-[11px] uppercase text-white">
-          <span>ESTADO API PRECIOS</span>
-          <span class="text-signal">OPERATIVO</span>
-        </div>
-      </div>
-
-      <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 tech-border-t font-mono text-[11px] uppercase text-muted">
-        <span>© 2026 UP CHILE — PLATAFORMA DE COMPARACIÓN Y COMPRA UNIFICADA</span>
-        <span>DISEÑO INDUSTRIAL EDITORIAL // NEGRO & DORADO</span>
-      </div>
-    </div>
-  </footer>
-
-  <!-- FLOATING BOTTOM PRODUCT DOCK -->
-  <div id="bottom-dock" class="hidden fixed bottom-2 left-2 right-2 z-30 pointer-events-none">
-    <div class="pointer-events-auto max-w-[768px] mx-auto chrome-glass rounded-[8px] px-4 py-2.5 min-h-[56px] flex flex-wrap items-center justify-between gap-3 shadow-2xl">
-      <div class="flex items-center gap-3">
-        <span class="w-2 h-2 rounded-full bg-signal"></span>
-        <span class="font-dot text-[18px] sm:text-[20px] uppercase text-white">UP CARRITO</span>
-        <span class="text-rule hidden sm:inline">|</span>
-        <span id="dock-summary" class="font-mono text-[11px] uppercase text-soft">0 PROD · 0 SUPERMERCADOS</span>
-      </div>
-      <div class="flex items-center gap-3 ml-auto">
-        <span id="dock-total" class="font-dot text-[18px] text-signal">$0</span>
-        <button id="dock-open-cart-btn" type="button" class="bg-signal text-ink hover:bg-white transition-colors px-4 h-[36px] rounded-[4px] font-mono text-[11px] font-semibold uppercase">
-          VER PAGO UNIFICADO →
+      <div class="up-container up-sync-bar">
+        <span class="up-sync-dot signal-pulse" aria-hidden="true"></span>
+        <span id="sync-timestamp">Precios de demostración actualizados</span>
+        <button id="refresh-prices-btn" type="button" class="up-refresh-btn">
+          <svg aria-hidden="true" id="sync-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path
+              d="M16.5 10A6.5 6.5 0 1 1 14.6 5.4M16.5 3.5V6.5H13.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Actualizar precios
         </button>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- MODAL DE COMPARACIÓN -->
-  <div id="compare-modal" role="dialog" aria-modal="true" aria-labelledby="modal-product-name" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md">
-    <div class="relative w-full max-w-[780px] max-h-[92vh] overflow-y-auto bg-canvas tech-border rounded-[8px] shadow-2xl">
-      <div class="sticky top-0 z-10 bg-stage/95 backdrop-blur-md px-5 py-4 tech-border-b flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <span id="modal-product-index" class="font-dot text-[15px] text-signal">(01)</span>
-          <span id="modal-product-category" class="font-mono text-[11px] uppercase text-muted px-2 py-0.5 rounded-[4px] utility-surface">BEBIDAS</span>
+    <section class="up-chains" aria-label="Supermercados disponibles">
+      <div class="up-container up-chains-inner">
+        <h2>Compra en estas cadenas</h2>
+        <div id="chain-strip" class="up-chain-list"></div>
+      </div>
+    </section>
+
+    <main id="catalogo" class="up-container up-catalog">
+      <div class="up-catalog-head">
+        <div>
+          <span class="up-eyebrow">TU DESPENSA</span>
+          <h2>Productos y precios</h2>
+          <p>El precio más bajo de cada producto, visible de un vistazo.</p>
         </div>
-        <button id="close-compare-modal" type="button" aria-label="Cerrar comparador" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono text-[14px]">✕</button>
+        <div class="up-catalog-tools">
+          <span id="results-count" aria-live="polite">0 productos</span>
+          <select id="sort-select" aria-label="Ordenar resultados">
+            <option value="default">Destacados</option>
+            <option value="price-asc">Menor precio</option>
+            <option value="price-desc">Mayor precio</option>
+            <option value="savings-desc">Mayor ahorro</option>
+            <option value="unit-asc">Precio por kg/litro</option>
+          </select>
+        </div>
       </div>
 
-      <div class="p-5 sm:p-6">
-        <div class="flex flex-col sm:flex-row gap-5 items-start sm:items-center pb-6 tech-border-b">
-          <div id="modal-product-art" class="w-24 h-24 sm:w-28 sm:h-28 shrink-0 bg-stage rounded-[8px] tech-border flex items-center justify-center p-3"></div>
-          <div class="flex-1">
-            <h3 id="modal-product-name" class="font-serif text-[26px] sm:text-[32px] leading-[1.1] text-white"></h3>
-            <p id="modal-product-desc" class="font-sans text-[14px] text-muted mt-1.5"></p>
-            <div class="flex flex-wrap items-center gap-3 mt-3">
-              <span id="modal-best-price-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-signal text-ink font-mono text-[11px] font-semibold uppercase"></span>
-              <span id="modal-savings-badge" class="inline-flex items-center px-2.5 py-1 rounded-[4px] utility-surface text-soft font-mono text-[11px] uppercase"></span>
+      <div class="up-filter-bar" id="filter-bar">
+        <select id="chain-filter" aria-label="Filtrar por cadena"></select>
+        <button id="free-shipping-toggle" type="button" aria-pressed="false">
+          Despacho gratis en carrito
+        </button>
+        <button id="open-filters-btn" type="button" class="up-mobile-filter-btn">
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 5h14M6 10h8M8 15h4" stroke-linecap="round" />
+          </svg>
+          Filtrar y ordenar
+        </button>
+      </div>
+
+      <div id="product-grid" class="up-product-grid"></div>
+
+      <div id="empty-state" class="hidden up-empty">
+        <svg aria-hidden="true" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M18 22h28l4 28H14l4-28Z" stroke-linejoin="round" />
+          <path d="M24 22v-5a8 8 0 0 1 16 0v5" stroke-linecap="round" />
+        </svg>
+        <h3>No encontramos ese producto</h3>
+        <p>Prueba con otro término o quita alguno de los filtros activos.</p>
+        <button id="reset-filters-btn" type="button" class="up-btn-primary">
+          Ver todos los productos
+        </button>
+      </div>
+    </main>
+
+    <section id="como-funciona" class="up-container up-how">
+      <div class="up-section-head">
+        <span class="up-eyebrow">CÓMO FUNCIONA</span>
+        <h2>Compra con claridad</h2>
+      </div>
+      <div id="faq-accordion" class="up-accordion">
+        <div class="up-acc-item">
+          <button type="button" aria-expanded="false" aria-controls="faq-1" class="accordion-trigger">
+            <span>¿Cómo sé que el precio es verificable?</span>
+            <span class="accordion-icon" aria-hidden="true">+</span>
+          </button>
+          <div id="faq-1" role="region" class="accordion-content hidden">
+            Cada precio enlaza a la ficha oficial de la cadena o, si no existe, a una búsqueda
+            exacta por SKU o GTIN. Nunca inventamos una URL a partir del nombre del producto.
+          </div>
+        </div>
+        <div class="up-acc-item">
+          <button
+            type="button"
+            aria-expanded="false"
+            aria-controls="faq-2"
+            class="accordion-trigger"
+          >
+            <span>¿Qué significa el pago unificado?</span>
+            <span class="accordion-icon" aria-hidden="true">+</span>
+          </button>
+          <div id="faq-2" role="region" class="accordion-content hidden">
+            Agrupas productos de varias cadenas y pagas una sola vez. El 99% del subtotal se reparte
+            entre los supermercados y UP retiene un 1% de intermediación: ese fee no se agrega a tu
+            cobro.
+          </div>
+        </div>
+        <div class="up-acc-item">
+          <button
+            type="button"
+            aria-expanded="false"
+            aria-controls="faq-3"
+            class="accordion-trigger"
+          >
+            <span>¿Cómo logro despacho gratis?</span>
+            <span class="accordion-icon" aria-hidden="true">+</span>
+          </button>
+          <div id="faq-3" role="region" class="accordion-content hidden">
+            Cada supermercado tiene su propio umbral. En el carrito verás una barra de progreso con
+            el monto exacto que falta para desbloquear el despacho gratis.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="up-footer">
+      <div class="up-container up-footer-grid">
+        <div class="up-footer-brand">
+          <span class="up-logo up-logo--footer">UP</span>
+          <p>Compara, agrupa y paga tu despensa en un solo lugar.</p>
+        </div>
+        <div>
+          <h3>UP</h3>
+          <a href="#catalogo">Catálogo</a>
+          <a href="#como-funciona">Cómo funciona</a>
+          <button type="button" id="footer-cart-link">Ver carrito</button>
+        </div>
+        <div>
+          <h3>Ayuda</h3>
+          <a href="#como-funciona">Preguntas frecuentes</a>
+          <a href="#catalogo">Buscar productos</a>
+          <span>Atención: hola@up.cl</span>
+        </div>
+        <div>
+          <h3>Legal y datos</h3>
+          <span>Precios referenciales de demostración.</span>
+          <span>Licencia: Propietaria · todos los derechos reservados.</span>
+          <span>Esto no es asesoría legal.</span>
+        </div>
+      </div>
+      <div class="up-container up-footer-bottom">
+        <span>© 2026 UP Chile</span>
+        <span>Hecho para comparar mejor en Chile</span>
+      </div>
+    </footer>
+
+    <div id="bottom-dock" class="hidden up-dock">
+      <div class="up-dock-inner">
+        <div>
+          <span id="dock-summary">0 productos · 0 supermercados</span>
+          <strong id="dock-total" class="price">$0</strong>
+        </div>
+        <button id="dock-open-cart-btn" type="button" class="up-btn-primary">
+          Ver carrito
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M4 10h11M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="compare-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-product-name"
+      class="hidden up-modal"
+    >
+      <div class="up-modal-card">
+        <div class="up-modal-head">
+          <div>
+            <span id="modal-product-index">(01)</span>
+            <span id="modal-product-category" class="up-chip">Bebidas</span>
+          </div>
+          <button
+            id="close-compare-modal"
+            type="button"
+            aria-label="Cerrar comparador"
+            class="up-icon-btn"
+          >
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="up-modal-body">
+          <div class="up-modal-product">
+            <div id="modal-product-art" class="up-modal-art"></div>
+            <div>
+              <h3 id="modal-product-name"></h3>
+              <p id="modal-product-desc"></p>
+              <div class="up-modal-badges">
+                <span id="modal-best-price-badge" class="up-chip up-chip--success"></span>
+                <span id="modal-savings-badge" class="up-chip"></span>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="mt-6">
-          <div class="flex items-center justify-between mb-3 font-mono text-[11px] uppercase text-muted">
-            <span>SUPERMERCADO / VERIFICACIÓN OFICIAL</span>
-            <span>PRECIO Y COMPRA DIRECTA UP</span>
+          <div class="up-modal-section-head">
+            <span>Supermercado</span>
+            <span>Precio y compra</span>
           </div>
-          <div id="modal-stores-list" class="space-y-2.5"></div>
-          <p class="font-mono text-[9px] uppercase text-muted mt-4 leading-relaxed">
-            Deep link: ficha canónica cuando existe; si no, búsqueda exacta por SKU/GTIN. Nunca se genera una búsqueda por nombre de producto.
+          <div id="modal-stores-list" class="up-store-list"></div>
+          <p class="up-modal-note">
+            Los enlaces usan la ficha oficial cuando existe; si no, una búsqueda exacta por SKU o
+            GTIN.
           </p>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- CARRITO MULTI-SUPERMERCADO -->
-  <div id="cart-drawer-backdrop" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex justify-end">
-    <aside id="cart-drawer" class="w-full max-w-[480px] h-full bg-canvas tech-border-l flex flex-col shadow-2xl">
-      <div class="bg-stage px-5 py-4 tech-border-b flex items-center justify-between">
-        <div>
-          <span id="cart-drawer-title" class="font-dot text-[20px] uppercase text-white">CARRITO UNIFICADO UP</span>
-          <p class="font-mono text-[10px] uppercase text-muted mt-0.5">SUB-CARRITOS POR FRANQUICIA · SPLIT PAYMENT</p>
+    <div
+      id="cart-drawer-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cart-drawer-title"
+      class="hidden up-drawer"
+    >
+      <aside id="cart-drawer" class="up-drawer-panel">
+        <div class="up-drawer-head">
+          <div>
+            <h2 id="cart-drawer-title">Tu carrito</h2>
+            <p>Carritos separados por supermercado</p>
+          </div>
+          <button id="close-cart-btn" type="button" aria-label="Cerrar carrito" class="up-icon-btn">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
         </div>
-        <button id="close-cart-btn" type="button" aria-label="Cerrar carrito" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono text-[14px]">✕</button>
-      </div>
-
-      <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-5"></div>
-
-      <div id="cart-summary-footer" class="bg-stage p-5 tech-border-t space-y-3">
-        <div class="space-y-1.5 font-mono text-[12px]">
-          <div class="flex justify-between text-soft">
-            <span>SUBTOTAL PRODUCTOS</span>
+        <div id="cart-items-container" class="up-drawer-items"></div>
+        <div id="cart-summary-footer" class="up-drawer-summary">
+          <div class="up-summary-line">
+            <span>Subtotal productos</span>
             <span id="summary-subtotal">$0</span>
           </div>
-          <div class="flex justify-between text-soft">
-            <span>DESPACHO CONSOLIDADO</span>
+          <div class="up-summary-line">
+            <span>Despacho</span>
             <span id="summary-shipping">$0</span>
           </div>
-          <div class="flex justify-between text-signal">
-            <span>FEE INTERMEDIACIÓN UP (1% RETENIDO)</span>
+          <div class="up-summary-line up-summary-fee">
+            <span>Fee UP (1% retenido)</span>
             <span id="summary-fee">$0</span>
           </div>
+          <div class="up-summary-total">
+            <span>Total a pagar</span>
+            <strong id="summary-total" class="price">$0</strong>
+          </div>
+          <button id="checkout-btn" type="button" class="up-btn-primary up-btn-block">
+            Ir a pagar
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 10h11M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
         </div>
+      </aside>
+    </div>
 
-        <div class="pt-3 tech-border-t flex items-baseline justify-between">
-          <span class="font-mono text-[12px] uppercase text-white">TOTAL A PAGAR EN UP</span>
-          <span id="summary-total" class="font-dot text-[26px] text-signal">$0</span>
-        </div>
-
-        <button id="checkout-btn" type="button" class="w-full h-[46px] bg-signal text-ink hover:bg-white transition-colors rounded-[4px] font-mono text-[12px] font-semibold uppercase flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
-          <span>PAGAR EN UP (PAGO UNIFICADO)</span>
-          <span>→</span>
-        </button>
-      </div>
-    </aside>
-  </div>
-
-  <!-- MODAL DE CONFIRMACIÓN: BOLETA DIVIDIDA -->
-  <div id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md">
-    <div class="w-full max-w-[540px] max-h-[90vh] overflow-y-auto bg-canvas tech-border rounded-[8px] shadow-2xl">
-      <div class="bg-stage px-5 py-4 tech-border-b flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-signal"></span>
-          <span id="checkout-title" class="font-dot text-[18px] uppercase text-white">ORDEN CONFIRMADA // SPLIT PAYMENT</span>
-        </div>
-        <button id="close-checkout-modal" type="button" aria-label="Cerrar comprobante" class="w-8 h-8 flex items-center justify-center rounded-[4px] utility-surface text-white hover:bg-signal hover:text-ink transition-colors font-mono">✕</button>
-      </div>
-
-      <div class="p-5 sm:p-6 space-y-5">
-        <div class="p-4 rounded-[6px] bg-stage tech-border flex items-center justify-between">
+    <div
+      id="checkout-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="checkout-title"
+      class="hidden up-modal"
+    >
+      <div class="up-modal-card up-receipt">
+        <div class="up-modal-head">
           <div>
-            <p class="font-mono text-[10px] uppercase text-muted">CÓDIGO DE ORDEN UNIFICADA</p>
-            <p id="order-code" class="font-dot text-[22px] text-signal mt-0.5">UP-CL-84920</p>
+            <span class="up-eyebrow">CONFIRMACIÓN</span>
+            <h2 id="checkout-title">Orden confirmada</h2>
           </div>
-          <div class="text-right">
-            <p class="font-mono text-[10px] uppercase text-muted">ESTADO</p>
-            <p class="font-mono text-[11px] uppercase text-white mt-1">BOLETAS EMITIDAS ✓</p>
-          </div>
+          <button
+            id="close-checkout-modal"
+            type="button"
+            aria-label="Cerrar comprobante"
+            class="up-icon-btn"
+          >
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
         </div>
-
-        <div>
-          <p class="font-mono text-[11px] uppercase text-muted mb-2.5">DESGLOSE DE TRANSFERENCIA POR SUPERMERCADO</p>
-          <div id="checkout-breakdown" class="space-y-2"></div>
-        </div>
-
-        <div class="p-4 rounded-[6px] utility-surface space-y-2 font-mono text-[12px]">
-          <div class="flex justify-between text-signal">
-            <span>COMISIÓN SERVICIO UP (1% RETENIDA)</span>
-            <span id="checkout-fee">$0</span>
+        <div class="up-modal-body">
+          <div class="up-receipt-code">
+            <div>
+              <span>Código de orden</span>
+              <strong id="order-code" class="price">UP-CL-84920</strong>
+            </div>
+            <span class="up-chip up-chip--success">Boletas emitidas</span>
           </div>
-          <div class="flex justify-between text-white font-semibold pt-2 tech-border-t text-[14px]">
-            <span>TOTAL PAGADO</span>
-            <span id="checkout-grand-total" class="font-dot text-[20px] text-signal">$0</span>
+          <div>
+            <h3>Desglose por supermercado</h3>
+            <div id="checkout-breakdown" class="up-breakdown"></div>
           </div>
+          <div class="up-receipt-totals">
+            <div class="up-summary-line up-summary-fee">
+              <span>Comisión UP (1% retenida)</span>
+              <span id="checkout-fee">$0</span>
+            </div>
+            <div class="up-summary-total">
+              <span>Total pagado</span>
+              <strong id="checkout-grand-total" class="price">$0</strong>
+            </div>
+          </div>
+          <p class="up-modal-note">
+            El 99% del subtotal se reparte entre los supermercados y UP retiene el 1% de
+            intermediación. Recibirás las boletas de cada cadena en tu correo.
+          </p>
+          <button id="finish-order-btn" type="button" class="up-btn-secondary up-btn-block">
+            Volver al catálogo
+          </button>
         </div>
-
-        <p class="font-sans text-[13px] text-muted leading-relaxed">
-          Hemos coordinado el despacho con cada franquicia seleccionada. El 99% del subtotal se dispersa a los supermercados y UP retiene el 1% de intermediación. Recibirás las boletas electrónicas de cada cadena más la boleta UP en tu correo.
-        </p>
-
-        <button id="finish-order-btn" type="button" class="w-full h-[44px] bg-white text-ink hover:bg-signal transition-colors rounded-[4px] font-mono text-[12px] font-semibold uppercase">
-          VOLVER AL CATÁLOGO
-        </button>
       </div>
     </div>
-  </div>
 
-  <!-- TOAST -->
-  <div id="toast" role="status" aria-live="polite" aria-atomic="true" class="fixed top-20 right-4 z-50 transform translate-x-[140%] transition-transform duration-300 bg-stage tech-border border-signal/70 px-4 py-3 rounded-[6px] shadow-2xl flex items-center gap-3 max-w-[340px]">
-    <span class="w-2 h-2 rounded-full bg-signal shrink-0"></span>
-    <span id="toast-message" class="font-mono text-[11px] uppercase text-white">PRODUCTO AGREGADO AL CARRITO</span>
-  </div>
+    <div id="toast" role="status" aria-live="polite" aria-atomic="true" class="up-toast up-toast-out">
+      <span class="up-toast-dot" aria-hidden="true"></span>
+      <span id="toast-message">Producto agregado al carrito</span>
+    </div>
 
-  <script src="data/demo.js"></script>
-  <script type="module" src="src/main.js"></script>
-</body>
+    <script src="data/demo.js"></script>
+    <script type="module" src="src/main.js"></script>
+  </body>
 </html>

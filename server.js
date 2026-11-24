@@ -21,10 +21,10 @@
  * valida cada salto de redirección, limita peticiones por IP y envía headers
  * de seguridad en TODAS las respuestas.
  */
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
-const vm = require("vm");
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
 const {
   CHAIN_IDS,
   PAUSE_STATUSES,
@@ -33,7 +33,7 @@ const {
   createCircuitBreaker,
   createFeedCache,
   normalizeFeed,
-} = require("./lib/feed.js");
+} = require('./lib/feed.js');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 3100);
@@ -41,27 +41,27 @@ const PORT = Number(process.env.PORT || 3100);
 // Verificación de enlaces: solo dominios de supermercados permitidos (evita SSRF).
 // El mismo mapa permite Derivar la cadena de un host para el circuit breaker.
 const LINK_DOMAINS = {
-  lider: ["lider.cl"],
-  jumbo: ["jumbo.cl"],
-  santaisabel: ["santaisabel.cl"],
-  tottus: ["tottus.cl"],
-  unimarc: ["unimarc.cl"],
-  coope: ["coope.cl"],
+  lider: ['lider.cl'],
+  jumbo: ['jumbo.cl'],
+  santaisabel: ['santaisabel.cl'],
+  tottus: ['tottus.cl'],
+  unimarc: ['unimarc.cl'],
+  coope: ['coope.cl'],
 };
 const LINK_ALLOWLIST = Object.values(LINK_DOMAINS).flat();
 const LINK_CACHE_MS = 5 * 60 * 1000;
 const linkCache = new Map();
-const UA = "UP-Prototype/1.0 (feed autorizado; +info: README)";
+const UA = 'UP-Prototype/1.0 (feed autorizado; +info: README)';
 
 // Integración de datos: TTL y pausa configurable por entorno, sin dependencias nuevas.
-const FEED_SCHEMA_VERSION = "2026-11-24";
+const FEED_SCHEMA_VERSION = '2026-11-24';
 const FEED_TTL_MS = positiveInt(process.env.UP_FEED_TTL_MS, 15 * 60 * 1000);
 const FEED_BREAKER_THRESHOLD = positiveInt(process.env.UP_FEED_BREAKER_THRESHOLD, 3);
 const FEED_BREAKER_COOLDOWN_MS = positiveInt(process.env.UP_FEED_BREAKER_COOLDOWN_MS, 60_000);
-const UPSTREAM_KEY = "upstream";
+const UPSTREAM_KEY = 'upstream';
 const DATA_POLICY =
-  "Solo feeds/APIs autorizados. URL canónica o búsqueda exacta por SKU/GTIN; nunca por nombre. " +
-  "403/429 pausa el conector y requiere renegociar acceso.";
+  'Solo feeds/APIs autorizados. URL canónica o búsqueda exacta por SKU/GTIN; nunca por nombre. ' +
+  '403/429 pausa el conector y requiere renegociar acceso.';
 
 function positiveInt(value, fallback) {
   const number = Number(value);
@@ -70,9 +70,9 @@ function positiveInt(value, fallback) {
 
 function chainForUrl(raw) {
   try {
-    const host = new URL(raw).hostname.toLowerCase().replace(/^www\./, "");
+    const host = new URL(raw).hostname.toLowerCase().replace(/^www\./, '');
     const entry = Object.entries(LINK_DOMAINS).find(([, domains]) =>
-      domains.some((domain) => host === domain || host.endsWith("." + domain))
+      domains.some((domain) => host === domain || host.endsWith('.' + domain))
     );
     return entry ? entry[0] : null;
   } catch {
@@ -102,13 +102,13 @@ const VERIFY_RATE = { limit: 10, windowMs: 60_000 };
 const PRICES_RATE = { limit: 60, windowMs: 60_000 };
 
 const SECURITY_HEADERS = {
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Referrer-Policy": "no-referrer",
-  "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=()",
-  "Content-Security-Policy": [
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+  'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=()',
+  'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' https://cdn.tailwindcss.com",
+    "script-src 'self'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data:",
@@ -116,27 +116,27 @@ const SECURITY_HEADERS = {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "object-src 'none'",
-    "form-action 'self'"
-  ].join("; ")
+    "form-action 'self'",
+  ].join('; '),
 };
 
 const MIME = {
-  ".html": "text/html; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".js": "application/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".jpeg": "image/jpeg",
-  ".jpg": "image/jpeg",
-  ".png": "image/png",
-  ".svg": "image/svg+xml",
-  ".ico": "image/x-icon",
-  ".md": "text/markdown; charset=utf-8"
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.md': 'text/markdown; charset=utf-8',
 };
 
 function readDemo() {
   // demo.js es un literal JS (claves sin comillas), no JSON estricto.
   // Se evalúa en un contexto aislado con un `window` propio.
-  const raw = fs.readFileSync(path.join(ROOT, "data", "demo.js"), "utf8");
+  const raw = fs.readFileSync(path.join(ROOT, 'data', 'demo.js'), 'utf8');
   const ctx = { window: {} };
   vm.runInNewContext(raw, ctx, { timeout: 1000 });
   return ctx.window.UP_DEMO_DATA;
@@ -147,14 +147,14 @@ function buildMeta(data, ctx, deps) {
   const generatedAt = data.meta && data.meta.generatedAt ? data.meta.generatedAt : null;
   const capturedAt = ctx.report ? ctx.report.newestCapturedAt : null;
   const ageOf = (iso) => {
-    const time = Date.parse(iso || "");
+    const time = Date.parse(iso || '');
     return Number.isFinite(time) ? Math.max(0, now - time) : null;
   };
   const ages = [ageOf(generatedAt), ageOf(capturedAt)].filter((value) => value != null);
   const ageMs = ages.length ? Math.max(...ages) : null;
   const stampMissing = ctx.report ? ctx.report.timestampMissing > 0 : false;
   const stale =
-    ctx.mode === "live" &&
+    ctx.mode === 'live' &&
     (ctx.stale || stampMissing || (ageMs != null && ageMs > (deps.cache || feedCache).ttlMs));
 
   return Object.assign({}, data, {
@@ -163,7 +163,7 @@ function buildMeta(data, ctx, deps) {
       source: ctx.source,
       generatedAt: generatedAt || null,
       capturedAt: capturedAt || null,
-      ageSeconds: ctx.mode !== "live" || ageMs == null ? null : Math.round(ageMs / 1000),
+      ageSeconds: ctx.mode !== 'live' || ageMs == null ? null : Math.round(ageMs / 1000),
       stale,
       query: ctx.query || null,
       feedVersion: FEED_SCHEMA_VERSION,
@@ -189,7 +189,7 @@ function cachedResult(cached, source, reason, warnings) {
   return {
     data: cached.data,
     report: cached.report,
-    mode: "live",
+    mode: 'live',
     source,
     stale: true,
     fallbackReason: reason,
@@ -201,42 +201,48 @@ async function loadUpstream(source, query, ctx, deps) {
   const breaker = deps.breaker || upstreamBreaker;
   const now = deps.now || Date.now;
   const doFetch = deps.fetch || fetch;
-  const key = "upstream:" + source;
+  const key = 'upstream:' + source;
   const cached = cache.get(key);
 
   if (cached && !cached.stale) {
-    return { data: cached.data, report: cached.report, mode: "live", source, stale: false };
+    return { data: cached.data, report: cached.report, mode: 'live', source, stale: false };
   }
   if (!breaker.allow(UPSTREAM_KEY)) {
     if (cached)
-      return cachedResult(cached, source, "API externa en pausa (circuit breaker): se sirve caché", ctx.warnings);
-    ctx.warnings.push("API externa en pausa (circuit breaker): se usa el siguiente origen");
+      return cachedResult(
+        cached,
+        source,
+        'API externa en pausa (circuit breaker): se sirve caché',
+        ctx.warnings
+      );
+    ctx.warnings.push('API externa en pausa (circuit breaker): se usa el siguiente origen');
     return null;
   }
 
-  const url = source + (source.includes("?") ? "&" : "?") + "q=" + encodeURIComponent(query || "");
+  const url = source + (source.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(query || '');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
   try {
     const res = await doFetch(url, {
       signal: controller.signal,
-      headers: { Accept: "application/json", "User-Agent": UA },
+      headers: { Accept: 'application/json', 'User-Agent': UA },
     });
     const status = Number(res && res.status) || 0;
-    if (classifyStatus(status) === "pause") {
-      const header = res.headers && typeof res.headers.get === "function"
-        ? res.headers.get("retry-after")
-        : null;
+    if (classifyStatus(status) === 'pause') {
+      const header =
+        res.headers && typeof res.headers.get === 'function'
+          ? res.headers.get('retry-after')
+          : null;
       breaker.recordFailure(UPSTREAM_KEY, parseRetryAfterMs(header, now));
       const reason = `API externa pausada por HTTP ${status}: se reanuda tras el enfriamiento`;
-      console.warn("[UP]", reason);
+      console.warn('[UP]', reason);
       if (cached) return cachedResult(cached, source, reason, ctx.warnings);
       ctx.warnings.push(reason);
       return null;
     }
     // La ausencia de bloqueo es éxito para el breaker: disponibilidad es otra señal.
     breaker.recordSuccess(UPSTREAM_KEY);
-    if (!res.ok) throw new Error("Upstream HTTP " + status);
+    if (!res.ok) throw new Error('Upstream HTTP ' + status);
     const normalized = normalizeFeed(await res.json(), {
       now,
       source,
@@ -246,14 +252,19 @@ async function loadUpstream(source, query, ctx, deps) {
     return {
       data: normalized.data,
       report: normalized.report,
-      mode: "live",
+      mode: 'live',
       source,
       stale: false,
     };
   } catch (err) {
-    ctx.warnings.push("API externa no disponible: " + err.message);
+    ctx.warnings.push('API externa no disponible: ' + err.message);
     if (cached)
-      return cachedResult(cached, source, "No se pudo refrescar la API externa: se sirve caché", ctx.warnings);
+      return cachedResult(
+        cached,
+        source,
+        'No se pudo refrescar la API externa: se sirve caché',
+        ctx.warnings
+      );
     return null;
   } finally {
     clearTimeout(timer);
@@ -265,19 +276,20 @@ function loadLocalFeed(ctx, deps) {
   const now = deps.now || Date.now;
   const exists = deps.existsSync || fs.existsSync;
   const read = deps.readFileSync || fs.readFileSync;
-  const file = path.join(ROOT, "data", "live-prices.json");
-  const source = "data/live-prices.json";
-  const key = "file:" + source;
+  const file = path.join(ROOT, 'data', 'live-prices.json');
+  const source = 'data/live-prices.json';
+  const key = 'file:' + source;
   const cached = cache.get(key);
   if (cached && !cached.stale) {
-    return { data: cached.data, report: cached.report, mode: "live", source, stale: false };
+    return { data: cached.data, report: cached.report, mode: 'live', source, stale: false };
   }
   if (!exists(file)) {
-    if (cached) return cachedResult(cached, source, "Feed local ya no existe: se sirve caché", ctx.warnings);
+    if (cached)
+      return cachedResult(cached, source, 'Feed local ya no existe: se sirve caché', ctx.warnings);
     return null;
   }
   try {
-    const normalized = normalizeFeed(JSON.parse(read(file, "utf8")), {
+    const normalized = normalizeFeed(JSON.parse(read(file, 'utf8')), {
       now,
       source,
       validateUrl: allowedLink,
@@ -286,13 +298,14 @@ function loadLocalFeed(ctx, deps) {
     return {
       data: normalized.data,
       report: normalized.report,
-      mode: "live",
+      mode: 'live',
       source,
       stale: false,
     };
   } catch (err) {
-    ctx.warnings.push("Feed local inválido: " + err.message);
-    if (cached) return cachedResult(cached, source, "Feed local inválido: se sirve caché", ctx.warnings);
+    ctx.warnings.push('Feed local inválido: ' + err.message);
+    if (cached)
+      return cachedResult(cached, source, 'Feed local inválido: se sirve caché', ctx.warnings);
     return null;
   }
 }
@@ -307,21 +320,21 @@ async function getPrices(query, deps = {}) {
 
   const demo = deps.readDemo ? deps.readDemo() : readDemo();
   demo.meta = Object.assign({}, demo.meta, {
-    mode: "demo",
-    source: "data/demo.js",
+    mode: 'demo',
+    source: 'data/demo.js',
     query: query || null,
   });
   return buildMeta(
     demo,
     {
-      mode: "demo",
-      source: "data/demo.js",
+      mode: 'demo',
+      source: 'data/demo.js',
       query,
       stale: false,
       warnings: ctx.warnings,
       fallbackReason: ctx.warnings.length
-        ? "Fuentes EN VIVO no disponibles"
-        : "Sin feed configurado (data/live-prices.json ni UP_RETAILER_API)",
+        ? 'Fuentes EN VIVO no disponibles'
+        : 'Sin feed configurado (data/live-prices.json ni UP_RETAILER_API)',
     },
     deps
   );
@@ -329,10 +342,14 @@ async function getPrices(query, deps = {}) {
 
 function allowedLink(raw) {
   let parsed;
-  try { parsed = new URL(raw); } catch { return null; }
-  if (!["http:", "https:"].includes(parsed.protocol)) return null;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) return null;
   const host = parsed.hostname.toLowerCase();
-  const ok = LINK_ALLOWLIST.some((domain) => host === domain || host.endsWith("." + domain));
+  const ok = LINK_ALLOWLIST.some((domain) => host === domain || host.endsWith('.' + domain));
   return ok ? parsed.toString() : null;
 }
 
@@ -349,7 +366,7 @@ function createRateLimiter({ limit, windowMs, now = Date.now } = {}) {
     return {
       allowed: entry.count <= limit,
       remaining: Math.max(0, limit - entry.count),
-      retryAfter: Math.max(1, Math.ceil((entry.start + windowMs - t) / 1000))
+      retryAfter: Math.max(1, Math.ceil((entry.start + windowMs - t) / 1000)),
     };
   };
   check.reset = () => hits.clear();
@@ -374,19 +391,24 @@ function resetIntegrationState() {
 
 function clientIp(req) {
   // X-Forwarded-For es spoofable si el servidor está expuesto directamente.
-  return req.socket.remoteAddress || "unknown";
+  return req.socket.remoteAddress || 'unknown';
 }
 
 function rateLimited(res, check, req) {
   const result = check(clientIp(req));
   if (result.allowed) return false;
-  res.setHeader("Retry-After", String(result.retryAfter));
-  send(res, 429, JSON.stringify({ error: "Demasiadas solicitudes", retryAfter: result.retryAfter }));
+  res.setHeader('Retry-After', String(result.retryAfter));
+  send(
+    res,
+    429,
+    JSON.stringify({ error: 'Demasiadas solicitudes', retryAfter: result.retryAfter })
+  );
   return true;
 }
 
 function redirectLocation(res, currentUrl) {
-  const location = res.headers && typeof res.headers.get === "function" ? res.headers.get("location") : null;
+  const location =
+    res.headers && typeof res.headers.get === 'function' ? res.headers.get('location') : null;
   if (!location) return null;
   try {
     return new URL(location, currentUrl).toString();
@@ -396,11 +418,11 @@ function redirectLocation(res, currentUrl) {
 }
 
 async function fetchRedirectSafe(doFetch, url, signal) {
-  const options = { method: "HEAD", redirect: "manual", signal, headers: { "User-Agent": UA } };
+  const options = { method: 'HEAD', redirect: 'manual', signal, headers: { 'User-Agent': UA } };
   let res = await doFetch(url, options);
   // Algunos sites responden 403/405/501 al HEAD; se reintenta con GET.
   if (HEAD_RETRY_STATUSES.has(res.status)) {
-    res = await doFetch(url, Object.assign({}, options, { method: "GET" }));
+    res = await doFetch(url, Object.assign({}, options, { method: 'GET' }));
   }
   return res;
 }
@@ -412,7 +434,12 @@ async function verifyLink(raw, deps = {}) {
   const breaker = deps.breaker || linkBreaker;
   const cacheKey = allowedLink(raw);
   if (!cacheKey) {
-    return { ok: false, status: 0, error: "Dominio no permitido", checkedAt: new Date(now()).toISOString() };
+    return {
+      ok: false,
+      status: 0,
+      error: 'Dominio no permitido',
+      checkedAt: new Date(now()).toISOString(),
+    };
   }
   const chain = deps.chain || chainForUrl(cacheKey);
 
@@ -442,16 +469,17 @@ async function verifyLink(raw, deps = {}) {
     while (true) {
       const res = await fetchRedirectSafe(doFetch, currentUrl, controller.signal);
       if (PAUSE_STATUSES.has(res.status)) {
-        const header = res.headers && typeof res.headers.get === "function"
-          ? res.headers.get("retry-after")
-          : null;
+        const header =
+          res.headers && typeof res.headers.get === 'function'
+            ? res.headers.get('retry-after')
+            : null;
         if (chain) breaker.recordFailure(chain, parseRetryAfterMs(header, now));
         return {
           ok: false,
           status: res.status,
           chain,
           paused: true,
-          error: `Acceso pausado por ${chain || "la cadena"} (HTTP ${res.status}); no se marca enlace roto`,
+          error: `Acceso pausado por ${chain || 'la cadena'} (HTTP ${res.status}); no se marca enlace roto`,
           finalUrl: currentUrl,
           checkedAt: new Date(now()).toISOString(),
         };
@@ -459,17 +487,35 @@ async function verifyLink(raw, deps = {}) {
       if (REDIRECT_STATUSES.has(res.status)) {
         const next = redirectLocation(res, currentUrl);
         if (!next) {
-          return { ok: false, status: res.status, error: "Redirección sin destino válido", finalUrl: currentUrl, checkedAt: new Date(now()).toISOString() };
+          return {
+            ok: false,
+            status: res.status,
+            error: 'Redirección sin destino válido',
+            finalUrl: currentUrl,
+            checkedAt: new Date(now()).toISOString(),
+          };
         }
         const validated = allowedLink(next);
         // Se rechaza ANTES de contactar al destino: `redirect: 'manual'` evita
         // que fetch siga la redirección por detrás de esta validación.
         if (!validated) {
-          return { ok: false, status: 0, error: "Redirección a host no permitido", finalUrl: next, checkedAt: new Date(now()).toISOString() };
+          return {
+            ok: false,
+            status: 0,
+            error: 'Redirección a host no permitido',
+            finalUrl: next,
+            checkedAt: new Date(now()).toISOString(),
+          };
         }
         hops += 1;
         if (hops > MAX_REDIRECTS) {
-          return { ok: false, status: res.status, error: "Demasiadas redirecciones", finalUrl: validated, checkedAt: new Date(now()).toISOString() };
+          return {
+            ok: false,
+            status: res.status,
+            error: 'Demasiadas redirecciones',
+            finalUrl: validated,
+            checkedAt: new Date(now()).toISOString(),
+          };
         }
         currentUrl = validated;
         continue;
@@ -477,7 +523,13 @@ async function verifyLink(raw, deps = {}) {
 
       const finalUrl = res.url || currentUrl;
       if (!allowedLink(finalUrl)) {
-        return { ok: false, status: 0, error: "Redirección a host no permitido", finalUrl, checkedAt: new Date(now()).toISOString() };
+        return {
+          ok: false,
+          status: 0,
+          error: 'Redirección a host no permitido',
+          finalUrl,
+          checkedAt: new Date(now()).toISOString(),
+        };
       }
       if (chain) breaker.recordSuccess(chain);
       const payload = {
@@ -485,7 +537,7 @@ async function verifyLink(raw, deps = {}) {
         status: res.status,
         finalUrl,
         hops,
-        checkedAt: new Date(now()).toISOString()
+        checkedAt: new Date(now()).toISOString(),
       };
       cache.set(cacheKey, { payload, at: now() });
       return payload;
@@ -503,8 +555,8 @@ function send(res, status, body, type) {
     status,
     Object.assign(
       {
-        "Content-Type": type || "application/json; charset=utf-8",
-        "Cache-Control": "no-store"
+        'Content-Type': type || 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
       },
       SECURITY_HEADERS
     )
@@ -513,63 +565,78 @@ function send(res, status, body, type) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
-  if (url.pathname === "/api/prices") {
+  if (url.pathname === '/api/prices') {
     if (rateLimited(res, checkPricesRate, req)) return;
     try {
-      const json = await getPrices(url.searchParams.get("q") || "");
+      const json = await getPrices(url.searchParams.get('q') || '');
       return send(res, 200, JSON.stringify(json));
     } catch (err) {
       return send(res, 500, JSON.stringify({ error: err.message }));
     }
   }
 
-  if (url.pathname === "/api/health") {
-    return send(res, 200, JSON.stringify({ ok: true, service: "UP prototipo" }));
+  if (url.pathname === '/api/health') {
+    return send(res, 200, JSON.stringify({ ok: true, service: 'UP prototipo' }));
   }
 
-  if (url.pathname === "/api/feed-status") {
+  if (url.pathname === '/api/feed-status') {
     if (rateLimited(res, checkPricesRate, req)) return;
-    return send(res, 200, JSON.stringify({
-      ok: true,
-      feedVersion: FEED_SCHEMA_VERSION,
-      ttlMs: feedCache.ttlMs,
-      dataPolicy: DATA_POLICY,
-      cache: feedCache.snapshot(),
-      breakers: {
-        upstream: upstreamBreaker.snapshot(),
-        links: linkBreaker.snapshot()
-      }
-    }));
+    return send(
+      res,
+      200,
+      JSON.stringify({
+        ok: true,
+        feedVersion: FEED_SCHEMA_VERSION,
+        ttlMs: feedCache.ttlMs,
+        dataPolicy: DATA_POLICY,
+        cache: feedCache.snapshot(),
+        breakers: {
+          upstream: upstreamBreaker.snapshot(),
+          links: linkBreaker.snapshot(),
+        },
+      })
+    );
   }
 
-  if (url.pathname === "/api/verify-link") {
+  if (url.pathname === '/api/verify-link') {
     if (rateLimited(res, checkVerifyRate, req)) return;
-    const result = await verifyLink(url.searchParams.get("url") || "");
+    const result = await verifyLink(url.searchParams.get('url') || '');
     return send(res, 200, JSON.stringify(result));
   }
 
-  const rel = decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname);
-  const filePath = path.resolve(ROOT, "." + rel);
-  if (!filePath.startsWith(ROOT + path.sep) && filePath !== path.join(ROOT, "index.html")) {
-    return send(res, 403, "Forbidden", "text/plain; charset=utf-8");
+  const rel = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
+  const filePath = path.resolve(ROOT, '.' + rel);
+  if (!filePath.startsWith(ROOT + path.sep) && filePath !== path.join(ROOT, 'index.html')) {
+    return send(res, 403, 'Forbidden', 'text/plain; charset=utf-8');
   }
 
   fs.readFile(filePath, (err, data) => {
-    if (err) return send(res, 404, "Not found", "text/plain; charset=utf-8");
-    send(res, 200, data, MIME[path.extname(filePath).toLowerCase()] || "application/octet-stream");
+    if (err) return send(res, 404, 'Not found', 'text/plain; charset=utf-8');
+    send(res, 200, data, MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream');
   });
 });
 
 if (require.main === module) {
   server.listen(PORT, () => {
     console.log(`\n  UP · Prototipo corriendo en http://localhost:${PORT}`);
-    console.log("  Modo datos: " + (process.env.UP_RETAILER_API
-      ? "API externa (" + process.env.UP_RETAILER_API + ")"
-      : fs.existsSync(path.join(ROOT, "data", "live-prices.json")) ? "live-prices.json" : "demo"));
-    console.log("  TTL de feed: " + Math.round(FEED_TTL_MS / 1000) + " s · pausa 403/429 tras " + FEED_BREAKER_THRESHOLD + " fallos");
-    console.log("  Presiona Ctrl+C para detener.\n");
+    console.log(
+      '  Modo datos: ' +
+        (process.env.UP_RETAILER_API
+          ? 'API externa (' + process.env.UP_RETAILER_API + ')'
+          : fs.existsSync(path.join(ROOT, 'data', 'live-prices.json'))
+            ? 'live-prices.json'
+            : 'demo')
+    );
+    console.log(
+      '  TTL de feed: ' +
+        Math.round(FEED_TTL_MS / 1000) +
+        ' s · pausa 403/429 tras ' +
+        FEED_BREAKER_THRESHOLD +
+        ' fallos'
+    );
+    console.log('  Presiona Ctrl+C para detener.\n');
   });
 }
 
@@ -600,5 +667,5 @@ module.exports = {
   MAX_REDIRECTS,
   SECURITY_HEADERS,
   LINK_ALLOWLIST,
-  LINK_CACHE_MS
+  LINK_CACHE_MS,
 };
