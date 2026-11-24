@@ -626,7 +626,7 @@ Nuevo módulo `src/a11y.js`, **sin dependencias**: centraliza el foco de los tre
 
 Verificación headless del rediseño: salto visible al enfocarse, foco inicial en `close-compare-modal` al abrir el comparador, 12 focusables con trampa de `Tab` y retorno al primero, `Escape` y click fuera cierran, acordeón con `aria-expanded` y foco amarillo. El checkout abre en `checkout-to-delivery`, recorre Resumen → Entrega → Pago → Confirmación y muestra el recibo con el fee de 1% retenido. Sin errores JS ni violaciones de CSP.
 
-**Lighthouse móvil** (`http://localhost:3100`, Chrome headless): **Performance 93** y **Accesibilidad 100** (FCP 2.2 s, LCP 2.7 s, CLS 0.077), con 0 fallos de `color-contrast` y `label-content-name-mismatch`. Objetivo ≥90 / ≥95 cumplido incluso con las 30 fotos referenciales restauradas en WebP.
+**Lighthouse móvil** (`http://localhost:3100`, Chrome headless): **Performance 93** y **Accesibilidad 100** (FCP 2.2 s, LCP 2.7 s, CLS 0.077), con 0 fallos de `color-contrast` y `label-content-name-mismatch`. En la **demo pública** (`https://moonlighpoio.github.io/UP.app/`): **Performance 99** y **Accesibilidad 100** (FCP 1.1 s, LCP 1.2 s, CLS 0), con las 30 fotos WebP y 0 recursos externos. Objetivo ≥90 / ≥95 cumplido incluso con las fotos referenciales restauradas.
 
 > ℹ️ Se retiró Tailwind y su CDN: el CSS propio en `styles.css` es la única fuente de estilos. Inter se sirve localmente con `font-display: swap`; `test/a11y.test.js` verifica el marcado y las reglas CSS sin agregar paquetes.
 
@@ -690,7 +690,8 @@ Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se r
 | Rediseño 5 · Comparador | `28e1da6` | Tabla clara, mejor precio y filas no confirmadas |
 | Rediseño 6 · Carrito | `bb3d96a` | Drawer agrupado, progreso y checkout de 4 pasos |
 | Rediseño 7 · Pulido | `690ff5f` | A11y, sin fuentes heredadas, CI con CSS y documentación |
-| Restauración de imágenes | este commit | 30 fotos referenciales en WebP, rutas reactivadas e Inter local para conservar Lighthouse ≥90 |
+| Restauración de imágenes | `686d7d5` | 30 fotos referenciales en WebP, rutas reactivadas e Inter local para conservar Lighthouse ≥90 |
+| Verificación pública | este commit | Build de Pages en el mismo SHA, 30/30 fotos cargadas y Lighthouse 99/100 en la demo |
 
 ### 14.2 Checklist de verificación
 
