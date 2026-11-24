@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-labelledby="title">
+  <title id="title">CONGELADOS · ilustración de demostración UP</title>
+  <rect width="400" height="300" fill="#0b0b0b"/>
+  <rect x="12" y="12" width="376" height="276" rx="8" fill="#111111" stroke="#595a5a" stroke-width="0.5"/>
+  <g fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M200 62V210M132 100L268 172M132 172L268 100" stroke="#595a5a"/><path d="M200 62V210M132 100L268 172M132 172L268 100" stroke="#ffffff" stroke-dasharray="6 10"/><circle cx="200" cy="136" r="18" stroke="#ffc700"/>
+  </g>
+  <text x="28" y="46" fill="#ffc700" font-family="IBM Plex Mono, monospace" font-size="13" letter-spacing="1.5">UP / DEMO</text>
+  <text x="200" y="266" fill="#d8d9d9" font-family="IBM Plex Mono, monospace" font-size="15" letter-spacing="1.5" text-anchor="middle">CONGELADOS</text>
+  <text x="200" y="284" fill="#9b9d9d" font-family="IBM Plex Mono, monospace" font-size="9" letter-spacing="1" text-anchor="middle">ILUSTRACION PROPIA · SIN FOTOS DE TERCEROS</text>
+</svg>

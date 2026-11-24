@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-labelledby="title">
+  <title id="title">FRUTAS Y VERDURAS · ilustración de demostración UP</title>
+  <rect width="400" height="300" fill="#0b0b0b"/>
+  <rect x="12" y="12" width="376" height="276" rx="8" fill="#111111" stroke="#595a5a" stroke-width="0.5"/>
+  <g fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="200" cy="156" r="48" stroke="#ffffff"/><path d="M200 108C210 92 226 86 244 84C240 102 228 116 210 120" stroke="#ffc700"/><path d="M200 108C188 94 174 88 158 86" stroke="#ffc700"/><circle cx="184" cy="148" r="3" fill="#ffc700"/><circle cx="216" cy="170" r="3" fill="#ffc700"/>
+  </g>
+  <text x="28" y="46" fill="#ffc700" font-family="IBM Plex Mono, monospace" font-size="13" letter-spacing="1.5">UP / DEMO</text>
+  <text x="200" y="266" fill="#d8d9d9" font-family="IBM Plex Mono, monospace" font-size="15" letter-spacing="1.5" text-anchor="middle">FRUTAS Y VERDURAS</text>
+  <text x="200" y="284" fill="#9b9d9d" font-family="IBM Plex Mono, monospace" font-size="9" letter-spacing="1" text-anchor="middle">ILUSTRACION PROPIA · SIN FOTOS DE TERCEROS</text>
+</svg>

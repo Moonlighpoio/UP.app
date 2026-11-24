@@ -6,7 +6,7 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 >
 > 🌐 **Demo pública (GitHub Pages):** https://moonlighpoio.github.io/UP.app/ · Repo: https://github.com/Moonlighpoio/UP.app. En Pages se activa automáticamente el **modo demo estático**: usa `data/demo.js`, no llama a `/api/prices` ni a `/api/verify-link`, y los badges muestran `Demo · sin verificación` en lugar de marcar enlaces como rotos.
 >
-> 🔒 **Privacidad:** el prototipo local se mantuvo como referencia privada, pero para recibir opiniones el repo y el sitio son públicos. Las imágenes y descripciones son referencia de Jumbo.cl; los detalles legales, comerciales y de licenciamiento se resuelven antes de cualquier uso productivo.
+> 🔒 **Privacidad y contenidos:** el repo y la demo son públicos para recibir opiniones. Las imágenes son ilustraciones SVG propias y las descripciones son textos neutrales creados por UP; ya no se incluyen fotos ni textos copiados de fichas de supermercados. Los nombres, SKU/GTIN y URLs canónicas siguen siendo datos de referencia necesarios para el *deep link*. Ver [Imágenes, textos y origen de los datos](#imágenes-textos-y-origen-de-los-datos). **Esto no es asesoría legal.**
 
 ---
 
@@ -77,7 +77,7 @@ sku_mapping(product_id, chain_id, retailer_sku, retailer_gtin, canonical_url,
 - Si `GET /api/verify-link` devuelve 404 u otro estado no OK, se marca `product_id + chain_id` para **re-indexación inmediata**. La fila se rotula **“⚠ Enlace roto · reindexar”** y el botón *Agregar* se deshabilita para no mostrar un precio engañoso.
 - La URL se actualiza en la tabla, no se reconstruye con `slug + id` a ciegas, porque los slugs cambian cuando la cadena renueva su catálogo.
 
-En el prototipo, los 30 productos tienen `sku`, `gtin`, `url`, `source` y `verifiedAt` en `product.skus.jumbo` (fichas públicas de Jumbo.cl capturadas el 23-11-2026). Las otras cadenas quedan con `sku/url: null` y son **pendientes de mapeo**; cuando se completa un SKU sin URL, se ejemplifica el fallback de búsqueda exacta.
+En el prototipo, los 30 productos tienen `sku`, `gtin`, `url` y `verifiedAt` en `product.skus.jumbo` como **referencia de *deep link***, sin haber copiado el contenido de esas fichas. Las otras cadenas quedan con `sku/url: null` y son **pendientes de mapeo**; cuando se completa un SKU sin URL, se ejemplifica el fallback de búsqueda exacta.
 
 ### Carritos múltiples y pago unificado
 
@@ -188,7 +188,7 @@ UP.app/
 ├── start.command                # Lanzador macOS equivalente a npm start
 ├── assets/
 │   ├── up-logo.jpeg             # Referencia visual del logotipo
-│   └── products/                # 30 imágenes de referencia guardadas localmente
+│   └── products/                # 9 ilustraciones SVG propias (una por categoría)
 ├── data/
 │   ├── demo.js                  # 30 productos · 10 locales · 6 cadenas
 │   ├── live-prices.example.json # Plantilla documentada del formato real
@@ -262,7 +262,7 @@ Verificado el 23-11-2026:
 
 | Cadena | Resultado |
 |---|---|
-| **Jumbo** | Fichas y `busqueda?ft=` responden 200, pero su `robots.txt` deshabilita rutas de búsqueda amplias. Uso permitido solo como referencia privada. |
+| **Jumbo** | Fichas y `busqueda?ft=` responden 200, pero su `robots.txt` deshabilita rutas de búsqueda amplias. No se copia contenido de sus fichas; solo se conservan URLs canónicas como referencia de *deep link*. |
 | **Santa Isabel** | Mismo motor VTEX: `busqueda?ft=` responde 200. Sin convenio no se usa para precios automáticos. |
 | **Lider** | `robots.txt` deshabilita `/search*`, `/catalogo/product*` y `/supermercado/product*`; redirige en bucle a clientes no-browser (fila 302 a queue-it). |
 | **Tottus** | Error TLS 526 desde este entorno. Su `robots.txt` permite búsqueda pero bloquea checkout/cuenta. |
@@ -271,7 +271,7 @@ Verificado el 23-11-2026:
 
 **Conclusión:** no existe una API pública de precios y el scraping automático de esas rutas sería frágil y contractualmente riesgoso. Por eso el prototipo **no hace scraping oculto**: deja el adaptador listo y usa datos referenciales hasta que exista un convenio, feed de afiliado o archivo autorizado.
 
-> Los precios de `data/demo.js` son referenciales: los productos iniciales se tomaron de fichas públicas de Jumbo.cl y el resto son ilustrativos. **No son una oferta comercial ni representan acuerdo con las cadenas.**
+> Los precios de `data/demo.js` son **ilustrativos y referenciales**, generados para la demo. **No son una oferta comercial ni representan acuerdo con las cadenas.** Los nombres y SKU/GTIN son datos de referencia para el comparador; las marcas pertenecen a sus titulares.
 
 ---
 
@@ -337,7 +337,7 @@ Galería + manual de ingeniería: fría, precisa y monocromática. El amarillo `
 
 El logo `assets/up-logo.jpeg` se invierte y se mezcla con `screen` dentro de la barra cromo para que el fondo claro del JPEG desaparezca sobre el vidrio oscuro.
 
-> El interludio "humano" y las macro-fotografías se aproximan con las imágenes de producto disponibles y tratamientos `grayscale`/contraste. Para una versión final se deben reemplazar por fotografía propia con iluminación rim-lit y escala humana real.
+> Las antes denominadas macro-fotografías son ahora **ilustraciones SVG propias** por categoría, sin uso de imágenes de terceros. Para una versión final se pueden reemplazar por fotografía propia con iluminación rim-lit y escala humana real.
 
 ---
 
@@ -360,10 +360,21 @@ Los avisos de "MODO DEMO", la nota del footer y la nota legal del checkout tiene
 | Mascotas | Alimento Perro Adulto Dog Chow 8 kg |
 | Congelados | Choclo Tierno La Crianza 400 g |
 
-### Imágenes y descripciones de referencia
-Los 30 productos incluyen `image`, `description` y `source` (cadena, fecha y URL de origen). Las imágenes se descargaron a `assets/products/` para que el prototipo funcione sin depender del CDN de Jumbo.
+### Imágenes, textos y origen de los datos
 
-> ⚠️ **Uso estrictamente privado:** las imágenes y los textos pertenecen a sus respectivos titulares y se usan solo como referencia visual en este prototipo local. **No publicar, distribuir ni usar con fines comerciales** sin autorización. Para producción se deben reemplazar por fotos y textos propios o licenciados.
+Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de fichas comerciales fueron **eliminados** del repositorio.
+
+| Dato | Origen / tratamiento |
+|---|---|
+| Nombres y presentaciones | Datos de referencia del prototipo. Las marcas mencionadas pertenecen a sus titulares. |
+| Precios | Ilustrativos, generados para la demo. No son oferta comercial. |
+| Imágenes | **Ilustraciones SVG propias** por categoría en `assets/products/*.svg`. |
+| Descripciones | **Texto neutral creado por UP**, sin copiar fichas de supermercados. |
+| `sku` / `gtin` / URL canónica | Referencias de *deep link*; no se copia el contenido de las páginas destino. |
+| `source` (cadena/fecha de captura) | Eliminado: ya no se registra procedencia de terceros. |
+| Paleta, íconos y SVG | Creados para este prototipo bajo el sistema visual negro/amarillo `#ffc700`. |
+
+> ⚠️ **Aviso legal:** este proyecto **no constituye asesoría legal**. El uso de marcas, URLs canónicas, precios referenciales y la publicación de la demo debe ser revisado por un abogado antes de cualquier uso comercial o acuerdo con las cadenas. Ver `LICENSE` (todos los derechos reservados).
 
 ### Mejoras funcionales del prototipo
 - Búsqueda instantánea por nombre, detalle, categoría y descripción.

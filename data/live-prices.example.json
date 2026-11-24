@@ -6,11 +6,11 @@
       "meta": "mode, generatedAt, source, currency, locale, note. El servidor fuerza mode=live.",
       "chains": "Clave = chain_id. name, color, freeShippingFrom (CLP), deliveryFee (CLP).",
       "stores": "id, chain, name, comuna, distanceKm, deliveryMinutes, type. Un chain_id puede tener varios locales.",
-      "products": "id, name, detail, description, image, source, skus, category, emoji, unitLabel, unitAmount, unitName, prices, promos."
+      "products": "id, name, detail, description, image, skus, category, emoji, unitLabel, unitAmount, unitName, prices, promos."
     },
     "skus": {
       "canonico": "url directa a la ficha.Tiene prioridad y se verifica con /api/verify-link.",
-      "fallback": "Si no hay url pero hay sku o gtin, la UI construye una busqueda EXACTA por ese identificador (CHAIN_SEARCH en app.js). Nunca se busca por nombre generico.",
+      "fallback": "Si no hay url pero hay sku o gtin, la UI construye una busqueda EXACTA por ese identificador (constante CHAIN_SEARCH en el front-end). Nunca se busca por nombre generico.",
       "sin_mapeo": "Si no hay url ni sku/gtin, se muestra 'Sin SKU mapeado' y se encola para re-indexacion."
     },
     "precios": "CLP enteros. prices por chain_id; promos opcionales por chain_id. El frontend aplica variacion por local para la demo; en produccion el feed debe entregar precio por store_id.",
@@ -25,7 +25,7 @@
       "Mascotas",
       "Congelados"
     ],
-    "nota_legal": "Imagenes y descripciones de referencia de Jumbo.cl, uso privado. Reemplazar por activos propios o licenciados antes de cualquier publicacion."
+    "nota_legal": "Las imagenes son ilustraciones SVG propias y las descripciones textos neutrales creados por UP. Los precios son referenciales. No es asesoria legal; validar con abogado antes de uso comercial."
   },
   "meta": {
     "mode": "live",
@@ -68,13 +68,8 @@
       "id": "coca-original-15l",
       "name": "Bebida Coca-Cola Original",
       "detail": "Botella desechable 1,5 L",
-      "description": "Refresco de sabor original y burbujeante, en botella desechable de 1.5 litros. Aporta la frescura clásica tipo cola para acompañar comidas y compartir en casa.",
-      "image": "assets/products/coca-original-1.5l.jpg",
-      "source": {
-        "chain": "Jumbo",
-        "capturedAt": "2026-11-23",
-        "url": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p"
-      },
+      "description": "Bebida Coca-Cola Original (1,5 L). Registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/bebidas.svg",
       "skus": {
         "lider": { "sku": "391", "gtin": "7801610001622", "url": null, "exact": true, "verifiedAt": null },
         "jumbo": { "sku": "391", "gtin": "7801610001622", "url": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p", "exact": true, "verifiedAt": "2026-11-23" },
@@ -95,13 +90,8 @@
       "id": "leche-entera-1l",
       "name": "Leche Colun Entera",
       "detail": "Caja 1 L · UHT natural",
-      "description": "Leche entera UHT Colun, en envase de 1 litro. Sabor natural y larga vida útil, lista para consumir sin refrigeración previa.",
-      "image": "assets/products/leche-entera-1l.jpg",
-      "source": {
-        "chain": "Jumbo",
-        "capturedAt": "2026-11-23",
-        "url": "https://www.jumbo.cl/leche-colun-entera-1-l/p"
-      },
+      "description": "Leche Colun Entera (1 L). Registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/lacteos.svg",
       "skus": {
         "lider": { "sku": null, "gtin": "7801209000015", "url": null, "exact": true, "verifiedAt": null },
         "jumbo": { "sku": "1200", "gtin": "7801209000015", "url": "https://www.jumbo.cl/leche-colun-entera-1-l/p", "exact": true, "verifiedAt": "2026-11-23" },
@@ -122,13 +112,8 @@
       "id": "palta-hass-jumbo-granel",
       "name": "Palta Hass",
       "detail": "Granel · unidad",
-      "description": "Palta Hass de temporada, maduración progresiva. Ideal para tostadas, ensaladas y guacamole.",
-      "image": "assets/products/palta-hass-jumbo-granel.jpg",
-      "source": {
-        "chain": "Jumbo",
-        "capturedAt": "2026-11-23",
-        "url": "https://www.jumbo.cl/palta-hass-jumbo-granel/p"
-      },
+      "description": "Palta Hass (1 unidad). Registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/frutas-verduras.svg",
       "skus": {
         "lider": { "sku": null, "gtin": null, "url": null, "exact": false, "verifiedAt": null },
         "jumbo": { "sku": "5869", "gtin": "24851794", "url": "https://www.jumbo.cl/palta-hass-jumbo-granel/p", "exact": true, "verifiedAt": "2026-11-23" },
@@ -149,13 +134,8 @@
       "id": "cafe-250g",
       "name": "Café Molido Gold Premier Forte",
       "detail": "Bolsa 230 g · tueste oscuro",
-      "description": "Café molido de grano arábica con tueste fuerte, cuerpo intenso y notas de chocolate. Presentación en bolsa de 230 gramos.",
-      "image": "assets/products/cafe-250g.jpg",
-      "source": {
-        "chain": "Jumbo",
-        "capturedAt": "2026-11-23",
-        "url": "https://www.jumbo.cl/cafe-molido-gold-premier-forte-230-g/p"
-      },
+      "description": "Café Molido Gold Premier Forte (230 g). Registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/almacen.svg",
       "skus": {
         "lider": { "sku": "8801", "gtin": "7804632001108", "url": null, "exact": true, "verifiedAt": null },
         "jumbo": { "sku": "8801", "gtin": "7804632001108", "url": "https://www.jumbo.cl/cafe-molido-gold-premier-forte-230-g/p", "exact": true, "verifiedAt": "2026-11-23" },
