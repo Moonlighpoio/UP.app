@@ -10,7 +10,7 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 >
 > 🌐 **Demo pública (GitHub Pages):** https://moonlighpoio.github.io/UP.app/ · Repo: https://github.com/Moonlighpoio/UP.app. En Pages se activa automáticamente el **modo demo estático**: usa `data/demo.js`, no llama a `/api/prices` ni a `/api/verify-link`, y los badges muestran `Demo · sin verificación` en lugar de marcar enlaces como rotos.
 >
-> 🔒 **Privacidad y contenidos:** el repo y la demo son públicos para recibir opiniones. Las imágenes son ilustraciones SVG propias y las descripciones son textos neutrales creados por UP; ya no se incluyen fotos ni textos copiados de fichas de supermercados. Los nombres, SKU/GTIN y URLs canónicas siguen siendo datos de referencia necesarios para el *deep link*. Ver [Imágenes, textos y origen de los datos](#imágenes-textos-y-origen-de-los-datos). **Esto no es asesoría legal.**
+> 🔒 **Privacidad y contenidos:** el repo y la demo son públicos para recibir opiniones. Las **fotos referenciales de los 30 productos** fueron restauradas desde la captura original y las descripciones son textos neutrales creados por UP; los SVG propios por categoría se conservan como *fallback*. Las imágenes se usan sólo para demostración: validar derechos antes de cualquier uso comercial. Los nombres, SKU/GTIN y URLs canónicas siguen siendo datos de referencia necesarios para el *deep link*. Ver [Imágenes, textos y origen de los datos](#imágenes-textos-y-origen-de-los-datos). **Esto no es asesoría legal.**
 
 **Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
 
@@ -179,7 +179,7 @@ El alcance objetivo es la **despensa familiar chilena completa**, ya reflejada e
 ## 1. Cómo abrirlo
 
 ### Opción A — Demo estática en GitHub Pages (sin servidor)
-Visitar **https://moonlighpoio.github.io/UP.app/**. Usa `data/demo.js`, no llama a `/api/*` y los badges muestran `Demo · sin verificación`. Requiere internet solo para cargar Inter desde Google Fonts.
+Visitar **https://moonlighpoio.github.io/UP.app/**. Usa `data/demo.js`, no llama a `/api/*` y los badges muestran `Demo · sin verificación`. Inter y las fotos se sirven como activos locales, sin depender de CDNs.
 
 > ℹ️ **Nota:** al usar módulos ES nativos, abrir `index.html` con doble clic (`file://`) ya no funciona en Chrome/Firefox por las restricciones CORS del navegador. Para probar en local usa la Opción B.
 
@@ -463,7 +463,7 @@ Galería + manual de ingeniería: fría, precisa y monocromática. El amarillo `
 
 El logo `assets/up-logo.jpeg` se invierte y se mezcla con `screen` dentro de la barra cromo para que el fondo claro del JPEG desaparezca sobre el vidrio oscuro.
 
-> Las antes denominadas macro-fotografías son ahora **ilustraciones SVG propias** por categoría, sin uso de imágenes de terceros. Para una versión final se pueden reemplazar por fotografía propia con iluminación rim-lit y escala humana real.
+> Esta sección documenta el diseño original. En el catálogo actual se restauraron las **fotos referenciales por producto** (captura del 23-11-2026); los SVG propios por categoría quedaron como respaldo si falta una foto. Para una versión final se recomienda fotografía propia con iluminación rim-lit y escala humana real.
 
 ---
 
@@ -488,16 +488,16 @@ Los avisos de "MODO DEMO", la nota del footer y la nota legal del checkout tiene
 
 ### Imágenes, textos y origen de los datos
 
-Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de fichas comerciales fueron **eliminados** del repositorio.
+Los 30 productos incluyen `image` e `description`. Las **fotos referenciales** se restauraron en `assets/products/` desde la captura original del 23-11-2026; las descripciones siguen siendo texto neutral creado por UP.
 
 | Dato | Origen / tratamiento |
 |---|---|
 | Nombres y presentaciones | Datos de referencia del prototipo. Las marcas mencionadas pertenecen a sus titulares. |
 | Precios | Ilustrativos, generados para la demo. No son oferta comercial. |
-| Imágenes | **Ilustraciones SVG propias** por categoría en `assets/products/*.svg`. |
+| Imágenes | **Fotos referenciales por producto** en `assets/products/*.webp` (30 archivos), restauradas desde la captura original y redimensionadas a 240×240. Los `*.svg` por categoría se conservan como *fallback*. |
 | Descripciones | **Texto neutral creado por UP**, sin copiar fichas de supermercados. |
 | `sku` / `gtin` / URL canónica | Referencias de *deep link*; no se copia el contenido de las páginas destino. |
-| `source` (cadena/fecha de captura) | Eliminado: ya no se registra procedencia de terceros. |
+| `source` (cadena/fecha de captura) | No se reincorporó al dato: la procedencia de la imagen se documenta aquí, con fecha 23-11-2026. |
 | Paleta, íconos y SVG | Creados para este prototipo bajo el sistema visual negro/amarillo `#ffc700`. |
 
 > ⚠️ **Aviso legal:** este proyecto **no constituye asesoría legal**. El uso de marcas, URLs canónicas, precios referenciales y la publicación de la demo debe ser revisado por un abogado antes de cualquier uso comercial o acuerdo con las cadenas. Ver `LICENSE` (todos los derechos reservados).
@@ -538,7 +538,7 @@ Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de
 | **Saneamiento DOM** | `esc`, `safeHttpUrl`, `safeAssetUrl` | Todo texto se escapa antes de `innerHTML`; los `href` solo aceptan `http/https`; las imágenes solo rutas `assets/...` o `http(s)`. Los SKU se codifican con `encodeURIComponent`. |
 | **Feeds autorizados** | `lib/feed.js` + `meta.integration` | Solo `offers[]` con precio + timestamp + SKU/GTIN; URL canónica validada contra la whitelist. TTL de 15 min, circuit breakers y `Retry-After`: un 403/429 pausa el conector, nunca marca un enlace roto ni se evade. Los feeds vencidos se sirven con `stale: true`. |
 
-El CSP del servidor local usa `script-src 'self'` y no depende de CDNs de estilos. Google Fonts se carga como hoja de estilo externa y Inter es la única familia visible; el rediseño eliminó Tailwind, `Libre Caslon Text`, `IBM Plex Mono` y `DotGothic16`. Verificado con Chrome headless: 30 tarjetas claras, 5 filas comparadoras, tipografía Inter y precios con `tabular-nums`.
+El CSP del servidor local usa `script-src 'self'` y no depende de CDNs de estilos ni de fuentes. Inter se sirve desde `assets/fonts/inter-latin.woff2` con `font-display: swap` y es la única familia visible; el rediseño eliminó Tailwind, `Libre Caslon Text`, `IBM Plex Mono` y `DotGothic16`. Verificado con Chrome headless: 30 tarjetas claras, 5 filas comparadoras, tipografía Inter y precios con `tabular-nums`.
 
 > ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
 
@@ -622,13 +622,13 @@ Nuevo módulo `src/a11y.js`, **sin dependencias**: centraliza el foco de los tre
 | **Movimiento reducido** | `@media (prefers-reduced-motion: reduce)` anula animaciones, transiciones y scroll suave. |
 | **Targets táctiles** | Botones, enlaces, filtros, controles de cantidad y tooltip ⓘ con área mínima de `44×44` px, auditados en DOM de 1440, 390 y 360 px. |
 | **Contraste** | Verde `#1E8E3E` para estados y barras; texto verde usa `#137333` (`--color-success-text`) para llegar a 4.5:1 sobre blanco y sobre el fondo claro de badges. |
-| **Rendimiento** | Listeners **delegados** en la grilla: 2 por render. Imágenes `lazy` con `width`/`height` y `decoding="async"`; 30 imágenes medidas con `240×240`. |
+| **Rendimiento** | Listeners **delegados** en la grilla: 2 por render. Fotos WebP q80 a `240×240` (272 KB en total), `lazy` con `width`/`height` y `decoding="async"`. |
 
 Verificación headless del rediseño: salto visible al enfocarse, foco inicial en `close-compare-modal` al abrir el comparador, 12 focusables con trampa de `Tab` y retorno al primero, `Escape` y click fuera cierran, acordeón con `aria-expanded` y foco amarillo. El checkout abre en `checkout-to-delivery`, recorre Resumen → Entrega → Pago → Confirmación y muestra el recibo con el fee de 1% retenido. Sin errores JS ni violaciones de CSP.
 
-**Lighthouse móvil** (`http://localhost:3100`, Chrome headless): **Performance 92** y **Accesibilidad 100**, con 0 fallos de `color-contrast` y `label-content-name-mismatch`. Objetivo ≥90 / ≥95 cumplido.
+**Lighthouse móvil** (`http://localhost:3100`, Chrome headless): **Performance 93** y **Accesibilidad 100** (FCP 2.2 s, LCP 2.7 s, CLS 0.077), con 0 fallos de `color-contrast` y `label-content-name-mismatch`. Objetivo ≥90 / ≥95 cumplido incluso con las 30 fotos referenciales restauradas en WebP.
 
-> ℹ️ Se retiró Tailwind y su CDN: el CSS propio en `styles.css` es la única fuente de estilos. Inter se carga desde Google Fonts con `display=swap`; `test/a11y.test.js` verifica el marcado y las reglas CSS sin agregar paquetes.
+> ℹ️ Se retiró Tailwind y su CDN: el CSS propio en `styles.css` es la única fuente de estilos. Inter se sirve localmente con `font-display: swap`; `test/a11y.test.js` verifica el marcado y las reglas CSS sin agregar paquetes.
 
 ---
 
@@ -689,7 +689,8 @@ Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se r
 | Rediseño 4 · Tarjeta | `42164c8` | Imagen cuadrada, mini-franja, tooltips y agregar rápido |
 | Rediseño 5 · Comparador | `28e1da6` | Tabla clara, mejor precio y filas no confirmadas |
 | Rediseño 6 · Carrito | `bb3d96a` | Drawer agrupado, progreso y checkout de 4 pasos |
-| Rediseño 7 · Pulido | este commit | A11y, sin fuentes heredadas, CI con CSS y documentación |
+| Rediseño 7 · Pulido | `690ff5f` | A11y, sin fuentes heredadas, CI con CSS y documentación |
+| Restauración de imágenes | este commit | 30 fotos referenciales en WebP, rutas reactivadas e Inter local para conservar Lighthouse ≥90 |
 
 ### 14.2 Checklist de verificación
 
@@ -702,6 +703,7 @@ npx prettier --check styles.css
 npm start                         # http://localhost:3100
 curl -sS http://localhost:3100/api/health
 curl -sS http://localhost:3100/api/feed-status
+find assets/products -type f -name '*.webp' | wc -l  # 30 fotos
 git status --short --branch       # limpio y alineado con origin/main
 ```
 

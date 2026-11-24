@@ -16,7 +16,7 @@
       "Un 403/429 del upstream pausa el conector (circuit breaker): se sirve caché con stale=true o se cae al siguiente origen; nunca se evada el bloqueo.",
       "TTL por defecto 15 min (UP_FEED_TTL_MS). Un feed vencido se sirve marcado como stale, nunca como fresco."
     ],
-    "nota_legal": "Ilustraciones SVG propias y descripciones neutrales creadas por UP. Precios referenciales; no es oferta comercial ni asesoría legal. Validar con abogado antes de uso comercial."
+    "nota_legal": "Fotos referenciales de productos y descripciones neutrales creadas por UP. Precios referenciales; no es oferta comercial ni asesoría legal. Validar con abogado antes de uso comercial."
   },
   "meta": {
     "mode": "live",
@@ -172,7 +172,7 @@
       "name": "Bebida Coca-Cola Original",
       "detail": "Botella desechable 1,5 L",
       "description": "Bebida Coca-Cola Original (1,5 L). Registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      "image": "assets/products/bebidas.svg",
+      "image": "assets/products/coca-original-1.5l.webp",
       "category": "Bebidas y Licores",
       "emoji": "🥤",
       "unitLabel": "1,5 L",
@@ -244,7 +244,7 @@
       "name": "Leche Colun Entera",
       "detail": "Caja 1 L · UHT natural",
       "description": "Leche Colun Entera (1 L). Registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      "image": "assets/products/lacteos.svg",
+      "image": "assets/products/leche-entera-1l.webp",
       "category": "Lácteos y Frescos",
       "emoji": "🥛",
       "unitLabel": "1 L",
@@ -315,7 +315,7 @@
       "name": "Palta Hass",
       "detail": "Granel · unidad",
       "description": "Palta Hass (1 unidad). Registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      "image": "assets/products/frutas-verduras.svg",
+      "image": "assets/products/palta-hass-jumbo-granel.webp",
       "category": "Frutas y Verduras",
       "emoji": "🥑",
       "unitLabel": "1 unidad",
@@ -384,7 +384,7 @@
       "name": "Café Molido Gold Premier Forte",
       "detail": "Bolsa 230 g · tueste oscuro",
       "description": "Café Molido Gold Premier Forte (230 g). Registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      "image": "assets/products/almacen.svg",
+      "image": "assets/products/cafe-250g.webp",
       "category": "Almacén / Despensa",
       "emoji": "☕",
       "unitLabel": "230 g",
