@@ -871,7 +871,7 @@ npm run validate-catalog && npm run check-freshness && npm test
 | Corrección Fase 3 · Procedencia | `cbfe28a` | Migración 002, triggers, TTL 15 min, `match_queue` coherente y 105/105 tests |
 | Corrección Fase 4 · Enlaces | `c492284` | Migración 003, robots + ritmo 1,5–2 s, piloto Jumbo 30/30 en `url_queue`, ofertas `pending` y 113/113 tests |
 | Corrección Fase 5 · Verificación ampliada | `e5b2662` | Migración 004, 150 enlaces sin URL inventada, `--all`/`--chain`, pausa ante colas, ofertas `pending` y 115/115 tests |
-| Corrección Fase 6 · Precios verificados | este commit | Migración 005, adapter Pricto, `npm run sync`, TTL por fuente 15 min/48 h, atribución en UI, fail-closed y 133/133 tests; sin key aún no hay precios reales |
+| Corrección Fase 6 · Precios verificados | `0c0f85b` | Migración 005, adapter Pricto, `npm run sync`, TTL por fuente 15 min/48 h, atribución en UI, fail-closed y 133/133 tests; sin key aún no hay precios reales |
 
 ### 14.2 Checklist de verificación
 
