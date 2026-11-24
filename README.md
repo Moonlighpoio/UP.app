@@ -12,7 +12,7 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 >
 > 🔒 **Privacidad y contenidos:** el repo y la demo son públicos para recibir opiniones. Las **fotos referenciales de los 30 productos** fueron restauradas desde la captura original y las descripciones son textos neutrales creados por UP; los SVG propios por categoría se conservan como *fallback*. Las imágenes se usan sólo para demostración: validar derechos antes de cualquier uso comercial. Los nombres, SKU/GTIN y URLs canónicas siguen siendo datos de referencia necesarios para el *deep link*. Ver [Imágenes, textos y origen de los datos](#imágenes-textos-y-origen-de-los-datos). **Esto no es asesoría legal.**
 
-**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [catálogo SQLite / Fase 2](#131-catálogo-sqlite-versionado-fase-2) · [procedencia y frescura / Fase 3](#132-procedencia-y-frescura-fase-3) · [verificación de enlaces / Fase 4](#133-verificación-de-enlaces-fase-4) · [ampliación a otras cadenas / Fase 5](#134-ampliación-de-verificación-fase-5) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
+**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [catálogo SQLite / Fase 2](#131-catálogo-sqlite-versionado-fase-2) · [procedencia y frescura / Fase 3](#132-procedencia-y-frescura-fase-3) · [verificación de enlaces / Fase 4](#133-verificación-de-enlaces-fase-4) · [ampliación a otras cadenas / Fase 5](#134-ampliación-de-verificación-fase-5) · [precios verificados / Fase 6](#135-precios-verificados-con-pricto-fase-6) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
 
 ---
 
@@ -245,13 +245,18 @@ UP.app/
 │   └── live-prices.json         # (opcional, ignorado por git) activa el modo EN VIVO
 ├── db/
 │   ├── migrations/001_init.sql  # Esquema reproducible + índices gtin / chain+sku / product_url
+│   ├── migrations/005_price_source_attribution.sql # Fuente y atribución (Fase 6)
 │   └── legacy/demo-2026-11-23.json # Instantánea congelada de los 30 productos originales
 ├── lib/
-│   └── feed.js                  # Normalización, TTL y circuit breakers (CJS, sin deps)
+│   ├── feed.js                  # Normalización, TTL y circuit breakers (CJS, sin deps)
+│   ├── link-policy.js           # robots, ritmo, ETag y backoff con jitter
+│   └── pricto.js                # Adapter de precios reales; sandbox prohibida (Fase 6)
 ├── scripts/
 │   ├── catalog-db.js            # Migraciones, semilla, validación y export (node:sqlite)
 │   ├── build-catalog.js         # Reconstruye la BD y los artefactos
 │   ├── export-catalog.js        # Regenera catalog.json + demo.js desde la BD
+│   ├── migrate-catalog.js       # Aplica migraciones pendientes sin reconstruir la historia
+│   ├── sync.js                  # Ingesta verificada desde Pricto + regeneración (Fase 6)
 │   ├── validate-catalog.js      # Valida esquema, EAN-13, estados y artefactos
 │   └── check-contrast.js        # Auditoría WCAG 2.1 sin dependencias (Fase 1)
 ├── test/
@@ -262,6 +267,8 @@ UP.app/
 │   ├── filters.test.js          # Cadena, despacho gratis, precios y orden
 │   ├── feed.test.js             # Contrato offers[], TTL, circuit breakers y 403/429
 │   ├── catalog-db.test.js       # SQLite: esquema, EAN-13, precios, estados y export
+│   ├── pricto.test.js           # Adapter: validación estricta, pausa, reintentos y ETag
+│   ├── sync.test.js             # CLI: sin key, dry-run, fail-closed y escritura verificada
 │   ├── server.test.js           # /api/*, SSRF, caché, HEAD→GET, saltos, rate limit y headers
 │   ├── security.test.js         # Saneamiento de URLs y escape HTML
 │   └── package.json             # {"type":"module"} para los tests ESM
@@ -554,7 +561,7 @@ El CSP del servidor local usa `script-src 'self'` y no depende de CDNs de estilo
 
 > ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
 
-La suite completa tiene **115 tests** (58 de fases anteriores + 24 de Fase 9 + 6 del rediseño de filtros + 4 de mapeo de identificadores + 7 de SQLite/Fase 2 + 6 de procedencia/frescura + 8 de verificación de enlaces + 2 de ampliación Fase 5). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
+La suite completa tiene **133 tests** (115 hasta Fase 5 + 3 de TTL por fuente y atribución + 10 del adapter Pricto + 5 de la CLI `sync`). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
 
 ---
 
@@ -566,7 +573,7 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 115 tests: dinero, deep links, servidor, seguridad, filtros, a11y, feeds, catálogo, política de enlaces y colas por cadena
+npm test           # 133 tests: dinero, deep links, servidor, seguridad, filtros, a11y, feeds, catálogo, política de enlaces, colas, Pricto y sync
 npm run format     # aplica Prettier a lib/, src/, test/ y eslint.config.js
 ```
 
@@ -662,7 +669,7 @@ La metadata de integración expone `mode`, `source`, `ageSeconds`, `stale`, `fee
 Verificación local:
 
 ```bash
-npm run lint && npm run format:check && npm test   # 115/115 en verde (tras Fase 5)
+npm run lint && npm run format:check && npm test   # 133/133 en verde (tras Fase 6)
 npm start                                          # puerto 3100
 curl -sS http://localhost:3100/api/health
 curl -sS 'http://localhost:3100/api/prices?q=leche' | python3 -m json.tool
@@ -700,10 +707,10 @@ Comandos (sin red, sin scraping):
 npm run build-catalog      # reconstruye la BD desde db/legacy/ y regenera artefactos
 npm run export-catalog     # regenera catalog.json + demo.js desde la BD actual
 npm run validate-catalog   # valida esquema, migraciones, índices, EAN-13, estados y artefactos
-npm test                   # 115/115 (7 de SQLite + 6 de procedencia/frescura + 10 de enlaces)
+npm test                   # 133/133 (SQLite, procedencia/frescura, enlaces, Pricto y sync)
 ```
 
-`server.js` lee la BD en `/api/prices` (`meta.source: data/catalog.sqlite`) y bloquea el acceso estático a `*.sqlite`. El front-end y el carrito/checkout no cambiaron: `src/links.js` sólo añadió `plu` como tercer fallback de búsqueda exacta, para no romper los 5/5 enlaces de esos tres productos a granel. `npm run verify-links` ya existe y se ejecutó en Fase 4 (§13.3); **todavía no existe** `npm run sync` (Fase 6) y no se han creado stubs que simulen éxito.
+`server.js` lee la BD en `/api/prices` (`meta.source: data/catalog.sqlite`) y bloquea el acceso estático a `*.sqlite`. El front-end y el carrito/checkout no cambiaron: `src/links.js` sólo añadió `plu` como tercer fallback de búsqueda exacta, para no romper los 5/5 enlaces de esos tres productos a granel. `npm run verify-links` ya existe y se ejecutó en Fase 4 (§13.3); `npm run sync` se implementó en Fase 6 (§13.5) y su corrida real queda pendiente de la key del usuario. No se han creado stubs que simulen éxito.
 
 ---
 
@@ -720,21 +727,21 @@ La migración `db/migrations/002_price_provenance.sql` separa la procedencia de 
 
 Un registro `verified` exige **las dos parejas**. Dos triggers (`offers_verified_provenance_insert` y `offers_verified_provenance_update`) lo imprimen incluso si alguien escribe directamente en SQLite: no se puede marcar `verified` “porque sí”. Las ofertas heredadas siguen siendo las mismas **180 `pending`** con `priceSourceUrl = null` y `priceCapturedAt = null`: ningún precio referencial se vuelve verificado.
 
-La frescura usa el mismo TTL de **15 min** que `lib/feed.js` (`UP_FEED_TTL_MS`). `freshnessInfo` clasifica `fresh | stale | missing | invalid | future`; `future` se trata como error de datos. `applyFreshness(db)` **sólo degrada** `verified → stale`: nunca rehabilita un precio sin evidencia nueva. `checkFreshness(db)` es de sólo lectura y falla si hay un `verified` vencido, un `pending` con precio capturado o un `stale` sin procedencia.
+La frescura usa **TTL por fuente** (decisión de Fase 6): 15 min por defecto, alineado con `UP_FEED_TTL_MS`, y **48 h para `pricto`** porque su captura es diaria. `ttlForSource` resuelve el valor; las fuentes desconocidas caen al plazo corto. `freshnessInfo` clasifica `fresh | stale | missing | invalid | future`; `future` se trata como error de datos. `applyFreshness(db)` **sólo degrada** `verified → stale`: nunca rehabilita un precio sin evidencia nueva. `checkFreshness(db)` es de sólo lectura y falla si hay un `verified` vencido, un `pending` con precio capturado o un `stale` sin procedencia.
 
-`validateDb` también audita la coherencia de `match_queue`: una fila por cadena no-Jumbo y una adicional por cada producto PLU en Jumbo (153 en total), sin huérfanos, duplicados ni identificadores contradictorios con la oferta y el producto. El export `data/catalog.json` incorpora `priceSourceUrl` por oferta y `meta.freshness` (`ttlMs` + política); el objeto que consume el front-end no cambia, por lo que `data/demo.js` mantiene los mismos datos y sólo actualiza su cabecera generada.
+`validateDb` también audita la coherencia de `match_queue`: una fila por cadena no-Jumbo y una adicional por cada producto PLU en Jumbo (153 en total), sin huérfanos, duplicados ni identificadores contradictorios con la oferta y el producto. El export `data/catalog.json` incorpora `priceSourceUrl`, `priceSource` y `priceAttribution` por oferta, además de `meta.freshness` (`ttlMs`, `sourceTtlMs` y política). El objeto que consume el front-end incorpora esos campos **sólo en ofertas verificadas**, para mostrar la atribución; las 180 ofertas `pending` siguen iguales y `demo.js` mantiene sus datos originales.
 
 Comandos (sin red):
 
 ```bash
-npm run migrate-catalog   # aplica 002 a la BD ya versionada y regenera artefactos
-npm run check-freshness   # 0 verified vencidos · 180 pending · falla si hay contradicción
+npm run migrate-catalog   # aplica 002 a 005 a la BD ya versionada y regenera artefactos
+npm run check-freshness   # 0 verified vencidos · 180 pending · TTL 15 min / 48 h pricto
 npm run validate-catalog  # añade triggers, match_queue y meta.freshness a la validación
 npm run build-catalog     # reconstrucción desde cero, determinista (hash estable tras 2 ejecuciones)
-npm test                  # 115/115 tras Fase 5 (6 nuevos en Fase 3 + 10 en Fase 4/5)
+npm test                  # 133/133 tras Fase 6
 ```
 
-Riesgos y decisiones: el archivo SQLite migrado *in situ* y el reconstruido desde `db/legacy/` tienen bytes distintos, pero exportan exactamente el mismo `catalog.json`/`demo.js` y pasan la misma validación; se prefiere la reconstrucción para reproducibilidad. La cadena piloto de Fase 4 ya fue elegida y ejecutada (§13.3); `npm run sync` (Fase 6) sigue sin crearse y no se inventa una autorización de acceso ni un precio verificable.
+Riesgos y decisiones: el archivo SQLite migrado *in situ* y el reconstruido desde `db/legacy/` tienen bytes distintos, pero exportan exactamente el mismo `catalog.json`/`demo.js` y pasan la misma validación; se prefiere la reconstrucción para reproducibilidad. La cadena piloto de Fase 4 ya fue elegida y ejecutada (§13.3); la ingesta de precios se describe en §13.5 y no se inventa una autorización de acceso ni un precio verificable.
 
 ---
 
@@ -765,7 +772,7 @@ npm run build-catalog && shasum -a 256 data/catalog.sqlite data/catalog.json dat
 
 Resultado de la corrida real: **30/30 fichas `url_queue.verified`**, `http_status = 200`, `robots_status = allowed`, `final_url` idéntico a la canónica y `robots_checked_at = 2026-11-24T22:43:25.083Z`. Jumbo no devolvió `ETag` ni `Last-Modified` en esas respuestas, por lo que esas dos columnas quedaron `NULL` (no se inventaron). **30/30 ofertas Jumbo siguen `pending` y 0 precios verificados en toda la BD.** Un primer dry-run pausó las 3 fichas por un bug de escapado de `?` en el parser de robots: se corrigió con test de regresión y la corrida definitiva quedó sin pausas, rotas ni no disponibles. CI no ejecuta esta CLI por red; Pages sigue siendo estático e idéntico.
 
-Riesgos y decisiones: robots.txt permitía las rutas `/p` del catálogo, pero eso **no equivale a una validación legal de términos de uso**; el asistente no es asesor legal y cualquier integración comercial requiere revisión y autorización explícitas. El rebuild determinista tras 003 dio hashes estables (`catalog.sqlite` `954fad20…`, `catalog.json` `6a71ad94…`, `demo.js` `82baf5de…`). Reconstruir desde `db/legacy/` reinicia `url_queue` a `pending`: para conservar la evidencia se versiona la BD verificada y, si se reconstruye, hay que repetir la CLI con autorización. No se creó `npm run sync`: queda para Fase 6.
+Riesgos y decisiones: robots.txt permitía las rutas `/p` del catálogo, pero eso **no equivale a una validación legal de términos de uso**; el asistente no es asesor legal y cualquier integración comercial requiere revisión y autorización explícitas. El rebuild determinista tras 003 dio hashes estables (`catalog.sqlite` `954fad20…`, `catalog.json` `6a71ad94…`, `demo.js` `82baf5de…`). Reconstruir desde `db/legacy/` reinicia `url_queue` a `pending`: para conservar la evidencia se versiona la BD verificada y, si se reconstruye, hay que repetir la CLI con autorización. La ingesta de precios con `npm run sync` se implementó en Fase 6 (§13.5); no se ejecutó sin key real.
 
 ---
 
@@ -800,7 +807,34 @@ Resultado de la corrida real:
 
 **180/180 ofertas siguen `pending` y 0 precios verificados.** Revisar un patrón de búsqueda no acredita que el producto exista ni su precio: sólo acredita la respuesta HTTP del enlace que la UI ya usaba. El dry-run previo coincidió exactamente con la corrida real. CI no ejecuta esta CLI por red; Pages no cambió su comportamiento.
 
-Riesgos y decisiones: el 404 de Santa Isabel puede significar patrón retirado o producto no encontrado; como no se parsea HTML, se marca el **enlace** como roto y no se afirma nada sobre el SKU. Lider y Unimarc requieren acceso renegociado; no se evitan colas ni se reintentan agresivamente. Un `robots.txt` permisible no equivale a una validación legal de términos de uso y el asistente no es asesor legal. Rebuild determinista desde `db/legacy/` tras 004: `catalog.sqlite` `8d3bfe88…`, `catalog.json` `bd669b9d…`, `demo.js` `82baf5de…` (idéntico al de Fase 4). La BD **versionada** conserva la evidencia de la corrida real y por eso tiene otro hash (`8fc19e22…`); reconstruirla desde cero reinicia `url_queue` a `pending`. `npm run sync` sigue reservado para Fase 6.
+Riesgos y decisiones: el 404 de Santa Isabel puede significar patrón retirado o producto no encontrado; como no se parsea HTML, se marca el **enlace** como roto y no se afirma nada sobre el SKU. Lider y Unimarc requieren acceso renegociado; no se evitan colas ni se reintentan agresivamente. Un `robots.txt` permisible no equivale a una validación legal de términos de uso y el asistente no es asesor legal. Rebuild determinista desde `db/legacy/` tras 004: `catalog.sqlite` `8d3bfe88…`, `catalog.json` `bd669b9d…`, `demo.js` `82baf5de…` (idéntico al de Fase 4). La BD **versionada** conserva la evidencia de la corrida real y por eso tiene otro hash (`8fc19e22…`); reconstruirla desde cero reinicia `url_queue` a `pending`. La ingesta de precios se describe en §13.5 y no inventa autorización de acceso ni precio verificable.
+
+---
+
+## 13.5 Precios verificados con Pricto (Fase 6)
+
+> Decisiones del usuario: **SQLite + artefactos**, **atribución visible en la demo pública**, **TTL por fuente de 48 h para Pricto** y **implementar ahora, key después**. No se ejecuta ninguna corrida de precios reales hasta que el usuario exporte su propia key.
+
+**Fuente encontrada y evaluada:** [Pricto](https://pricto.dev), API REST con precios reales de **Jumbo, Santa Isabel y Unimarc** (`cl-jumbo`, `cl-santaisabel`, `cl-unimarc`), con URL de ficha, `observed_at`, `capture_method`, `quality_status` y `match.confidence`. Expone `GET /v1/products?gtin=` y `GET /v1/products/{id}/prices`, y exige una línea de atribución en cada respuesta. **No cubre Lider, Tottus ni Coope**: esas cadenas siguen `pending` por bloqueos, colas o términos, igual que tras Fase 5.
+
+La sandbox pública (`sk_test_sandbox`) responde, pero sus precios, GTIN y URLs son **inventados** y los términos de Pricto prohíben presentarlos como reales. El adapter los rechaza dos veces: exige key `sk_live_…` y descarta cualquier respuesta con warnings `synthetic_data`. La atribución se guarda y se muestra; el asistente no es asesor legal y los términos deben ser aceptados por el usuario.
+
+**Cambios implementados:**
+
+- Migración `005_price_source_attribution.sql`: columnas `price_source` y `price_attribution` en `offers` y dos triggers que impiden un `verified` sin fuente ni atribución. `meta.freshness.sourceTtlMs.pricto = 172800000` (48 h); los feeds en vivo conservan 15 min.
+- `lib/pricto.js`: sólo GTIN EAN-13, `match.kind = identical`, `match.method = gtin`, confianza ≥ 0.85, `quality_status = ok` sin flags, `in_stock`, CLP entero, `capture_method` permitido, observación ≤ 48 h y sin futuro, URL HTTPS del dominio de la cadena y atribución obligatoria. Respeta `robots.txt`, espacia peticiones 1,5–2 s por dominio, usa ETag/Last-Modified con 304, reintentos con jitter ante 5xx, circuit breaker y **pausa sin evasión ante 403/429**. La key nunca se registra ni se commitea.
+- `scripts/sync.js` + `npm run sync`: `--dry-run` (cotiza la búsqueda con `dry_run=true` y estima los créditos de precios por tarifa documentada; **no pide precios ni escribe**), `--chain=<id>`, `--limit=N` y `--max-credits=N` (default 100). Sin key real falla antes de abrir la BD. Cualquier oferta rechazada queda `pending`: no se enlaza como válida, no muestra precio verificado y no entra en el comparador como verificada.
+- Escritura transaccional: **nunca** se usa `build-catalog` tras un sync; se valida la BD y se regeneran `catalog.json`/`demo.js` con `export-catalog`. El comparador muestra `✓ Precio verificado`, la línea `Fuente: Pricto · …` y un enlace a la ficha exacta; el CSS usa `--color-text-muted` (`#5F6368`, ratio 6.05 sobre blanco) y el carrito, el fee del 1%, el split 99%/1% y el checkout simulado quedan intactos.
+
+```bash
+export PRICTO_API_KEY=<tu key sk_live_...>   # sólo en tu entorno local; nunca en git
+npm run sync -- --dry-run                    # cotiza créditos, sin pedir precios ni escribir
+npm run sync -- --chain=jumbo --limit=1      # prueba acotada
+npm run sync                                 # corrida completa (≈83 créditos del plan Free)
+npm run validate-catalog && npm run check-freshness && npm test
+```
+
+**Estado de esta entrega:** el código está implementado y verificado con tests deterministas (133/133), pero **no hay ningún precio real sincronizado todavía**: la BD sigue con **180 ofertas `pending` y 0 `verified`**. El dry-run y la corrida real quedan pendientes de la key del usuario. Un sync completo de 27 GTIN × 3 cadenas cuesta ≈83 de los 100 créditos mensuales del plan Free; Pricto captura una vez al día, por eso el TTL es 48 h y no se falsifica `observed_at`. CI y Pages no ejecutan `sync` por red.
 
 ---
 
@@ -836,7 +870,8 @@ Riesgos y decisiones: el 404 de Santa Isabel puede significar patrón retirado o
 | Corrección Fase 2 · Catálogo | `92e716f` | SQLite versionado, 30/180/153/30, Node 24 LTS y artefactos derivados |
 | Corrección Fase 3 · Procedencia | `cbfe28a` | Migración 002, triggers, TTL 15 min, `match_queue` coherente y 105/105 tests |
 | Corrección Fase 4 · Enlaces | `c492284` | Migración 003, robots + ritmo 1,5–2 s, piloto Jumbo 30/30 en `url_queue`, ofertas `pending` y 113/113 tests |
-| Corrección Fase 5 · Verificación ampliada | este commit | Migración 004, 150 enlaces sin URL inventada, `--all`/`--chain`, pausa ante colas, ofertas `pending` y 115/115 tests |
+| Corrección Fase 5 · Verificación ampliada | `e5b2662` | Migración 004, 150 enlaces sin URL inventada, `--all`/`--chain`, pausa ante colas, ofertas `pending` y 115/115 tests |
+| Corrección Fase 6 · Precios verificados | este commit | Migración 005, adapter Pricto, `npm run sync`, TTL por fuente 15 min/48 h, atribución en UI, fail-closed y 133/133 tests; sin key aún no hay precios reales |
 
 ### 14.2 Checklist de verificación
 
@@ -844,10 +879,11 @@ Riesgos y decisiones: el 404 de Santa Isabel puede significar patrón retirado o
 npm ci
 npm run lint
 npm run format:check
-npm test                          # 115/115
+npm test                          # 133/133
 npm run validate-catalog
-npm run check-freshness
+npm run check-freshness            # TTL 15 min / 48 h pricto
 # npm run verify-links -- --all --dry-run --limit=1  # manual, todas las cadenas; no se ejecuta en CI
+# export PRICTO_API_KEY=<sk_live_...> && npm run sync -- --dry-run  # manual con key; no se ejecuta en CI ni se commitea la key
 npx prettier --check styles.css
 npm start                         # http://localhost:3100
 curl -sS http://localhost:3100/api/health

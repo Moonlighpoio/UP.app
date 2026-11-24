@@ -1691,6 +1691,21 @@ body :focus-visible {
   font-weight: 700;
   text-transform: uppercase;
 }
+.up-price-source {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+.up-price-source a {
+  color: inherit;
+  text-decoration: underline;
+}
+.up-price-source-chip {
+  color: var(--success-text);
+  font-weight: 700;
+}
 .up-compare-price {
   font-size: 20px;
 }

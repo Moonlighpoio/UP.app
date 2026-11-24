@@ -22,10 +22,13 @@ const ROOT = path.resolve(__dirname, '..');
 const CATALOG_SCHEMA_VERSION = '1.0.0';
 const FEED_VERSION = '2026-11-24';
 const FRESHNESS_TTL_MS = 15 * 60 * 1000; // Alineado con UP_FEED_TTL_MS en lib/feed.js.
+const PRICTO_TTL_MS = 48 * 60 * 60 * 1000; // Pricto captura una vez al día (Fase 6).
+const PRICE_SOURCE_TTL_MS = Object.freeze({ pricto: PRICTO_TTL_MS });
 const FRESHNESS_POLICY =
   'Toda oferta verified necesita sourceUrl+capturedAt (identificador) y ' +
-  'priceSourceUrl+priceCapturedAt (precio). Pasado el TTL de 15 min pasa a stale; ' +
-  'pending nunca muestra precio verificado ni entra en "mejor precio".';
+  'priceSourceUrl+priceCapturedAt (precio), además de priceSource y priceAttribution. ' +
+  'TTL por fuente: 15 min para feeds en vivo y 48 h para Pricto (captura diaria); ' +
+  'pasado ese TTL pasa a stale. pending nunca muestra precio verificado ni entra en "mejor precio".';
 const CHAIN_ORDER = ['lider', 'jumbo', 'tottus', 'unimarc', 'santaisabel', 'coope'];
 const OFFER_STATUSES = Object.freeze([
   'verified',
@@ -88,18 +91,26 @@ function isPositiveInt(value) {
   return Number.isInteger(value) && value > 0;
 }
 
+/** TTL vigente para una fuente; las desconocidas usan el TTL corto por defecto. */
+function ttlForSource(source, fallback = FRESHNESS_TTL_MS) {
+  if (typeof source === 'string' && Object.hasOwn(PRICE_SOURCE_TTL_MS, source)) {
+    return PRICE_SOURCE_TTL_MS[source];
+  }
+  return fallback;
+}
+
 /**
  * Estado de frescura de un timestamp ISO 8601. `future` es un error de datos:
  * ningún precio puede capturarse en el futuro.
  */
-function freshnessInfo(iso, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
+function freshnessInfo(iso, { now = Date.now, ttlMs = FRESHNESS_TTL_MS, source = null } = {}) {
   if (typeof iso !== 'string' || !iso.trim()) return { state: 'missing', ageMs: null };
   const captured = Date.parse(iso);
   if (!Number.isFinite(captured)) return { state: 'invalid', ageMs: null };
   const current = now();
   if (captured > current) return { state: 'future', ageMs: 0 };
   const ageMs = current - captured;
-  return { state: ageMs > ttlMs ? 'stale' : 'fresh', ageMs };
+  return { state: ageMs > ttlForSource(source, ttlMs) ? 'stale' : 'fresh', ageMs };
 }
 
 /**
@@ -108,7 +119,7 @@ function freshnessInfo(iso, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
  */
 function applyFreshness(db, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
   const verified = db
-    .prepare("SELECT id, price_captured_at FROM offers WHERE status = 'verified'")
+    .prepare("SELECT id, price_captured_at, price_source FROM offers WHERE status = 'verified'")
     .all();
   const stamp = new Date(now()).toISOString();
   const update = db.prepare("UPDATE offers SET status = 'stale', updated_at = ? WHERE id = ?");
@@ -116,7 +127,12 @@ function applyFreshness(db, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
   db.exec('BEGIN');
   try {
     for (const row of verified) {
-      if (freshnessInfo(row.price_captured_at, { now, ttlMs }).state !== 'fresh') {
+      const fresh = freshnessInfo(row.price_captured_at, {
+        now,
+        ttlMs,
+        source: row.price_source,
+      });
+      if (fresh.state !== 'fresh') {
         update.run(stamp, row.id);
         changed += 1;
       }
@@ -141,14 +157,21 @@ function checkFreshness(db, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
       if (!row.source_url || !row.captured_at || !row.price_source_url || !row.price_captured_at) {
         errors.push(`${label}: verified sin las dos parejas de procedencia`);
       }
-      const fresh = freshnessInfo(row.price_captured_at, { now, ttlMs });
+      if (!row.price_source || !row.price_attribution) {
+        errors.push(`${label}: verified sin fuente ni atribución de precio`);
+      }
+      const fresh = freshnessInfo(row.price_captured_at, {
+        now,
+        ttlMs,
+        source: row.price_source,
+      });
       if (fresh.state !== 'fresh') {
         const detail = fresh.state === 'stale' ? 'stale (vencido)' : fresh.state;
         errors.push(`${label}: verified con precio ${detail}; ejecutar reconciliación`);
       }
     } else if (row.status === 'pending') {
       summary.pending += 1;
-      if (row.price_source_url || row.price_captured_at) {
+      if (row.price_source_url || row.price_captured_at || row.price_source) {
         errors.push(`${label}: pending con precio capturado (contradicción de estado)`);
       }
     } else if (row.status === 'stale') {
@@ -160,7 +183,7 @@ function checkFreshness(db, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
       summary.other += 1;
     }
   }
-  return { errors, summary, ttlMs };
+  return { errors, summary, ttlMs, sourceTtlMs: PRICE_SOURCE_TTL_MS };
 }
 
 function migrationFiles() {
@@ -287,11 +310,11 @@ function seedCatalog(db, legacy = loadLegacy()) {
     INSERT INTO offers (
       product_id, chain_id, sku, gtin, plu, identifier_kind, identifier_value, price,
       currency, status, canonical_url, source_url, captured_at, price_source_url,
-      price_captured_at, exact, note, created_at, updated_at
+      price_captured_at, price_source, price_attribution, exact, note, created_at, updated_at
     ) VALUES (
       @product_id, @chain_id, @sku, @gtin, @plu, @identifier_kind, @identifier_value, @price,
       @currency, @status, @canonical_url, @source_url, @captured_at, @price_source_url,
-      @price_captured_at, @exact, @note, @created_at, @updated_at
+      @price_captured_at, @price_source, @price_attribution, @exact, @note, @created_at, @updated_at
     )
   `);
   const putMatch = db.prepare(`
@@ -375,6 +398,8 @@ function seedCatalog(db, legacy = loadLegacy()) {
           captured_at: capturedAt,
           price_source_url: null,
           price_captured_at: null,
+          price_source: null,
+          price_attribution: null,
           exact: chainId === 'jumbo' && mapping.exact === true ? 1 : 0,
           note: noteForChain,
           created_at: stamp,
@@ -500,6 +525,8 @@ function readCatalog(db) {
         capturedAt: offer.captured_at,
         priceSourceUrl: offer.price_source_url,
         priceCapturedAt: offer.price_captured_at,
+        priceSource: offer.price_source,
+        priceAttribution: offer.price_attribution,
         exact: offer.exact === 1,
         note: offer.note,
       })),
@@ -525,7 +552,11 @@ function readCatalog(db) {
       source: LEGACY_SOURCE,
       catalogSource: DB_SOURCE,
       dataPolicy: DATA_POLICY,
-      freshness: { ttlMs: FRESHNESS_TTL_MS, policy: FRESHNESS_POLICY },
+      freshness: {
+        ttlMs: FRESHNESS_TTL_MS,
+        sourceTtlMs: PRICE_SOURCE_TTL_MS,
+        policy: FRESHNESS_POLICY,
+      },
       counts,
     },
     chains,
@@ -548,6 +579,15 @@ function toFrontPayload(catalog) {
         exact: offer.exact,
         status: offer.status,
         ...(offer.capturedAt ? { verifiedAt: offer.capturedAt } : {}),
+        ...(offer.priceSource === 'pricto'
+          ? {
+              priceSource: offer.priceSource,
+              priceAttribution: offer.priceAttribution,
+              priceCapturedAt: offer.priceCapturedAt,
+              priceSourceUrl: offer.priceSourceUrl,
+              priceRetailerUrl: offer.sourceUrl,
+            }
+          : {}),
       };
       prices[offer.chainId] = offer.price;
     }
@@ -584,9 +624,9 @@ function toFrontPayload(catalog) {
 function renderDemoJs(catalog) {
   const header = [
     '/**',
-    ' * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (Fases 2 y 3).',
+    ' * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (Fases 2, 3 y 6).',
     ' * No editar a mano: npm run build-catalog o npm run export-catalog.',
-    ' * Precios referenciales; todas las ofertas están `pending`. Ver README.',
+    ' * Precios referenciales salvo ofertas verificadas con atribución. Ver README.',
     ' */',
   ].join('\n');
   return (
@@ -605,6 +645,7 @@ function validateCatalogObject(catalog, { now = Date.now, ttlMs = FRESHNESS_TTL_
   if (
     !catalog.meta?.freshness ||
     catalog.meta.freshness.ttlMs !== FRESHNESS_TTL_MS ||
+    catalog.meta.freshness.sourceTtlMs?.pricto !== PRICTO_TTL_MS ||
     typeof catalog.meta.freshness.policy !== 'string'
   ) {
     errors.push('meta.freshness ausente o inválido');
@@ -665,7 +706,14 @@ function validateCatalogObject(catalog, { now = Date.now, ttlMs = FRESHNESS_TTL_
             `${product.id}/${offer.chainId}: verified sin las dos parejas de procedencia`
           );
         }
-        const fresh = freshnessInfo(offer.priceCapturedAt, { now, ttlMs });
+        if (!offer.priceSource || !offer.priceAttribution) {
+          errors.push(`${product.id}/${offer.chainId}: verified sin fuente ni atribución`);
+        }
+        const fresh = freshnessInfo(offer.priceCapturedAt, {
+          now,
+          ttlMs,
+          source: offer.priceSource,
+        });
         if (fresh.state !== 'fresh') {
           errors.push(`${product.id}/${offer.chainId}: verified con precio ${fresh.state}`);
         }
@@ -690,7 +738,7 @@ function validateCatalogObject(catalog, { now = Date.now, ttlMs = FRESHNESS_TTL_
 }
 
 /** Validación de la BD: esquema, migraciones, índices, datos y consistencia. */
-function validateDb(db) {
+function validateDb(db, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
   const errors = [];
   const objects = db
     .prepare("SELECT type, name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'")
@@ -714,7 +762,12 @@ function validateDb(db) {
     errors.push(`migraciones aplicadas ${migrations}/${migrationFiles().length}`);
   }
   const triggers = new Set(objects.filter((row) => row.type === 'trigger').map((row) => row.name));
-  for (const name of ['offers_verified_provenance_insert', 'offers_verified_provenance_update']) {
+  for (const name of [
+    'offers_verified_provenance_insert',
+    'offers_verified_provenance_update',
+    'offers_verified_attribution_insert',
+    'offers_verified_attribution_update',
+  ]) {
     if (!triggers.has(name)) errors.push(`falta trigger ${name}`);
   }
   const badProducts = db.prepare('SELECT id, gtin FROM products WHERE gtin IS NOT NULL').all();
@@ -734,7 +787,7 @@ function validateDb(db) {
       errors.push(`${row.product_id}/${row.chain_id}: verified sin trazabilidad`);
     }
   }
-  const { errors: freshnessErrors } = checkFreshness(db);
+  const { errors: freshnessErrors } = checkFreshness(db, { now, ttlMs });
   errors.push(...freshnessErrors.map((error) => `freshness: ${error}`));
 
   const productsById = new Map(
@@ -803,7 +856,7 @@ function validateDb(db) {
   let catalog = null;
   if (!errors.length) {
     catalog = readCatalog(db);
-    errors.push(...validateCatalogObject(catalog));
+    errors.push(...validateCatalogObject(catalog, { now, ttlMs }));
   }
   return { errors, catalog };
 }
@@ -839,6 +892,8 @@ module.exports = {
   IDENTIFIER_KINDS,
   DATA_POLICY,
   FRESHNESS_TTL_MS,
+  PRICTO_TTL_MS,
+  PRICE_SOURCE_TTL_MS,
   FRESHNESS_POLICY,
   DB_FILE,
   LEGACY_FILE,
@@ -850,6 +905,7 @@ module.exports = {
   isEan13,
   isPlu,
   freshnessInfo,
+  ttlForSource,
   applyFreshness,
   checkFreshness,
   applyMigrations,

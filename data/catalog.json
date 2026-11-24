@@ -12,7 +12,10 @@
     "dataPolicy": "Solo datos autorizados. URL canónica o búsqueda exacta por SKU/GTIN/PLU verificado; nunca por nombre. 403/429 pausa el conector y requiere renegociar acceso.",
     "freshness": {
       "ttlMs": 900000,
-      "policy": "Toda oferta verified necesita sourceUrl+capturedAt (identificador) y priceSourceUrl+priceCapturedAt (precio). Pasado el TTL de 15 min pasa a stale; pending nunca muestra precio verificado ni entra en \"mejor precio\"."
+      "sourceTtlMs": {
+        "pricto": 172800000
+      },
+      "policy": "Toda oferta verified necesita sourceUrl+capturedAt (identificador) y priceSourceUrl+priceCapturedAt (precio), además de priceSource y priceAttribution. TTL por fuente: 15 min para feeds en vivo y 48 h para Pricto (captura diaria); pasado ese TTL pasa a stale. pending nunca muestra precio verificado ni entra en \"mejor precio\"."
     },
     "counts": {
       "products": 30,
@@ -190,6 +193,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -208,6 +213,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -226,6 +233,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -244,6 +253,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -262,6 +273,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -280,6 +293,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -320,6 +335,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -338,6 +355,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -356,6 +375,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -374,6 +395,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -392,6 +415,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -410,6 +435,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -448,6 +475,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -466,6 +495,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -484,6 +515,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -502,6 +535,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -520,6 +555,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -538,6 +575,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -578,6 +617,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -596,6 +637,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -614,6 +657,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -632,6 +677,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -650,6 +697,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -668,6 +717,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -706,6 +757,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -724,6 +777,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -742,6 +797,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -760,6 +817,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -778,6 +837,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -796,6 +857,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -834,6 +897,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -852,6 +917,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -870,6 +937,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -888,6 +957,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -906,6 +977,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -924,6 +997,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -962,6 +1037,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -980,6 +1057,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -998,6 +1077,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1016,6 +1097,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1034,6 +1117,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1052,6 +1137,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -1092,6 +1179,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1110,6 +1199,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -1128,6 +1219,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1146,6 +1239,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1164,6 +1259,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1182,6 +1279,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -1222,6 +1321,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -1240,6 +1341,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -1258,6 +1361,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -1276,6 +1381,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -1294,6 +1401,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -1312,6 +1421,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         }
@@ -1350,6 +1461,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1368,6 +1481,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -1386,6 +1501,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1404,6 +1521,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1422,6 +1541,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1440,6 +1561,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -1478,6 +1601,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1496,6 +1621,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -1514,6 +1641,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1532,6 +1661,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1550,6 +1681,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1568,6 +1701,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -1606,6 +1741,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1624,6 +1761,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -1642,6 +1781,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1660,6 +1801,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1678,6 +1821,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1696,6 +1841,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -1736,6 +1883,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1754,6 +1903,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -1772,6 +1923,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1790,6 +1943,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1808,6 +1963,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1826,6 +1983,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -1864,6 +2023,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1882,6 +2043,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -1900,6 +2063,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1918,6 +2083,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1936,6 +2103,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -1954,6 +2123,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -1992,6 +2163,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2010,6 +2183,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -2028,6 +2203,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2046,6 +2223,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2064,6 +2243,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2082,6 +2263,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -2120,6 +2303,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -2138,6 +2323,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -2156,6 +2343,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -2174,6 +2363,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -2192,6 +2383,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -2210,6 +2403,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         }
@@ -2248,6 +2443,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2266,6 +2463,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -2284,6 +2483,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2302,6 +2503,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2320,6 +2523,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2338,6 +2543,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -2376,6 +2583,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2394,6 +2603,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -2412,6 +2623,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2430,6 +2643,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2448,6 +2663,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2466,6 +2683,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -2504,6 +2723,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2522,6 +2743,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -2540,6 +2763,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2558,6 +2783,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2576,6 +2803,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2594,6 +2823,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -2632,6 +2863,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2650,6 +2883,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -2668,6 +2903,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2686,6 +2923,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2704,6 +2943,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2722,6 +2963,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -2760,6 +3003,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2778,6 +3023,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -2796,6 +3043,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2814,6 +3063,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2832,6 +3083,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2850,6 +3103,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -2890,6 +3145,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2908,6 +3165,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -2926,6 +3185,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2944,6 +3205,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2962,6 +3225,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -2980,6 +3245,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -3018,6 +3285,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3036,6 +3305,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -3054,6 +3325,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3072,6 +3345,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3090,6 +3365,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3108,6 +3385,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -3146,6 +3425,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3164,6 +3445,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -3182,6 +3465,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3200,6 +3485,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3218,6 +3505,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3236,6 +3525,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -3274,6 +3565,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3292,6 +3585,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -3310,6 +3605,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3328,6 +3625,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3346,6 +3645,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3364,6 +3665,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -3402,6 +3705,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -3420,6 +3725,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -3438,6 +3745,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -3456,6 +3765,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -3474,6 +3785,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         },
@@ -3492,6 +3805,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "PLU de granel: confirmar identificador en ficha; precio sin fuente verificable"
         }
@@ -3530,6 +3845,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3548,6 +3865,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -3566,6 +3885,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3584,6 +3905,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3602,6 +3925,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3620,6 +3945,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -3658,6 +3985,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3676,6 +4005,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -3694,6 +4025,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3712,6 +4045,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3730,6 +4065,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3748,6 +4085,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -3788,6 +4127,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3806,6 +4147,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -3824,6 +4167,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3842,6 +4187,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3860,6 +4207,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3878,6 +4227,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }
@@ -3916,6 +4267,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3934,6 +4287,8 @@
           "capturedAt": "2026-11-23",
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": true,
           "note": "SKU y ficha mapeados; precio referencial sin fuente verificable"
         },
@@ -3952,6 +4307,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3970,6 +4327,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -3988,6 +4347,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         },
@@ -4006,6 +4367,8 @@
           "capturedAt": null,
           "priceSourceUrl": null,
           "priceCapturedAt": null,
+          "priceSource": null,
+          "priceAttribution": null,
           "exact": false,
           "note": "Identificador universal provisional; sin SKU propio verificado"
         }

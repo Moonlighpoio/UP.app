@@ -1,7 +1,7 @@
 /**
- * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (Fases 2 y 3).
+ * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (Fases 2, 3 y 6).
  * No editar a mano: npm run build-catalog o npm run export-catalog.
- * Precios referenciales; todas las ofertas están `pending`. Ver README.
+ * Precios referenciales salvo ofertas verificadas con atribución. Ver README.
  */
 window.UP_DEMO_DATA = {
   "meta": {

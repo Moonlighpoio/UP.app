@@ -5,7 +5,7 @@
  * silencioso. Sólo `applyFreshness` puede degradar `verified` → `stale`.
  * Uso: npm run check-freshness
  */
-const { checkFreshness, FRESHNESS_TTL_MS, openCatalogDb } = require('./catalog-db');
+const { checkFreshness, FRESHNESS_TTL_MS, PRICTO_TTL_MS, openCatalogDb } = require('./catalog-db');
 
 const db = openCatalogDb({ readOnly: true });
 let result;
@@ -16,7 +16,9 @@ try {
 }
 
 console.log('UP · Procedencia y frescura del catálogo SQLite');
-console.log(`  TTL: ${FRESHNESS_TTL_MS} ms (15 min)`);
+console.log(
+  `  TTL: ${FRESHNESS_TTL_MS} ms (15 min por defecto) · pricto: ${PRICTO_TTL_MS} ms (48 h)`
+);
 console.log(
   `  ofertas: ${result.summary.verified} verified · ${result.summary.pending} pending · ` +
     `${result.summary.stale} stale · ${result.summary.other} otras`

@@ -1,7 +1,7 @@
 /**
  * UP · Modal comparador: 5 supermercados ordenados por precio.
  */
-import { $, esc, formatCLP, getProductSVG, safeAssetUrl } from './utils.js';
+import { $, esc, formatCLP, getProductSVG, safeAssetUrl, safeHttpUrl } from './utils.js';
 import { getProduct, setActiveProduct, addReindex } from './state.js';
 import { getProductStats, unitPriceFor } from './catalog.js';
 import { linkMarkup } from './ui.js';
@@ -42,7 +42,15 @@ export function openCompareModal(productId) {
       const linkInfo = linkMarkup(product, entry.storeId);
       const link = offerLink(product, entry.storeId);
       const blocked = isPurchaseBlocked(product, entry.storeId, linkInfo.broken);
-      const referential = !blocked && !link.canonical;
+      const pricing = (product.skus && product.skus[entry.storeId]) || {};
+      const priceVerified = pricing.priceSource === 'pricto' && pricing.status === 'verified';
+      const referential = !blocked && !link.canonical && !priceVerified;
+      const retailerUrl = safeHttpUrl(pricing.priceRetailerUrl);
+      const attribution = priceVerified
+        ? `<span class="up-price-source"><span class="up-price-source-chip">✓ Precio verificado</span> ${esc(
+            pricing.priceAttribution || ''
+          )}${retailerUrl ? ` · <a href="${esc(retailerUrl)}" target="_blank" rel="noopener noreferrer">Ficha ↗</a>` : ''}</span>`
+        : '';
       const unit = unitPriceFor(product, entry.price);
 
       return `
@@ -64,6 +72,7 @@ export function openCompareModal(productId) {
                 ? '<span class="up-referential-label">Precio referencial · búsqueda exacta por GTIN</span>'
                 : ''
           }
+          ${attribution}
           ${linkInfo.html}
         </th>
         <td><strong class="price up-compare-price">${formatCLP(entry.price)}</strong></td>

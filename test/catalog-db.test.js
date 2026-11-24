@@ -10,12 +10,14 @@ const {
   CHAIN_ORDER,
   SEARCH_BY_CHAIN,
   FRESHNESS_TTL_MS,
+  PRICTO_TTL_MS,
   buildCatalogDb,
   checkFreshness,
   createCatalogDb,
   ean13CheckDigit,
   applyFreshness,
   freshnessInfo,
+  ttlForSource,
   isEan13,
   isPlu,
   readCatalog,
@@ -42,7 +44,7 @@ test('EAN-13: dígito verificador y rechazo de PLU de 8 dígitos', () => {
   assert.equal(isPlu('7801610001622'), false);
 });
 
-test('migraciones crean tablas, índices, triggers y registran 001_init.sql + 002 + 003', () => {
+test('migraciones crean tablas, índices, triggers y registran 001 a 005', () => {
   const db = seeded();
   try {
     const { errors } = validateDb(db);
@@ -63,10 +65,18 @@ test('migraciones crean tablas, índices, triggers y registran 001_init.sql + 00
       'idx_url_queue_product_url',
       'offers_verified_provenance_insert',
       'offers_verified_provenance_update',
+      'offers_verified_attribution_insert',
+      'offers_verified_attribution_update',
     ]) {
       assert.ok(objects.includes(name), name);
     }
-    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get().n, 4);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get().n, 5);
+    const offerColumns = db
+      .prepare('PRAGMA table_info(offers)')
+      .all()
+      .map((row) => row.name);
+    assert.ok(offerColumns.includes('price_source'));
+    assert.ok(offerColumns.includes('price_attribution'));
     const urlColumns = db
       .prepare('PRAGMA table_info(url_queue)')
       .all()
@@ -255,8 +265,8 @@ test('los triggers exigen las dos parejas de procedencia para verified', () => {
       db.prepare(`UPDATE offers SET status = 'verified' WHERE ${JUMBO_COCA}`).run()
     );
     db.prepare(
-      `UPDATE offers SET price_captured_at = ?, status = 'verified' WHERE ${JUMBO_COCA}`
-    ).run(new Date(TEST_NOW - 60_000).toISOString());
+      `UPDATE offers SET price_source = ?, price_attribution = ?, price_captured_at = ?, status = 'verified' WHERE ${JUMBO_COCA}`
+    ).run('feed', 'Fuente: feed · prueba', new Date(TEST_NOW - 60_000).toISOString());
     assert.equal(
       db.prepare(`SELECT status FROM offers WHERE ${JUMBO_COCA}`).get().status,
       'verified'
@@ -271,8 +281,13 @@ test('applyFreshness degrada vencidos y checkFreshness detecta contradicciones',
   try {
     const source = db.prepare(`SELECT source_url FROM offers WHERE ${JUMBO_COCA}`).get();
     db.prepare(
-      `UPDATE offers SET price_source_url = ?, price_captured_at = ?, status = 'verified' WHERE ${JUMBO_COCA}`
-    ).run(source.source_url, new Date(TEST_NOW - FRESHNESS_TTL_MS - 1).toISOString());
+      `UPDATE offers SET price_source_url = ?, price_source = ?, price_attribution = ?, price_captured_at = ?, status = 'verified' WHERE ${JUMBO_COCA}`
+    ).run(
+      source.source_url,
+      'feed',
+      'Fuente: feed · prueba',
+      new Date(TEST_NOW - FRESHNESS_TTL_MS - 1).toISOString()
+    );
     const before = checkFreshness(db, { now: () => TEST_NOW });
     assert.ok(before.errors.some((error) => error.includes('vencido')));
     assert.deepEqual(applyFreshness(db, { now: () => TEST_NOW }), { checked: 1, changed: 1 });
@@ -326,7 +341,9 @@ test('el export expone priceSourceUrl y la política de frescura, y rechaza veri
   try {
     const catalog = readCatalog(db);
     assert.equal(catalog.meta.freshness.ttlMs, FRESHNESS_TTL_MS);
+    assert.equal(catalog.meta.freshness.sourceTtlMs.pricto, PRICTO_TTL_MS);
     assert.ok(catalog.meta.freshness.policy.includes('15 min'));
+    assert.ok(catalog.meta.freshness.policy.includes('48 h'));
     for (const product of catalog.products) {
       for (const offer of product.offers) assert.equal(offer.priceSourceUrl, null);
     }
@@ -345,6 +362,65 @@ test('el export expone priceSourceUrl y la política de frescura, y rechaza veri
     offer.priceCapturedAt = new Date(TEST_NOW - FRESHNESS_TTL_MS - 1).toISOString();
     const stale = validateCatalogObject(broken, { now: () => TEST_NOW });
     assert.ok(stale.some((error) => error.includes('verified con precio stale')));
+  } finally {
+    db.close();
+  }
+});
+
+test('TTL por fuente: Pricto 48 h y fallback 15 min para fuentes desconocidas', () => {
+  assert.equal(ttlForSource('pricto'), 48 * 60 * 60 * 1000);
+  assert.equal(ttlForSource('feed'), FRESHNESS_TTL_MS);
+  assert.equal(ttlForSource(null), FRESHNESS_TTL_MS);
+  const fresh = new Date(TEST_NOW - 20 * 60 * 60 * 1000).toISOString();
+  assert.equal(freshnessInfo(fresh, { now: () => TEST_NOW, source: 'pricto' }).state, 'fresh');
+  assert.equal(freshnessInfo(fresh, { now: () => TEST_NOW, source: 'feed' }).state, 'stale');
+});
+
+test('applyFreshness no degrada un precio Pricto de 20 h pero sí uno de 49 h', () => {
+  const db = seeded();
+  try {
+    const captured20h = new Date(TEST_NOW - 20 * 60 * 60 * 1000).toISOString();
+    db.prepare(
+      `UPDATE offers SET price_source_url = ?, price_source = ?, price_attribution = ?, price_captured_at = ?, status = 'verified' WHERE ${JUMBO_COCA}`
+    ).run(
+      'https://pricto.dev/v1/products/prd_1/prices',
+      'pricto',
+      'Fuente: Pricto · prueba',
+      captured20h
+    );
+    assert.deepEqual(checkFreshness(db, { now: () => TEST_NOW }).errors, []);
+    assert.deepEqual(applyFreshness(db, { now: () => TEST_NOW }), { checked: 1, changed: 0 });
+
+    const captured49h = new Date(TEST_NOW - 49 * 60 * 60 * 1000).toISOString();
+    db.prepare(`UPDATE offers SET price_captured_at = ? WHERE ${JUMBO_COCA}`).run(captured49h);
+    assert.deepEqual(applyFreshness(db, { now: () => TEST_NOW }), { checked: 1, changed: 1 });
+  } finally {
+    db.close();
+  }
+});
+
+test('el export exige fuente y atribución, y respeta el TTL de Pricto', () => {
+  const db = seeded();
+  try {
+    const catalog = readCatalog(db);
+    const offer = catalog.products
+      .find((p) => p.id === 'coca-original-15l')
+      .offers.find((row) => row.chainId === 'jumbo');
+    offer.status = 'verified';
+    offer.priceSourceUrl = 'https://pricto.dev/v1/products/prd_1/prices';
+    offer.priceCapturedAt = new Date(TEST_NOW - 20 * 60 * 60 * 1000).toISOString();
+    const missing = validateCatalogObject(catalog, { now: () => TEST_NOW });
+    assert.ok(missing.some((error) => error.includes('verified sin fuente ni atribución')));
+
+    offer.priceSource = 'pricto';
+    offer.priceAttribution = 'Fuente: Pricto · Jumbo · prueba';
+    assert.deepEqual(validateCatalogObject(catalog, { now: () => TEST_NOW }), []);
+
+    const front = toFrontPayload(catalog);
+    const mapping = front.products.find((p) => p.id === 'coca-original-15l').skus.jumbo;
+    assert.equal(mapping.priceSource, 'pricto');
+    assert.equal(mapping.priceAttribution, 'Fuente: Pricto · Jumbo · prueba');
+    assert.ok(mapping.priceRetailerUrl);
   } finally {
     db.close();
   }
