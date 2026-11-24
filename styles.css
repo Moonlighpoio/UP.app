@@ -16,27 +16,48 @@
 :root {
   color-scheme: light;
 
-  /* Superficies y texto */
-  --color-bg: #f6f6f3;
-  --color-surface: #ffffff;
-  --color-text: #1a1a1a;
-  --color-text-muted: #5f6368;
-  --color-border: #e4e4e0;
+  /* Tokens canónicos (Fase 1). Regla de oro: texto + fondo en la misma clase. */
+  --bg: #f6f6f3;
+  --surface: #ffffff;
+  --surface-2: #f0f0ec;
+  --text: #1a1a1a;
+  --text-muted: #5f6368;
+  --border: #e1e1dc;
+  --brand-black: #111111;
+  --brand-yellow: #ffc700;
+  --success: #1e8e3e;
+  --success-bg: #e6f4ea;
+  --success-text: #137333;
+  --danger: #c5221f;
+  --danger-bg: #fce8e6;
+  --warning: #8a5a00;
+  --warning-bg: #fff4d6;
+  --focus: #1a73e8;
 
-  /* Marca y acento: el amarillo queda reservado a CTA principal y activo */
-  --color-brand: #111111;
-  --color-accent: #ffc700;
+  /* Superficies oscuras declaradas: nunca heredan del tema claro. */
+  --on-dark: #ffffff;
+  --on-dark-muted: #c2c2c2;
+  --on-dark-soft: rgba(255, 255, 255, 0.2);
+  --on-dark-border: rgba(255, 255, 255, 0.16);
+  --scrim: rgba(17, 17, 17, 0.55);
 
-  /* Semánticos */
-  --color-success: #1e8e3e;
-  --color-success-text: #137333;
-  --color-success-bg: #e8f5ec;
-  --color-danger: #d93025;
-  --color-danger-bg: #fdecea;
-  --color-warning-bg: #fff4ce;
-  --color-warning-text: #7a5b00;
-  --color-info-bg: #f1f3f4;
-  --color-info-text: #5f6368;
+  /* Alias de compatibilidad: el código y los tests siguen usando --color-*. */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-brand: var(--brand-black);
+  --color-accent: var(--brand-yellow);
+  --color-success: var(--success);
+  --color-success-text: var(--success-text);
+  --color-success-bg: var(--success-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-text: var(--warning);
+  --color-info-bg: var(--surface-2);
+  --color-info-text: var(--text-muted);
 
   /* Tipografía */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -66,7 +87,7 @@
   --motion-fast: 150ms;
   --motion-base: 200ms;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --focus-halo: rgba(255, 199, 0, 0.55);
+  --focus-halo: var(--brand-black);
   --color-yellow: var(--color-accent);
 }
 
@@ -271,7 +292,7 @@ a {
   padding: 10px 14px;
   border-radius: var(--radius-input);
   background: var(--color-brand);
-  color: var(--color-surface);
+  color: var(--on-dark);
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
@@ -287,8 +308,8 @@ a {
 /* Foco siempre visible en cualquier componente interactivo. */
 body :focus-visible {
   outline: 2px solid var(--color-yellow) !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px var(--focus-halo) !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 3px var(--brand-black) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -404,7 +425,7 @@ body :focus-visible {
 
 .up-toast-out {
   transform: translateX(140%);
-  opacity: 0;
+  visibility: hidden;
 }
 
 .up-announcement {
@@ -415,7 +436,7 @@ body :focus-visible {
   gap: var(--space-2);
   padding: var(--space-1) var(--space-4);
   background: var(--color-brand);
-  color: var(--color-surface);
+  color: var(--on-dark);
   font-size: 12px;
 }
 .up-announcement p {
@@ -582,7 +603,7 @@ body :focus-visible {
   border: 0;
   border-radius: var(--radius-input);
   background: var(--color-brand);
-  color: var(--color-surface);
+  color: var(--on-dark);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -886,7 +907,7 @@ body :focus-visible {
 .up-sheet-toggle.up-active {
   background: var(--color-brand);
   border-color: var(--color-brand);
-  color: var(--color-surface);
+  color: var(--on-dark);
 }
 .up-filter-badge[hidden],
 .up-facet-count[hidden] {
@@ -909,8 +930,8 @@ body :focus-visible {
 }
 .up-filter-trigger.up-active .up-filter-badge,
 .up-sheet-toggle.up-active .up-facet-count {
-  background: rgba(255, 255, 255, 0.2);
-  color: inherit;
+  background: var(--on-dark-soft);
+  color: var(--on-dark);
 }
 .up-popover {
   position: absolute;
@@ -956,12 +977,14 @@ body :focus-visible {
 }
 .up-choice.up-active {
   background: var(--color-brand);
-  color: var(--color-surface);
+  color: var(--on-dark);
   font-weight: 700;
 }
 .up-choice:disabled {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-muted);
   cursor: not-allowed;
-  opacity: 0.45;
 }
 .up-price-field {
   display: flex;
@@ -1183,7 +1206,7 @@ body :focus-visible {
   border-radius: 8px;
   background: var(--color-brand);
   box-shadow: var(--shadow-hover);
-  color: var(--color-surface);
+  color: var(--on-dark);
   font-size: 11px;
   font-weight: 500;
   line-height: 1.45;
@@ -1303,8 +1326,10 @@ body :focus-visible {
   padding: 0 var(--space-3);
 }
 .up-add-btn:disabled {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-muted);
   cursor: not-allowed;
-  opacity: 0.45;
 }
 .up-compare-btn {
   display: inline-flex;
@@ -1398,7 +1423,7 @@ body :focus-visible {
 .up-footer {
   padding: var(--space-10) 0 var(--space-5);
   background: var(--color-brand);
-  color: var(--color-surface);
+  color: var(--on-dark);
 }
 .up-footer-grid {
   display: grid;
@@ -1417,7 +1442,7 @@ body :focus-visible {
   padding: 0;
   border: 0;
   background: none;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--on-dark-muted);
   cursor: pointer;
   font-size: 12px;
   text-align: left;
@@ -1431,13 +1456,13 @@ body :focus-visible {
 }
 .up-footer a:hover,
 .up-footer button:hover {
-  color: var(--color-surface);
+  color: var(--on-dark);
 }
 .up-logo--footer {
-  color: var(--color-surface);
+  color: var(--on-dark);
 }
 .up-footer-brand p {
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--on-dark-muted);
   font-size: 12px;
 }
 .up-footer-bottom {
@@ -1446,8 +1471,8 @@ body :focus-visible {
   gap: var(--space-4);
   margin-top: var(--space-8);
   padding-top: var(--space-4);
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
-  color: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid var(--on-dark-border);
+  color: var(--on-dark-muted);
   font-size: 11px;
 }
 
@@ -1491,7 +1516,7 @@ body :focus-visible {
   align-items: center;
   justify-content: center;
   padding: var(--space-2);
-  background: rgba(17, 17, 17, 0.55);
+  background: var(--scrim);
 }
 .up-modal-card {
   width: 100%;
@@ -1637,8 +1662,8 @@ body :focus-visible {
   font-weight: 700;
 }
 .up-compare-row.up-best .up-rank {
-  background: var(--color-success);
-  color: var(--color-surface);
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 .up-compare-store b {
   font-size: 13px;
@@ -1690,8 +1715,10 @@ body :focus-visible {
   font-size: 12px;
 }
 .up-compare-add:disabled {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-muted);
   cursor: not-allowed;
-  opacity: 0.45;
 }
 .up-modal-note {
   margin-top: var(--space-4);
@@ -1745,7 +1772,7 @@ body :focus-visible {
   z-index: 50;
   display: flex;
   justify-content: flex-end;
-  background: rgba(17, 17, 17, 0.55);
+  background: var(--scrim);
 }
 .up-drawer-panel {
   display: flex;
@@ -2097,7 +2124,7 @@ body :focus-visible {
 .up-checkout-steps li.up-active span {
   background: var(--color-brand);
   border-color: var(--color-brand);
-  color: var(--color-surface);
+  color: var(--on-dark);
 }
 .up-checkout-steps li.up-done span {
   background: var(--color-success-bg);
@@ -2225,17 +2252,37 @@ body :focus-visible {
   background: var(--color-brand);
   border-radius: var(--radius-input);
   box-shadow: var(--shadow-hover);
-  color: var(--color-surface);
+  color: var(--on-dark);
   font-size: 12px;
   transition:
     transform var(--motion-base) var(--ease),
-    opacity var(--motion-base) var(--ease);
+    visibility var(--motion-base);
 }
 .up-toast-dot {
   width: 8px;
   height: 8px;
   border-radius: var(--radius-chip);
   background: var(--color-success);
+}
+
+/* Regla de oro Fase 1: cada control lleva su par texto/fondo y borde legible. */
+.up-btn-secondary,
+.verify-badge,
+.up-search,
+.up-filter-trigger,
+.up-clear-btn,
+.up-mobile-filter-btn,
+.up-price-field input,
+.up-checkout-option,
+input:not([type='hidden']):not([type='checkbox']):not([type='radio']),
+select {
+  border-color: var(--text-muted);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
 }
 
 @media (min-width: 768px) {

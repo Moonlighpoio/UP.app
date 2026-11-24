@@ -52,7 +52,7 @@ module.exports = [
     rules,
   },
   {
-    files: ['server.js', 'lib/**/*.js', 'data/demo.js', 'eslint.config.js'],
+    files: ['server.js', 'lib/**/*.js', 'scripts/**/*.js', 'data/demo.js', 'eslint.config.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'commonjs',
