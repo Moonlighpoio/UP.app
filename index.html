@@ -185,11 +185,20 @@
           <option value="price-asc">PRECIO: MENOR A MAYOR</option>
           <option value="price-desc">PRECIO: MAYOR A MENOR</option>
           <option value="savings-desc">MAYOR AHORRO</option>
+          <option value="unit-asc">MENOR PRECIO UNITARIO</option>
         </select>
       </div>
     </div>
 
-    <div id="category-filters" class="flex flex-wrap gap-2 mb-10"></div>
+    <div id="category-filters" class="flex flex-wrap gap-2 mb-4"></div>
+
+    <div class="flex flex-wrap items-center gap-2 mb-10">
+      <select id="chain-filter" aria-label="Filtrar por cadena" class="h-[40px] px-3 bg-utility text-white font-mono text-[11px] uppercase rounded-[4px] tech-border focus:outline-none focus:border-signal"></select>
+      <button id="free-shipping-toggle" type="button" aria-pressed="false" class="h-[40px] px-4 rounded-[4px] utility-surface text-soft font-mono text-[11px] uppercase hover:text-white transition-colors">
+        DESPACHO GRATIS EN CARRITO
+      </button>
+      <span class="font-mono text-[9px] uppercase text-muted">FILTROS AVANZADOS · SE APLICAN AL INSTANTE</span>
+    </div>
 
     <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"></div>
 

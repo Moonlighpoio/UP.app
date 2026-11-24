@@ -153,7 +153,7 @@ El alcance objetivo es la **despensa familiar chilena completa**, ya reflejada e
 - Diseñar primero para **320–390 px**: resultados en tarjetas, CTA fijo al bottom, filtros en bottom-sheet y tipografía legible sin zoom.
 - Paleta monocromática con **un solo acento amarillo** reservado a estados activos, mejor precio, avisos clave y acción principal de compra. Nada de gradientes infantiles ni rotaciones decorativas.
 - Transiciones cortas (150–200 ms), estados de carga skeleton y respuestas inmediatas al filtrar.
-- La página de resultados permite ordenar por **precio, ahorro, disponibilidad, precio unitario, distancia y tiempo de despacho**, y filtrar por **categoría, cadena, oferta, stock, despacho gratis alcanzado y tiempo máximo de entrega**.
+- La página de resultados permite ordenar por **precio, ahorro y precio unitario** (ya implementado), y filtrar por **categoría, cadena y despacho gratis alcanzado** (ya implementado). La visión de producción agrega disponibilidad, distancia, tiempo de despacho, ofertas, stock y tiempo máximo de entrega. Ver [§11](#11-filtros-y-orden-avanzado).
 
 ---
 
@@ -208,12 +208,13 @@ UP.app/
 │   ├── main.js                  # Entrada: cablea módulos y eventos
 │   ├── config.js                # Cadenas, umbrales, fee y detección de modo demo
 │   ├── state.js                 # Estado central: catálogo, filtros, carrito, verificación
-│   ├── catalog.js               # Normalización del feed y estadísticas de precio
+│   ├── catalog.js               # Normalización, estadísticas y precio unitario
 │   ├── api.js                   # /api/prices y refreshPrices; modo estático
 │   ├── links.js                 # CHAIN_SEARCH, offerLink, verifyLink
 │   ├── cart.js                  # Carrito: resuelve productos y delega en money.js
 │   ├── money.js                 # Matemática de dinero pura (fee, payout, totales, CLP)
-│   ├── compare.js               # Modal comparador y orden por precio
+│   ├── filters.js               # Filtros por cadena/despacho y orden (incluye precio unitario)
+│   ├── compare.js               # Modal comparador con precio por unidad por cadena
 │   ├── checkout.js              # Checkout simulado y split 99%/1%
 │   ├── ui.js                    # Toasts, render y paneles
 │   └── utils.js                 # Helpers puros de UI
@@ -237,6 +238,8 @@ UP.app/
 ├── test/
 │   ├── money.test.js            # Dinero puro, redondeo y formato CLP
 │   ├── links.test.js            # Canónica, SKU/GTIN y nunca por nombre
+│   ├── catalog.test.js          # Heurística de unidades y precio unitario
+│   ├── filters.test.js          # Cadena, despacho gratis, precios y orden
 │   ├── server.test.js           # /api/*, SSRF, caché, HEAD→GET, saltos, rate limit y headers
 │   ├── security.test.js         # Saneamiento de URLs y escape HTML
 │   └── package.json             # {"type":"module"} para los tests ESM
@@ -464,7 +467,7 @@ El CSP del servidor local permite explícitamente el CDN de Tailwind, Google Fon
 
 > ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
 
-Cobertura en `npm test`: 38 tests, incluidos salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
+La suite completa tiene **50 tests**; la cobertura de esta fase incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
 
 ---
 
@@ -476,7 +479,7 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 38 tests: dinero, deep links, servidor y seguridad
+npm test           # 50 tests: dinero, deep links, servidor, seguridad y filtros
 npm run format     # aplica Prettier a src/, test/ y eslint.config.js
 ```
 
@@ -503,3 +506,22 @@ gh api repos/Moonlighpoio/UP.app/actions/workflows/ci.yml/runs --jq '.workflow_r
 > La API de builds de Pages puede mostrar metadata desfasada justo después de un push. Si el `status`/`commit` parece viejo, valida el **contenido servido** (por ejemplo, que `index.html` apunte a `src/main.js`) en vez de fiarte solo de la API.
 
 En Pages el front-end detecta el host `github.io` y activa el **modo demo estático**: no existen `/api/*`, así que usa `data/demo.js` y no marca enlaces como rotos. El servidor Node (`npm start`, puerto `3100`) es la única forma de ejercitar `/api/prices`, `/api/health` y `/api/verify-link` en local.
+
+---
+
+## 11. Filtros y orden avanzado
+
+La lógica vive en `src/filters.js`; la UI solo renderiza el resultado y cablea los controles. Todo se aplica al instante, sin recargas ni dependencias nuevas.
+
+| Control | Semántica |
+|---|---|
+| `#chain-filter` | `selectedChain` deja pasar solo productos con precio en esa cadena. La tarjeta muestra `PRECIO (CADENA)` en vez de `DESDE (MEJOR CADENA)`. |
+| `#free-shipping-toggle` | `freeShippingOnly` usa las cadenas cuyo carrito ya superó su umbral. Si ninguna califica, el botón no se activa y muestra el toast `AGREGA PRODUCTOS PARA DESBLOQUEAR DESPACHO GRATIS`. Si el carrito baja del umbral, `syncFreeShippingFilter()` apaga el filtro solo. |
+| `option value="unit-asc"` | Ordena por **precio unitario** calculado sobre el precio visible (el de la cadena elegida o el mejor). |
+| `reset-filters-btn` | Restaura categoría, búsqueda, cadena, despacho gratis y orden. |
+
+**Heurística de precio unitario** (`unitInfo` en `src/catalog.js`): se extrae la primera cantidad con unidad reconocida del texto del detalle, con prioridad `kg > g > L > ml > m > un`. Gramos y mililitros se expresan **por 100** (`/100 g`, `/100 ml`); kilos, litros, metros y unidades se expresan por 1 (`/kg`, `/L`, `/m`, `/un`). Formatos como `Bidón 6,5 L`, `Bolsa 500 g` o `18 rollos · 50 m c/u` se normalizan; si no hay unidad reconocida, la tarjeta simplemente no muestra línea unitaria y el orden la deja al final.
+
+> ℹ️ En el feed de demo los 30 productos tienen precio en las 5 cadenas visibles: filtrar por cadena no reduce el conteo, pero **sí cambia el precio y la cadena mostrados**. Los tests de `test/filters.test.js` cubren el caso general con un fixture donde sí hay productos sin precio en la cadena elegida.
+
+Verificación headless frente al baseline `8258045`: mismos estilos y flujo (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $3.990 / $6.080`). Controles nuevos: 6 opciones de cadena (TODAS + 5), opción `unit-asc`, etiqueta que pasa de `DESDE (TOTTUS)` a `PRECIO (LIDER)`, orden unitario cambiante, toggle bloqueado con carrito vacío, `GRATIS` al superar el umbral y reset restaurando todo. Sin errores JS.

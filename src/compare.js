@@ -3,7 +3,7 @@
  */
 import { $, esc, formatCLP, getProductSVG, safeAssetUrl } from './utils.js';
 import { getProduct, setActiveProduct, addReindex } from './state.js';
-import { getProductStats } from './catalog.js';
+import { getProductStats, unitPriceFor } from './catalog.js';
 import { linkMarkup } from './ui.js';
 import { offerLink, verifyLink } from './links.js';
 import { addToCart } from './cart.js';
@@ -39,6 +39,7 @@ export function openCompareModal(productId) {
       const isBest = idx === 0;
       const diff = entry.price - stats.minPrice;
       const linkInfo = linkMarkup(product, entry.storeId);
+      const unit = unitPriceFor(product, entry.price);
 
       return `
       <div class="p-3.5 sm:p-4 rounded-[6px] ${isBest ? 'bg-stage border border-signal/80' : 'utility-surface'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -50,6 +51,11 @@ export function openCompareModal(productId) {
               ${isBest ? '<span class="px-1.5 py-0.5 rounded-[3px] bg-signal text-ink font-mono text-[9px] font-semibold uppercase">MEJOR PRECIO</span>' : `<span class="font-mono text-[10px] text-muted">+${formatCLP(diff)}</span>`}
             </div>
             ${linkInfo.html}
+            ${
+              unit
+                ? `<span class="block font-mono text-[9px] uppercase text-muted mt-0.5">${formatCLP(unit.value)} ${esc(unit.label)}</span>`
+                : ''
+            }
           </div>
         </div>
         <div class="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-rule/40">

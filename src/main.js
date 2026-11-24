@@ -9,9 +9,12 @@ import { refreshPrices } from './api.js';
 import { initCart } from './cart.js';
 import { initCompare, openCompareModal, closeCompareModal } from './compare.js';
 import { finishCheckout, processUnifiedCheckout } from './checkout.js';
+import { freeShippingChainIds, resetAdvancedFilters } from './filters.js';
 import {
   showToast,
   renderCategories,
+  renderChainFilter,
+  updateFreeShippingButton,
   renderProducts,
   renderCartUI,
   initUI,
@@ -42,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const demo = window.UP_DEMO_DATA;
   if (demo) applyDemoData(demo);
 
+  renderChainFilter();
+  updateFreeShippingButton();
   renderAll();
   refreshPrices(true, priceHooks);
 
@@ -71,11 +76,30 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProducts();
   });
 
+  $('chain-filter').addEventListener('change', (e) => {
+    state.selectedChain = e.target.value;
+    renderProducts();
+  });
+
+  $('free-shipping-toggle').addEventListener('click', () => {
+    if (!freeShippingChainIds().length) {
+      showToast('AGREGA PRODUCTOS PARA DESBLOQUEAR DESPACHO GRATIS');
+      return;
+    }
+    state.freeShippingOnly = !state.freeShippingOnly;
+    updateFreeShippingButton();
+    renderProducts();
+  });
+
   $('reset-filters-btn').addEventListener('click', () => {
     state.selectedCategory = 'TODOS';
     state.searchQuery = '';
     searchInput.value = '';
     clearSearchBtn.classList.add('hidden');
+    resetAdvancedFilters();
+    $('sort-select').value = 'default';
+    $('chain-filter').value = 'TODOS';
+    updateFreeShippingButton();
     renderCategories();
     renderProducts();
   });

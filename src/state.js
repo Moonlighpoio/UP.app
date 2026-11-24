@@ -8,6 +8,8 @@ export const state = {
   products: [],
   categories: ['TODOS'],
   selectedCategory: 'TODOS',
+  selectedChain: 'TODOS',
+  freeShippingOnly: false,
   searchQuery: '',
   sortBy: 'default',
   activeProductId: null,

@@ -2,12 +2,18 @@
  * UP · Render, toasts y avisos descartables.
  * Toda la manipulación del DOM de la demo vive aquí.
  */
-import { $, esc, formatCLP, norm, getProductSVG, safeAssetUrl } from './utils.js';
-import { STATIC_DEMO } from './config.js';
+import { $, esc, formatCLP, getProductSVG, safeAssetUrl } from './utils.js';
+import { STATIC_DEMO, STORES } from './config.js';
 import { state, getLinkVerification, hasReindex } from './state.js';
-import { getProductStats } from './catalog.js';
+import { unitPriceFor } from './catalog.js';
 import { offerLink, reindexKey } from './links.js';
 import { calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
+import {
+  matchesFilters,
+  sortProducts,
+  priceForDisplay,
+  syncFreeShippingFilter,
+} from './filters.js';
 
 const uiHooks = { onOpenCompare: () => {} };
 let toastTimer;
@@ -47,24 +53,34 @@ export function renderCategories() {
   });
 }
 
+export function renderChainFilter() {
+  const select = $('chain-filter');
+  select.innerHTML = [
+    '<option value="TODOS">CADENA: TODAS</option>',
+    ...Object.values(STORES).map(
+      (store) => `<option value="${esc(store.id)}">CADENA: ${esc(store.short)}</option>`
+    ),
+  ].join('');
+  select.value = state.selectedChain;
+}
+
+export function updateFreeShippingButton() {
+  const button = $('free-shipping-toggle');
+  if (!button) return;
+  const active = state.freeShippingOnly;
+  button.setAttribute('aria-pressed', String(active));
+  button.classList.toggle('bg-signal', active);
+  button.classList.toggle('text-ink', active);
+  button.classList.toggle('bg-utility', !active);
+  button.classList.toggle('text-soft', !active);
+}
+
 export function renderProducts() {
   const grid = $('product-grid');
   const emptyState = $('empty-state');
   const countEl = $('results-count');
 
-  const filtered = state.products.filter((p) => {
-    const matchCat = state.selectedCategory === 'TODOS' || p.category === state.selectedCategory;
-    const q = norm(state.searchQuery.trim());
-    const hay = norm(p.name + ' ' + p.category + ' ' + p.unit + ' ' + p.description);
-    return matchCat && (!q || q.split(/\s+/).every((token) => hay.includes(token)));
-  });
-
-  if (state.sortBy === 'price-asc')
-    filtered.sort((a, b) => getProductStats(a).minPrice - getProductStats(b).minPrice);
-  else if (state.sortBy === 'price-desc')
-    filtered.sort((a, b) => getProductStats(b).minPrice - getProductStats(a).minPrice);
-  else if (state.sortBy === 'savings-desc')
-    filtered.sort((a, b) => getProductStats(b).maxSavings - getProductStats(a).maxSavings);
+  const filtered = sortProducts(state.products.filter(matchesFilters));
 
   countEl.textContent = `${filtered.length} PRODUCTO${filtered.length === 1 ? '' : 'S'}`;
 
@@ -77,7 +93,8 @@ export function renderProducts() {
 
   grid.innerHTML = filtered
     .map((product) => {
-      const stats = getProductStats(product);
+      const shown = priceForDisplay(product);
+      const unit = unitPriceFor(product, shown.price);
       const image = safeAssetUrl(product.image);
       return `
       <article data-product-id="${esc(product.id)}" class="product-card group cursor-pointer bg-[#141414] tech-border rounded-[8px] overflow-hidden flex flex-col transition-all duration-200">
@@ -97,11 +114,18 @@ export function renderProducts() {
           <div>
             <h3 class="font-serif text-[20px] leading-[1.15] text-white group-hover:text-signal transition-colors">${esc(product.name)}</h3>
             <p class="font-mono text-[11px] uppercase text-muted mt-1.5">${esc(product.unit)} · 5 SUPERMERCADOS</p>
+            ${
+              unit
+                ? `<p class="font-mono text-[10px] uppercase text-muted mt-0.5">${formatCLP(unit.value)} ${esc(unit.label)} · ${esc(unit.quantity)} ${esc(unit.unit)}</p>`
+                : ''
+            }
           </div>
           <div class="pt-3 tech-border-t flex items-end justify-between gap-2">
             <div>
-              <span class="block font-mono text-[10px] uppercase text-muted">DESDE (${stats.bestStore ? esc(stats.bestStore.short) : '—'})</span>
-              <span class="font-dot text-[22px] text-signal leading-none">${formatCLP(stats.minPrice)}</span>
+              <span class="block font-mono text-[10px] uppercase text-muted">${
+                shown.best ? 'DESDE' : 'PRECIO'
+              } (${shown.store ? esc(shown.store.short) : '—'})</span>
+              <span class="font-dot text-[22px] text-signal leading-none">${formatCLP(shown.price)}</span>
             </div>
             <span class="inline-flex items-center gap-1 font-mono text-[11px] uppercase text-white group-hover:text-signal transition-colors underline underline-offset-4">COMPARAR →</span>
           </div>
@@ -262,6 +286,12 @@ export function renderCartUI() {
     totalShipping === 0 && totalItems > 0 ? 'GRATIS' : formatCLP(totalShipping);
   $('summary-fee').textContent = formatCLP(upFee);
   $('summary-total').textContent = formatCLP(grandTotal);
+
+  // Si el carrito deja de tener despacho gratis, el filtro se apaga solo.
+  if (syncFreeShippingFilter()) {
+    updateFreeShippingButton();
+    renderProducts();
+  }
 }
 
 export function openCartDrawer() {
