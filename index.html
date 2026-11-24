@@ -509,11 +509,22 @@
               </div>
             </div>
           </div>
-          <div class="up-modal-section-head">
-            <span>Supermercado</span>
-            <span>Precio y compra</span>
+          <div class="up-compare-table-wrap">
+            <table class="up-compare-table">
+              <caption class="up-sr-only">
+                Precios del producto en los supermercados disponibles, ordenados de menor a mayor.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Supermercado</th>
+                  <th scope="col">Precio</th>
+                  <th scope="col">Unitario</th>
+                  <th scope="col">Compra</th>
+                </tr>
+              </thead>
+              <tbody id="modal-stores-list"></tbody>
+            </table>
           </div>
-          <div id="modal-stores-list" class="up-store-list"></div>
           <p class="up-modal-note">
             Los enlaces usan la ficha oficial cuando existe; si no, una búsqueda exacta por SKU o
             GTIN.

@@ -25,7 +25,7 @@ export function openCompareModal(productId) {
   $('modal-product-index').textContent = `(${product.index})`;
   $('modal-product-category').textContent = product.category;
   $('modal-product-art').innerHTML = image
-    ? `<img src="${esc(image)}" alt="${esc(product.name)}" class="max-h-full max-w-full object-contain" />`
+    ? `<img src="${esc(image)}" alt="${esc(product.name)}" width="112" height="112" loading="lazy" decoding="async" />`
     : getProductSVG(product.icon);
   $('modal-product-name').textContent = product.name;
   $('modal-product-desc').textContent =
@@ -40,37 +40,38 @@ export function openCompareModal(productId) {
       const isBest = idx === 0;
       const diff = entry.price - stats.minPrice;
       const linkInfo = linkMarkup(product, entry.storeId);
+      const unconfirmed = linkInfo.broken || !offerLink(product, entry.storeId).canonical;
       const unit = unitPriceFor(product, entry.price);
 
       return `
-      <div class="p-3.5 sm:p-4 rounded-[6px] ${isBest ? 'bg-stage border border-signal/80' : 'utility-surface'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex items-start sm:items-center gap-3">
-          <div class="w-8 h-8 rounded-[4px] ${isBest ? 'bg-signal text-ink' : 'bg-utility text-muted'} flex items-center justify-center font-dot text-[14px] shrink-0">#${idx + 1}</div>
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="font-mono text-[13px] font-semibold uppercase text-white">${esc(entry.store.name)}</span>
-              ${isBest ? '<span class="px-1.5 py-0.5 rounded-[3px] bg-signal text-ink font-mono text-[9px] font-semibold uppercase">MEJOR PRECIO</span>' : `<span class="font-mono text-[10px] text-muted">+${formatCLP(diff)}</span>`}
-            </div>
-            ${linkInfo.html}
+      <tr class="up-compare-row${isBest ? ' up-best' : ''}${unconfirmed ? ' up-unconfirmed' : ''}">
+        <th scope="row">
+          <span class="up-compare-store">
+            <span class="up-rank" aria-hidden="true">${idx + 1}</span>
+            <b>${esc(entry.store.name)}</b>
             ${
-              unit
-                ? `<span class="block font-mono text-[9px] uppercase text-muted mt-0.5">${formatCLP(unit.value)} ${esc(unit.label)}</span>`
-                : ''
+              isBest
+                ? '<span class="up-chip up-chip--success">✓ Mejor precio</span>'
+                : `<span class="up-diff">+${formatCLP(diff)}</span>`
             }
-          </div>
-        </div>
-        <div class="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-rule/40">
-          <span class="font-dot text-[22px] ${isBest ? 'text-signal' : 'text-white'}">${formatCLP(entry.price)}</span>
-          <div class="flex items-center gap-1.5">
-            <select aria-label="Cantidad" id="qty-${esc(product.id)}-${entry.storeId}" class="h-[36px] px-2 bg-stage text-white font-mono text-[11px] rounded-[4px] tech-border focus:outline-none focus:border-signal">
+          </span>
+          ${unconfirmed ? '<span class="up-unconfirmed-label">Precio no confirmado</span>' : ''}
+          ${linkInfo.html}
+        </th>
+        <td><strong class="price up-compare-price">${formatCLP(entry.price)}</strong></td>
+        <td>${unit ? `${formatCLP(unit.value)} ${esc(unit.label)}` : '—'}</td>
+        <td>
+          <span class="up-compare-buy">
+            <label class="up-sr-only" for="qty-${esc(product.id)}-${entry.storeId}">Cantidad para ${esc(entry.store.name)}</label>
+            <select id="qty-${esc(product.id)}-${entry.storeId}" aria-label="Cantidad para ${esc(entry.store.name)}">
               <option value="1">1 u</option><option value="2">2 u</option><option value="3">3 u</option><option value="6">6 u</option>
             </select>
-            <button type="button" data-add-product="${esc(product.id)}" data-add-store="${entry.storeId}" ${linkInfo.broken ? 'disabled' : ''} class="add-to-cart-btn h-[36px] px-3 rounded-[4px] font-mono text-[11px] font-semibold uppercase transition-colors ${isBest ? 'bg-signal text-ink hover:bg-white' : 'bg-white text-ink hover:bg-signal'} ${linkInfo.broken ? 'opacity-40' : ''}">
-              AGREGAR A UP
+            <button type="button" data-add-product="${esc(product.id)}" data-add-store="${entry.storeId}" ${unconfirmed ? 'disabled' : ''} class="up-btn-primary up-compare-add add-to-cart-btn">
+              Agregar
             </button>
-          </div>
-        </div>
-      </div>`;
+          </span>
+        </td>
+      </tr>`;
     })
     .join('');
 
