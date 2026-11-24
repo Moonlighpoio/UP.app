@@ -6,7 +6,8 @@ export const $ = (id) => document.getElementById(id);
 
 export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export const formatCLP = (amount) => '$' + Math.round(amount).toLocaleString('es-CL');
+// La única implementación de formato CLP vive en money.js (pura y testeable).
+export { formatCLP } from './money.js';
 
 export const norm = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 

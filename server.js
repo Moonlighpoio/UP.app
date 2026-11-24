@@ -90,33 +90,40 @@ function allowedLink(raw) {
   return ok ? parsed.toString() : null;
 }
 
-async function verifyLink(raw) {
+async function verifyLink(raw, deps = {}) {
+  const doFetch = deps.fetch || fetch;
+  const now = deps.now || Date.now;
+  const cache = deps.cache || linkCache;
   const url = allowedLink(raw);
-  if (!url) return { ok: false, status: 0, error: "Dominio no permitido", checkedAt: new Date().toISOString() };
+  if (!url) return { ok: false, status: 0, error: "Dominio no permitido", checkedAt: new Date(now()).toISOString() };
 
-  const cached = linkCache.get(url);
-  if (cached && Date.now() - cached.at < LINK_CACHE_MS) {
+  const cached = cache.get(url);
+  if (cached && now() - cached.at < LINK_CACHE_MS) {
     return Object.assign({}, cached.payload, { cached: true });
   }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   try {
-    let res = await fetch(url, { method: "HEAD", redirect: "follow", signal: controller.signal, headers: { "User-Agent": UA } });
+    let res = await doFetch(url, { method: "HEAD", redirect: "follow", signal: controller.signal, headers: { "User-Agent": UA } });
     // Algunos sites responden 403/405 al HEAD; se reintenta con GET.
     if ([403, 405, 501].includes(res.status)) {
-      res = await fetch(url, { method: "GET", redirect: "follow", signal: controller.signal, headers: { "User-Agent": UA } });
+      res = await doFetch(url, { method: "GET", redirect: "follow", signal: controller.signal, headers: { "User-Agent": UA } });
+    }
+    // Una redirección no puede terminar fuera de la whitelist (SSRF).
+    if (res.url && !allowedLink(res.url)) {
+      return { ok: false, status: 0, error: "Redirección a host no permitido", finalUrl: res.url, checkedAt: new Date(now()).toISOString() };
     }
     const payload = {
       ok: res.ok,
       status: res.status,
       finalUrl: res.url,
-      checkedAt: new Date().toISOString()
+      checkedAt: new Date(now()).toISOString()
     };
-    linkCache.set(url, { payload, at: Date.now() });
+    cache.set(url, { payload, at: now() });
     return payload;
   } catch (err) {
-    return { ok: false, status: 0, error: err.message, checkedAt: new Date().toISOString() };
+    return { ok: false, status: 0, error: err.message, checkedAt: new Date(now()).toISOString() };
   } finally {
     clearTimeout(timer);
   }
@@ -164,10 +171,14 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`\n  UP · Prototipo corriendo en http://localhost:${PORT}`);
-  console.log("  Modo datos: " + (process.env.UP_RETAILER_API
-    ? "API externa (" + process.env.UP_RETAILER_API + ")"
-    : fs.existsSync(path.join(ROOT, "data", "live-prices.json")) ? "live-prices.json" : "demo"));
-  console.log("  Presiona Ctrl+C para detener.\n");
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`\n  UP · Prototipo corriendo en http://localhost:${PORT}`);
+    console.log("  Modo datos: " + (process.env.UP_RETAILER_API
+      ? "API externa (" + process.env.UP_RETAILER_API + ")"
+      : fs.existsSync(path.join(ROOT, "data", "live-prices.json")) ? "live-prices.json" : "demo"));
+    console.log("  Presiona Ctrl+C para detener.\n");
+  });
+}
+
+module.exports = { server, getPrices, allowedLink, verifyLink, LINK_ALLOWLIST, LINK_CACHE_MS };

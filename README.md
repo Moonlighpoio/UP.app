@@ -87,6 +87,22 @@ En el prototipo, los 30 productos tienen `sku`, `gtin`, `url` y `verifiedAt` en 
   - `platformFee = Σ round(subtotalPorCadena × 0.01)`
   - `payout = subtotalPorCadena − fee` (99% para la cadena)
   - `totalCobrado = subtotalProductos + despachoTotal`
+
+**Ejemplo numérico.** Carrito con $1.250 en Lider y $1.250 en Tottus, ambos con despacho de $3.990 (umbral de $50.000 no alcanzado):
+
+| Concepto | Cálculo | Valor |
+|---|---|---|
+| Subtotal Lider | — | $1.250 |
+| Subtotal Tottus | — | $1.250 |
+| Fee Lider | `round(1.250 × 0,01)` = `round(12,5)` | $13 |
+| Fee Tottus | `round(1.250 × 0,01)` = `round(12,5)` | $13 |
+| **Fee UP total** | `13 + 13` (no `round(2.500 × 0,01) = 25`) | **$26** |
+| Payout a tiendas | `2.500 − 26` | $2.474 |
+| Despacho total | `3.990 + 3.990` | $7.980 |
+| **Total que paga el cliente** | `2.500 + 7.980` (fee **no** se suma) | **$10.480** |
+
+> El redondeo se hace **por cadena**, por eso el fee total ($26) puede diferir de redondear el subtotal agregado ($25). El cliente paga productos + despacho; el 1% se descuenta de la liquidación a las cadenas. Estas funciones puras viven en `src/money.js` y están cubiertas por `npm test`.
+
 - En producción el PSP dispersa automáticamente (Transbank/Kushki/Stripe/Mercado Pago); UP no recibe el valor de los productos para pagar después, porque eso la convertiría en vendedora (*merchant of record*).
 
 ### Concurrencia y sistemas antibot
@@ -191,7 +207,8 @@ UP.app/
 │   ├── catalog.js               # Normalización del feed y estadísticas de precio
 │   ├── api.js                   # /api/prices y refreshPrices; modo estático
 │   ├── links.js                 # CHAIN_SEARCH, offerLink, verifyLink
-│   ├── cart.js                  # Carrito y cálculo de totales
+│   ├── cart.js                  # Carrito: resuelve productos y delega en money.js
+│   ├── money.js                 # Matemática de dinero pura (fee, payout, totales, CLP)
 │   ├── compare.js               # Modal comparador y orden por precio
 │   ├── checkout.js              # Checkout simulado y split 99%/1%
 │   ├── ui.js                    # Toasts, render y paneles
@@ -209,6 +226,11 @@ UP.app/
 │   ├── demo.js                  # 30 productos · 10 locales · 6 cadenas
 │   ├── live-prices.example.json # Plantilla documentada del formato real
 │   └── live-prices.json         # (opcional, ignorado por git) activa el modo EN VIVO
+├── test/
+│   ├── money.test.js            # Dinero puro, redondeo y formato CLP
+│   ├── links.test.js            # Canónica, SKU/GTIN y nunca por nombre
+│   ├── server.test.js           # /api/*, whitelist SSRF, caché y HEAD→GET
+│   └── package.json             # {"type":"module"} para los tests ESM
 └── README.md
 ```
 
