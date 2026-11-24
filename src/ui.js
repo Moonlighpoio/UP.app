@@ -358,7 +358,7 @@ export function renderProducts() {
             </button>
           </div>
 
-          <button type="button" role="button" tabindex="0" aria-label="Comparar ${esc(product.name)}" class="up-compare-btn" data-compare="${esc(product.id)}">
+          <button type="button" role="button" tabindex="0" aria-label="Comparar precios de ${esc(product.name)}" class="up-compare-btn" data-compare="${esc(product.id)}">
             Comparar precios
             <span aria-hidden="true">→</span>
           </button>
@@ -458,12 +458,12 @@ export function linkMarkup(product, chainId) {
     html: `
       ${
         link.url
-          ? `<a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-1 font-mono text-[11px] uppercase text-soft hover:text-signal underline underline-offset-4 transition-colors"><span>VER EN TIENDA</span><span>↗</span></a>
-      <span class="block font-mono text-[9px] uppercase text-muted mt-0.5">${link.kind === 'ficha' ? 'FICHA' : 'SKU/GTIN'} ${esc(link.token || '—')}</span>`
+          ? `<a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer" class="up-store-link"><span>Ver en tienda</span><span aria-hidden="true">↗</span></a>
+      <span class="up-store-token">${link.kind === 'ficha' ? 'Ficha' : 'SKU/GTIN'} ${esc(link.token || '—')}</span>`
           : ''
       }
-      <button type="button" class="verify-badge mt-1 px-1.5 py-0.5 rounded-[3px] utility-surface font-mono text-[9px] uppercase" data-state="${stateAttr}" data-chain="${esc(chainId)}" ${action ? `${action}="${esc(action === 'data-reindex' ? reindexKey(product.id, chainId) : link.url)}"` : ''}>${stateText}</button>
-      ${broken ? '<span class="block font-mono text-[9px] uppercase text-signal mt-1">PRECIO NO CONFIRMADO</span>' : ''}`,
+      <button type="button" class="verify-badge" data-state="${stateAttr}" data-chain="${esc(chainId)}" ${action ? `${action}="${esc(action === 'data-reindex' ? reindexKey(product.id, chainId) : link.url)}"` : ''}>${stateText}</button>
+      ${broken ? '<span class="up-unconfirmed-inline">Precio no confirmado</span>' : ''}`,
   };
 }
 
@@ -473,6 +473,10 @@ export function renderCartUI() {
 
   $('nav-cart-count').textContent = totalItems;
   $('nav-cart-total').textContent = formatCLP(grandTotal);
+  $('open-cart-btn').setAttribute(
+    'aria-label',
+    `Abrir carrito · Carrito ${totalItems} ${formatCLP(grandTotal)}`
+  );
 
   const dock = $('bottom-dock');
   if (totalItems > 0) {

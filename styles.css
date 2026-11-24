@@ -21,6 +21,7 @@
 
   /* Semánticos */
   --color-success: #1e8e3e;
+  --color-success-text: #137333;
   --color-success-bg: #e8f5ec;
   --color-danger: #d93025;
   --color-danger-bg: #fdecea;
@@ -31,7 +32,6 @@
 
   /* Tipografía */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
   /* Radios */
   --radius-card: 12px;
@@ -60,15 +60,6 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --focus-halo: rgba(255, 199, 0, 0.55);
   --color-yellow: var(--color-accent);
-
-  /* Compatibilidad temporal con el markup oscuro actual (se retira en Paso 2) */
-  --legacy-glass: rgba(17, 17, 17, 0.72);
-  --legacy-glass-border: rgba(255, 255, 255, 0.14);
-  --legacy-surface: rgba(255, 255, 255, 0.05);
-  --legacy-surface-border: rgba(255, 255, 255, 0.1);
-  --legacy-rule: #595a5a;
-  --legacy-muted: #9b9d9d;
-  --blur-legacy: 45px;
 }
 
 *,
@@ -176,7 +167,7 @@ a {
 
 .up-chip--success {
   background: var(--color-success-bg);
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 
 .up-chip--danger {
@@ -285,7 +276,7 @@ a {
   top: 8px; /* equivalente a var(--space-2); literal requerido por test/a11y.test.js */
 }
 
-/* Foco siempre visible, incluso donde Tailwind usa focus:outline-none. */
+/* Foco siempre visible en cualquier componente interactivo. */
 body :focus-visible {
   outline: 2px solid var(--color-yellow) !important;
   outline-offset: 2px !important;
@@ -301,55 +292,6 @@ body :focus-visible {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Compatibilidad temporal: se elimina con el markup del Paso 2. */
-.ambient-dot-field {
-  position: fixed;
-  inset: 32px;
-  pointer-events: none;
-  z-index: 1;
-  background-image: radial-gradient(circle, var(--color-text) 1px, transparent 1.5px);
-  background-size: 114.7px 114.7px;
-  background-position: -56.3px -56.3px;
-  opacity: 0.12;
-  mix-blend-mode: multiply;
-}
-
-.chrome-glass {
-  background: var(--legacy-glass);
-  backdrop-filter: blur(var(--blur-legacy));
-  -webkit-backdrop-filter: blur(var(--blur-legacy));
-  border: 1px solid var(--legacy-glass-border);
-  box-shadow: var(--shadow-rest);
-}
-
-.smoked-glass {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-rest);
-  color: var(--color-text);
-}
-
-.utility-surface {
-  background: var(--legacy-surface);
-  backdrop-filter: blur(var(--blur-legacy));
-  -webkit-backdrop-filter: blur(var(--blur-legacy));
-  border: 1px solid var(--legacy-surface-border);
-}
-
-.tech-border {
-  border: 1px solid var(--legacy-rule);
-}
-.tech-border-t {
-  border-top: 1px solid var(--legacy-rule);
-}
-.tech-border-b {
-  border-bottom: 1px solid var(--legacy-rule);
-}
-.tech-border-l {
-  border-left: 1px solid var(--legacy-rule);
 }
 
 /* Scrollbar coherente con el tema claro */
@@ -384,26 +326,59 @@ body :focus-visible {
   animation: signalPulse 2s var(--ease) infinite;
 }
 
-.product-card:hover .product-stage-glow {
-  opacity: 0.9;
+.up-store-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
-.product-card:hover {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-hover);
+.up-store-link:hover {
+  color: var(--color-text-muted);
 }
-
+.up-store-token {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+.verify-badge {
+  display: inline-flex;
+  min-height: 44px;
+  margin-top: var(--space-1);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-chip);
+  background: var(--color-info-bg);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
 .verify-badge[data-state='broken'] {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 .verify-badge[data-state='ok'] {
-  color: var(--color-surface);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-bg);
+  color: var(--color-success-text);
 }
-.verify-badge[data-state='search'] {
-  color: var(--legacy-muted);
+.up-unconfirmed-inline {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-danger);
+  font-size: 10px;
+  font-weight: 700;
 }
 
-/* Paso 2 · Shell claro y componentes semánticos */
+/* Shell claro y componentes semánticos */
 
 .hidden {
   display: none !important;
@@ -440,8 +415,9 @@ body :focus-visible {
 }
 .up-announcement-close {
   display: inline-flex;
-  width: 24px;
-  height: 24px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   align-items: center;
   justify-content: center;
   border: 0;
@@ -470,6 +446,10 @@ body :focus-visible {
   gap: var(--space-4);
 }
 .up-logo {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
   color: var(--color-brand);
   font-size: 24px;
   font-weight: 800;
@@ -637,7 +617,7 @@ body :focus-visible {
 .up-category {
   display: inline-flex;
   flex: 0 0 auto;
-  min-height: 40px;
+  min-height: 44px;
   align-items: center;
   gap: 6px;
   padding: 0 var(--space-3);
@@ -750,7 +730,7 @@ body :focus-visible {
 }
 .up-refresh-btn {
   display: inline-flex;
-  min-height: 32px;
+  min-height: 44px;
   align-items: center;
   gap: 6px;
   margin-left: auto;
@@ -845,9 +825,8 @@ body :focus-visible {
   font-size: 12px;
   font-weight: 600;
 }
-#sort-select,
-#chain-filter {
-  min-height: 40px;
+#sort-select {
+  min-height: 44px;
   padding: 0 var(--space-3);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -876,7 +855,7 @@ body :focus-visible {
 .up-clear-btn,
 .up-mobile-filter-btn {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
@@ -951,7 +930,7 @@ body :focus-visible {
 .up-choice {
   display: flex;
   width: 100%;
-  min-height: 38px;
+  min-height: 44px;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
@@ -987,7 +966,7 @@ body :focus-visible {
 }
 .up-price-field input {
   width: 120px;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 var(--space-2);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
@@ -1012,7 +991,7 @@ body :focus-visible {
 }
 .up-filter-chip {
   display: inline-flex;
-  min-height: 32px;
+  min-height: 44px;
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-1) 0 var(--space-3);
@@ -1024,8 +1003,8 @@ body :focus-visible {
 }
 .up-filter-chip button {
   display: inline-flex;
-  width: 24px;
-  height: 24px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   justify-content: center;
   border: 0;
@@ -1089,6 +1068,9 @@ body :focus-visible {
   height: 100%;
   object-fit: contain;
 }
+.up-card-media > svg {
+  color: var(--color-text-muted);
+}
 .up-card-index,
 .up-card-category {
   position: absolute;
@@ -1137,7 +1119,7 @@ body :focus-visible {
 }
 .up-badge--best {
   background: var(--color-success-bg);
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 .up-badge--offer {
   background: var(--color-warning-bg);
@@ -1173,8 +1155,12 @@ body :focus-visible {
 .up-info {
   position: relative;
   display: inline-flex;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   align-items: center;
   justify-content: center;
+  margin: -10px 0;
   color: var(--color-text-muted);
   cursor: help;
   font-size: 12px;
@@ -1272,7 +1258,7 @@ body :focus-visible {
   box-shadow: var(--shadow-rest);
 }
 .up-mini-price--best small {
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 .up-card-actions {
   display: flex;
@@ -1285,7 +1271,7 @@ body :focus-visible {
   border-radius: var(--radius-input);
 }
 .up-qty button {
-  width: 36px;
+  width: 44px;
   height: 44px;
   border: 0;
   background: transparent;
@@ -1314,7 +1300,7 @@ body :focus-visible {
 }
 .up-compare-btn {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 44px;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
@@ -1428,6 +1414,12 @@ body :focus-visible {
   font-size: 12px;
   text-align: left;
   text-decoration: none;
+}
+.up-footer a,
+.up-footer button {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
 }
 .up-footer a:hover,
 .up-footer button:hover {
@@ -1545,10 +1537,14 @@ body :focus-visible {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
 }
-.up-modal-art img {
+.up-modal-art img,
+.up-modal-art > svg {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+.up-modal-art > svg {
+  color: var(--color-text-muted);
 }
 #modal-product-name {
   margin: 0 0 var(--space-1);
@@ -1937,7 +1933,7 @@ body :focus-visible {
   color: var(--color-text);
 }
 .up-cart-progress-ok {
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-weight: 700;
 }
 .up-cart-progress {
@@ -2009,12 +2005,12 @@ body :focus-visible {
   gap: var(--space-1);
 }
 .up-cart-item-controls .up-qty button {
-  width: 30px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
 }
 .up-cart-remove-btn {
-  width: 32px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -2090,7 +2086,7 @@ body :focus-visible {
 .up-checkout-steps li.up-done span {
   background: var(--color-success-bg);
   border-color: var(--color-success-bg);
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 .up-checkout-card h3 {
   margin: 0 0 var(--space-3);

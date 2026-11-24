@@ -179,7 +179,7 @@ El alcance objetivo es la **despensa familiar chilena completa**, ya reflejada e
 ## 1. Cómo abrirlo
 
 ### Opción A — Demo estática en GitHub Pages (sin servidor)
-Visitar **https://moonlighpoio.github.io/UP.app/**. Usa `data/demo.js`, no llama a `/api/*` y los badges muestran `Demo · sin verificación`. Requiere internet para Tailwind CDN y Google Fonts.
+Visitar **https://moonlighpoio.github.io/UP.app/**. Usa `data/demo.js`, no llama a `/api/*` y los badges muestran `Demo · sin verificación`. Requiere internet solo para cargar Inter desde Google Fonts.
 
 > ℹ️ **Nota:** al usar módulos ES nativos, abrir `index.html` con doble clic (`file://`) ya no funciona en Chrome/Firefox por las restricciones CORS del navegador. Para probar en local usa la Opción B.
 
@@ -205,7 +205,7 @@ Respuesta esperada de `/api/prices`: `30 productos · 10 tiendas · 6 cadenas` e
 
 ```
 UP.app/
-├── index.html                   # Solo marcado UI + Tailwind por CDN
+├── index.html                   # Solo marcado UI; estilos en styles.css
 ├── styles.css                   # Tokens de diseño y estilos propios, cargados por index.html
 ├── src/
 │   ├── package.json             # {"type":"module"}: ESM en src/, CJS en server.js
@@ -414,6 +414,8 @@ Esto no es asesoría legal ni tributaria.
 
 ## 6. Sistema visual · Nothing — Machines Meet Culture
 
+> ℹ️ Esta sección documenta el **diseño original** previo al rediseño. El sistema visual vigente (tema claro, Inter y tokens actuales) está en [§14.3](#143-decisiones-congeladas).
+
 Galería + manual de ingeniería: fría, precisa y monocromática. El amarillo `#ffc700` está reservado a **estados activos, mejor precio, avisos clave y acción principal de compra**; nunca decora.
 
 ### Tokens exactos (`:root` en `styles.css`)
@@ -536,11 +538,11 @@ Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de
 | **Saneamiento DOM** | `esc`, `safeHttpUrl`, `safeAssetUrl` | Todo texto se escapa antes de `innerHTML`; los `href` solo aceptan `http/https`; las imágenes solo rutas `assets/...` o `http(s)`. Los SKU se codifican con `encodeURIComponent`. |
 | **Feeds autorizados** | `lib/feed.js` + `meta.integration` | Solo `offers[]` con precio + timestamp + SKU/GTIN; URL canónica validada contra la whitelist. TTL de 15 min, circuit breakers y `Retry-After`: un 403/429 pausa el conector, nunca marca un enlace roto ni se evade. Los feeds vencidos se sirven con `stale: true`. |
 
-El CSP del servidor local permite explícitamente el CDN de Tailwind, Google Fonts y los estilos inline generados por el CDN. Verificado con Chrome headless: mismos estilos calculados y mismo flujo que antes del header (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $6.080`).
+El CSP del servidor local usa `script-src 'self'` y no depende de CDNs de estilos. Google Fonts se carga como hoja de estilo externa y Inter es la única familia visible; el rediseño eliminó Tailwind, `Libre Caslon Text`, `IBM Plex Mono` y `DotGothic16`. Verificado con Chrome headless: 30 tarjetas claras, 5 filas comparadoras, tipografía Inter y precios con `tabular-nums`.
 
 > ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
 
-La suite completa tiene **82 tests** (58 de fases anteriores + 24 de Fase 9). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
+La suite completa tiene **88 tests** (58 de fases anteriores + 24 de Fase 9 + 6 del rediseño de filtros). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
 
 ---
 
@@ -552,11 +554,11 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 82 tests: dinero, deep links, servidor, seguridad, filtros, a11y y feeds
+npm test           # 88 tests: dinero, deep links, servidor, seguridad, filtros, a11y y feeds
 npm run format     # aplica Prettier a lib/, src/, test/ y eslint.config.js
 ```
 
-El workflow `.github/workflows/ci.yml` corre en **cada push y pull request** con Node 20: `npm ci` → `npm run lint` → `npm run format:check` → `npm test`. El badge de CI está arriba de este README; el badge de Demo consulta la URL pública.
+El workflow `.github/workflows/ci.yml` corre en **cada push y pull request** con Node 20: `npm ci` → `npm run lint` → `npm run format:check` → `npx prettier --check styles.css` → `npm test`. El badge de CI está arriba de este README; el badge de Demo consulta la URL pública.
 
 > ℹ️ Se mantiene **ESLint 9** por la decisión aprobada. npm avisa que la rama 9 está deprecated (latest: 10.x, que exige Node ≥20.19); la actualización a 10 queda como decisión futura y no afecta al prototipo ni a la CI con Node 20.
 
@@ -588,16 +590,21 @@ La lógica vive en `src/filters.js`; la UI solo renderiza el resultado y cablea 
 
 | Control | Semántica |
 |---|---|
-| `#chain-filter` | `selectedChain` deja pasar solo productos con precio en esa cadena. La tarjeta muestra `PRECIO (CADENA)` en vez de `DESDE (MEJOR CADENA)`. |
-| `#free-shipping-toggle` | `freeShippingOnly` usa las cadenas cuyo carrito ya superó su umbral. Si ninguna califica, el botón no se activa y muestra el toast `AGREGA PRODUCTOS PARA DESBLOQUEAR DESPACHO GRATIS`. Si el carrito baja del umbral, `syncFreeShippingFilter()` apaga el filtro solo. |
+| Popover **Cadena** | `selectedChain` deja pasar solo productos con precio en esa cadena. La tarjeta muestra `PRECIO EN …` en vez de `DESDE`. |
+| Popover **Precio** | `minPrice`/`maxPrice` sobre el precio visible. Los límites se redondean a centena y se comparten con el bottom-sheet. |
+| **Solo ofertas** | `offersOnly` usa `product.promos` de la cadena visible (o de cualquier cadena si no hay una elegida). |
+| **Despacho gratis** | `freeShippingOnly` usa las cadenas cuyo carrito ya superó su umbral. Si ninguna califica, muestra el toast y no se activa; si el carrito baja del umbral, `syncFreeShippingFilter()` lo apaga solo. |
+| Popover **Plazo** | `maxDelivery` compara con `deliveryHours` de `src/config.js`, una **estimación de demostración**, no un tiempo real publicado por las cadenas. |
+| Popover **Precio verificado** | `availability` distingue precios con URL canónica de ficha (`CONFIRMADO`) de precios solo referenciales (`REFERENCIAL`). |
 | `option value="unit-asc"` | Ordena por **precio unitario** calculado sobre el precio visible (el de la cadena elegida o el mejor). |
-| `reset-filters-btn` | Restaura categoría, búsqueda, cadena, despacho gratis y orden. |
+| Chips + **Limpiar todo** | Cada chip llama a `clearFilter(key)`; `resetAllFilters()` restaura categoría, búsqueda, cadena, precio, ofertas, despacho, plazo, disponibilidad y orden. |
+| URL | `cat`, `chain`, `sort`, `q`, `min`, `max`, `offers`, `shipping`, `delivery`, `availability`. Se sincroniza con `replaceState` y se restaura con `popstate`. |
 
 **Heurística de precio unitario** (`unitInfo` en `src/catalog.js`): se extrae la primera cantidad con unidad reconocida del texto del detalle, con prioridad `kg > g > L > ml > m > un`. Gramos y mililitros se expresan **por 100** (`/100 g`, `/100 ml`); kilos, litros, metros y unidades se expresan por 1 (`/kg`, `/L`, `/m`, `/un`). Formatos como `Bidón 6,5 L`, `Bolsa 500 g` o `18 rollos · 50 m c/u` se normalizan; si no hay unidad reconocida, la tarjeta simplemente no muestra línea unitaria y el orden la deja al final.
 
 > ℹ️ En el feed de demo los 30 productos tienen precio en las 5 cadenas visibles: filtrar por cadena no reduce el conteo, pero **sí cambia el precio y la cadena mostrados**. Los tests de `test/filters.test.js` cubren el caso general con un fixture donde sí hay productos sin precio en la cadena elegida.
 
-Verificación headless frente al baseline `8258045`: mismos estilos y flujo (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $3.990 / $6.080`). Controles nuevos: 6 opciones de cadena (TODAS + 5), opción `unit-asc`, etiqueta que pasa de `DESDE (TOTTUS)` a `PRECIO (LIDER)`, orden unitario cambiante, toggle bloqueado con carrito vacío, `GRATIS` al superar el umbral y reset restaurando todo. Sin errores JS.
+Verificación headless del rediseño: 30 tarjetas claras, 10 categorías, 5 cadenas, contadores facetados y 3 chips activos con la URL `?cat=Bebidas%20y%20Licores&chain=jumbo&offers=1&sort=price-asc`. El roundtrip de `syncUrlFilters()` → `applyUrlFilters()` restaura categoría, cadena, ofertas y plazo incluso con hash. Sin errores JS.
 
 ---
 
@@ -608,16 +615,20 @@ Nuevo módulo `src/a11y.js`, **sin dependencias**: centraliza el foco de los tre
 | Mejora | Implementación |
 |---|---|
 | **Saltar al catálogo** | Enlace `.skip-link` oculto hasta recibir foco (`top: -100px → 8px`). |
-| **Tarjetas por teclado** | `role="button"`, `tabindex="0"`, `aria-label="Comparar …"`; `Enter` y `Espacio` abren el comparador. |
+| **Tarjetas por teclado** | El botón `Comparar precios` tiene `role="button"`, `tabindex="0"` y `aria-label="Comparar …"`; `Enter` y `Espacio` abren el diálogo. La grilla usa `onclick`/`onkeydown` delegados. |
 | **Diálogos** | `role="dialog"`, `aria-modal="true"` y `aria-labelledby` en comparador, carrito y comprobante. El foco entra al botón de cierre y `Tab`/`Shift+Tab` cicla dentro. |
-| **Foco visible** | `body :focus-visible { outline: 2px solid #ffc700 !important }`, incluso donde Tailwind aplica `focus:outline-none`. Medido en Chrome: `rgb(255, 199, 0)` en el buscador (antes, transparente). |
-| **Estados y nombres** | `aria-pressed` en categorías y despacho gratis, `aria-expanded`/`aria-controls` en el acordeón, `aria-live` en resultados y toast, `aria-label` en búsqueda, orden y cierres. Todos los SVG decorativos son `aria-hidden="true"`. |
+| **Foco visible** | `body :focus-visible { outline: 2px solid var(--color-yellow) !important }`. Medido en Chrome: `rgb(255, 199, 0)` en el buscador. |
+| **Estados y nombres** | `aria-pressed` en categorías y toggles, `aria-expanded`/`aria-controls` en popovers y acordeón, `aria-current="step"` en el checkout, `role="progressbar"` en despacho gratis, `aria-live` en resultados, cantidades y toast. Todos los SVG decorativos son `aria-hidden="true"`. |
 | **Movimiento reducido** | `@media (prefers-reduced-motion: reduce)` anula animaciones, transiciones y scroll suave. |
-| **Rendimiento** | Listeners **delegados** en la grilla: 2 en vez de 30 por render. `decoding="async"` en imágenes. CLS medido con `PerformanceObserver`: `0.003`, idéntico al baseline. |
+| **Targets táctiles** | Botones, enlaces, filtros, controles de cantidad y tooltip ⓘ con área mínima de `44×44` px, auditados en DOM de 1440, 390 y 360 px. |
+| **Contraste** | Verde `#1E8E3E` para estados y barras; texto verde usa `#137333` (`--color-success-text`) para llegar a 4.5:1 sobre blanco y sobre el fondo claro de badges. |
+| **Rendimiento** | Listeners **delegados** en la grilla: 2 por render. Imágenes `lazy` con `width`/`height` y `decoding="async"`; 30 imágenes medidas con `240×240`. |
 
-Verificación headless frente al baseline `3fab230`: mismos estilos y flujo (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $3.990 / $6.080`), CLS `0.003` en ambas versiones. Comportamiento nuevo confirmado: salto visible al enfocarse, tarjeta enfocable con `Enter`, foco en `close-compare-modal` al abrir, `Shift+Tab` dentro del modal, `Escape` cierra y devuelve el foco a la tarjeta, acordeón con `aria-expanded` y foco amarillo. Sin errores JS ni violaciones de CSP.
+Verificación headless del rediseño: salto visible al enfocarse, foco inicial en `close-compare-modal` al abrir el comparador, 12 focusables con trampa de `Tab` y retorno al primero, `Escape` y click fuera cierran, acordeón con `aria-expanded` y foco amarillo. El checkout abre en `checkout-to-delivery`, recorre Resumen → Entrega → Pago → Confirmación y muestra el recibo con el fee de 1% retenido. Sin errores JS ni violaciones de CSP.
 
-> ℹ️ `domContentLoadedEventEnd` varió entre ejecuciones (758–920 ms) por el CDN externo de Tailwind y Google Fonts, así que no se reporta como mejora: la señal estable es el CLS idéntico y la reducción de listeners. `test/a11y.test.js` verifica el marcado y las reglas CSS sin agregar paquetes.
+**Lighthouse móvil** (`http://localhost:3100`, Chrome headless): **Performance 92** y **Accesibilidad 100**, con 0 fallos de `color-contrast` y `label-content-name-mismatch`. Objetivo ≥90 / ≥95 cumplido.
+
+> ℹ️ Se retiró Tailwind y su CDN: el CSS propio en `styles.css` es la única fuente de estilos. Inter se carga desde Google Fonts con `display=swap`; `test/a11y.test.js` verifica el marcado y las reglas CSS sin agregar paquetes.
 
 ---
 
@@ -637,7 +648,7 @@ La metadata de integración expone `mode`, `source`, `ageSeconds`, `stale`, `fee
 Verificación local:
 
 ```bash
-npm run lint && npm run format:check && npm test   # 82/82 en verde
+npm run lint && npm run format:check && npm test   # 88/88 en verde
 npm start                                          # puerto 3100
 curl -sS http://localhost:3100/api/health
 curl -sS 'http://localhost:3100/api/prices?q=leche' | python3 -m json.tool
@@ -671,7 +682,14 @@ Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se r
 | Fase 7 · Filtros | `3fab230` | Cadena, despacho gratis, precio unitario, 50 tests |
 | Fase 8 · A11y y render | `95793f4` | Foco/ARIA, listeners delegados, 58 tests |
 | Fase 9 · Feeds autorizados | `d9baca2` | Contrato `offers[]`, TTL, breakers, `/api/feed-status`, 82 tests |
-| Fase 10 · Documentación | este commit | README consolidado, sin cambios de comportamiento |
+| Fase 10 · Documentación | `9a295ef` | README consolidado, sin cambios de comportamiento |
+| Rediseño 1 · Tokens | `a5cbff7` | Tema claro, Inter y tokens en `:root` |
+| Rediseño 2 · Shell | `43f5e85` | Header sticky, buscador `/`, categorías, sin Tailwind |
+| Rediseño 3 · Filtros | `727983f` | Popovers, contadores, chips, URL y bottom-sheet |
+| Rediseño 4 · Tarjeta | `42164c8` | Imagen cuadrada, mini-franja, tooltips y agregar rápido |
+| Rediseño 5 · Comparador | `28e1da6` | Tabla clara, mejor precio y filas no confirmadas |
+| Rediseño 6 · Carrito | `bb3d96a` | Drawer agrupado, progreso y checkout de 4 pasos |
+| Rediseño 7 · Pulido | este commit | A11y, sin fuentes heredadas, CI con CSS y documentación |
 
 ### 14.2 Checklist de verificación
 
@@ -679,7 +697,8 @@ Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se r
 npm ci
 npm run lint
 npm run format:check
-npm test                          # 82/82
+npm test                          # 88/88
+npx prettier --check styles.css
 npm start                         # http://localhost:3100
 curl -sS http://localhost:3100/api/health
 curl -sS http://localhost:3100/api/feed-status
@@ -691,7 +710,7 @@ Además, en cada push a `main` se verifica: CI **success**, demo pública **200*
 ### 14.3 Decisiones congeladas
 
 - **Dinero:** `platformFee = Σ round(subtotalPorCadena × 0.01)`; `payout = subtotal − fee`; `totalCobrado = subtotalProductos + despachoTotal`. El fee **no** se agrega al cobro.
-- **Visual:** negro/charcoal con único acento `#ffc700`; `Libre Caslon Text`, `Inter`, `IBM Plex Mono` y `DotGothic16`. No se introducen segundos acentos ni activos propietarios de terceros.
+- **Visual:** tema claro con fondo `#F6F6F3`, superficie `#FFFFFF`, texto `#1A1A1A`, borde `#E4E4E0`, marca `#111111` y único acento `#ffc700` reservado al CTA principal y al estado activo del menú. Se usan **Inter** en toda la UI y `tabular-nums` en precios; no hay Tailwind, vidrio, blur, `Libre Caslon Text`, `IBM Plex Mono` ni `DotGothic16`. Radios 12/10/999 px y dos niveles de sombra.
 - **Datos:** solo feeds/APIs autorizados; URL canónica o fallback exacto por SKU/GTIN. Nunca scraping, evasión de antibots ni búsqueda por nombre.
 - **Dependencias:** cero dependencias en runtime; solo `eslint@9` y `prettier@3` como devDependencies. Módulos ES nativos, sin bundler.
 - **Deploy:** GitHub Pages desde `main` / raíz con `.nojekyll`; el front detecta `github.io` y activa modo demo estático. No cambiar la fuente de deployment.

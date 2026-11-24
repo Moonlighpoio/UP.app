@@ -25,5 +25,8 @@ jobs:
       - name: Verificar formato
         run: npm run format:check
 
+      - name: Verificar estilos
+        run: npx prettier --check styles.css
+
       - name: Tests
         run: npm test
