@@ -1,8 +1,8 @@
 /**
  * UP · Servidor del prototipo (Node.js, sin dependencias)
  * ---------------------------------------------------------------------------
- *   node server.js
- *   → http://localhost:3000
+ *   npm start
+ *   → http://localhost:3100
  *
  * Endpoints:
  *   GET /api/prices?q=coca                    → JSON con { meta, chains, stores, products }
@@ -21,7 +21,7 @@ const path = require("path");
 const vm = require("vm");
 
 const ROOT = __dirname;
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT || 3100);
 
 // Verificación de enlaces: solo dominios de supermercados permitidos (evita SSRF).
 const LINK_ALLOWLIST = ["jumbo.cl", "lider.cl", "tottus.cl", "unimarc.cl", "santaisabel.cl", "coope.cl"];

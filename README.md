@@ -1,6 +1,6 @@
 # UP · Prototipo de comparador de precios de supermercados (Chile)
 
-Prototipo web **local y privado** de **UP**: busca entre **30 productos de despensa**, compara precios en **5 cadenas en la interfaz** (el feed de demo incluye 6 cadenas y 10 locales), arma **carritos múltiples visibles** separados por supermercado, muestra umbrales de despacho gratis y simula un **resumen de pago unificado** con **split payment 99% / 1%** (modelo **marketplace**, UP no es vendedor de los productos).
+Prototipo web de demostración de **UP**: busca entre **30 productos de despensa**, compara precios en **5 cadenas en la interfaz** (el feed de demo incluye 6 cadenas y 10 locales), arma **carritos múltiples visibles** separados por supermercado, muestra umbrales de despacho gratis y simula un **resumen de pago unificado** con **split payment 99% / 1%** (modelo **marketplace**, UP no es vendedor de los productos).
 
 > ⚠️ **Estado de los datos:** precios **referenciales de demostración**, no precios en tiempo real. Ver [¿Por qué no hay conexión real ya?](#4-por-qué-no-hay-conexión-real-ya).
 >
@@ -21,7 +21,7 @@ Prototipo web **local y privado** de **UP**: busca entre **30 productos de despe
 7. **Checkout consolidado y comprobante split.** Un solo resumen con subtotales por cadena, despachos, comisión UP del 1% y un cargo final. **Confirmar pago** genera el **comprobante de boleta dividida**: 99% dispersado a supermercados, 1% retenido por UP, dispersión por franquicia y detalle de entrega coordinada.
 8. **Avisos breves.** Los eventos usan un toast deslizante que desaparece solo; no hay popups persistentes ni avisos que bloqueen el catálogo.
 
-> Implementado en un solo `index.html` (Tailwind CDN + JS inline: `offerLink`, `verifyLink`, `refreshPrices`, `openCompareModal`, `calculateCartTotals`, `processUnifiedCheckout`) y `server.js` (`/api/prices`, `/api/verify-link`). En GitHub Pages el front-end detecta el host `github.io` y usa el catálogo estático sin depender del servidor local.
+> Implementado en `index.html` (Tailwind CDN + JS inline: `offerLink`, `verifyLink`, `refreshPrices`, `openCompareModal`, `calculateCartTotals`, `processUnifiedCheckout`), `styles.css` (tokens y estilos propios) y `server.js` (`/api/prices`, `/api/verify-link`). En GitHub Pages el front-end detecta el host `github.io` y usa el catálogo estático sin depender del servidor local.
 
 ---
 
@@ -148,23 +148,20 @@ El alcance objetivo es la **despensa familiar chilena completa**, ya reflejada e
 | **4 · Checkout y logística** | PSP con split 99/1, emisión de boletas por cadena, factura de fee UP, orquestador de entregas | Un cargo al cliente, dispersión automática, boleta del supermercado + comprobante de fee; reconciliación diaria |
 | **5 · Piloto y escalamiento** | Observabilidad, rate limiting por usuario, SLA y compliance SII/Ley 21.713 | Métricas de frescura y enlaces rotos; auditoría de vendedores; zero-downtime deploy |
 
-> La fase 0 ya está implementada en esta carpeta. Las fases 1–5 son el roadmap de producción: requieren convenios con las cadenas y no se ejecutan en este prototipo privado.
+> La fase 0 ya está implementada en este repositorio. Las fases 1–5 son el roadmap de producción: requieren convenios con las cadenas y no se ejecutan en este prototipo de demostración.
 
 ---
 
 ## 1. Cómo abrirlo
 
 ### Opción A — Sin servidor (más rápida)
-Abrir `index.html` con doble clic. Funciona con `data/demo.js`, pero sin `/api/verify-link` (los badges quedarán en “Verificar”). Requiere internet para Tailwind CDN y Google Fonts.
+Abrir `index.html` con doble clic. Funciona con `data/demo.js` y `styles.css` locales, pero sin `/api/verify-link` (los badges quedarán en “Demo · sin verificación”). Requiere internet para Tailwind CDN y Google Fonts.
 
 ### Opción B — Con servidor local (recomendada)
 ```bash
-cd ~/Desktop/UP-prototipo
-PORT=3100 node server.js
+npm start
 ```
-Abrir **http://localhost:3100**. La cabecera muestra el indicador de sincronización y el botón **ACTUALIZAR PRECIOS**.
-
-> En esta máquina el puerto **3000** está ocupado por otro servicio. Usa el lanzador **`start.command`** (doble clic) o el comando `PORT=3100 node server.js`.
+Abrir **http://localhost:3100**. El servidor escucha en el puerto `3100` por defecto; puedes cambiarlo con `PORT=4000 npm start`. La cabecera muestra el indicador de sincronización y el botón **ACTUALIZAR PRECIOS**. En macOS también puedes usar `start.command` (doble clic), que equivale a `npm start`.
 
 Comprobar los endpoints:
 ```bash
@@ -180,21 +177,26 @@ Respuesta esperada de `/api/prices`: `30 productos · 10 tiendas · 6 cadenas` e
 ## 2. Estructura
 
 ```
-UP-prototipo/
-├── index.html                   # Interfaz + estilos Tailwind + JS inline (única fuente de UI)
+UP.app/
+├── index.html                   # Interfaz (Tailwind por CDN) + JS inline
+├── styles.css                   # Tokens de diseño y estilos propios, cargados por index.html
 ├── server.js                    # Servidor Node sin dependencias + /api/prices + /api/verify-link
+├── package.json                 # Scripts npm start / test / lint
+├── .gitignore                   # Ignora dependencias, entorno y datos reales opcionales
+├── .nojekyll                    # Evita el procesamiento Jekyll en GitHub Pages
+├── LICENSE                      # Todos los derechos reservados
+├── start.command                # Lanzador macOS equivalente a npm start
 ├── assets/
-│   ├── up-logo.jpeg             # Copia del logo desde el Escritorio (referencia)
+│   ├── up-logo.jpeg             # Referencia visual del logotipo
 │   └── products/                # 30 imágenes de referencia guardadas localmente
 ├── data/
 │   ├── demo.js                  # 30 productos · 10 locales · 6 cadenas
 │   ├── live-prices.example.json # Plantilla documentada del formato real
-│   └── live-prices.json         # (opcional) crearlo con datos reales para activar modo EN VIVO
-├── styles.css                   # Legacy: sistema visual anterior, NO cargado por index.html
-├── app.js                       # Legacy: lógica anterior, NO cargada por index.html
-├── start.command                # Lanzador en puerto 3100
+│   └── live-prices.json         # (opcional, ignorado por git) activa el modo EN VIVO
 └── README.md
 ```
+
+> No quedan archivos legacy: `app.js` y la versión anterior de `styles.css` fueron reemplazados por el CSS realmente cargado.
 
 ---
 
@@ -204,7 +206,7 @@ El prototipo ya tiene el **adaptador** listo. Hay tres caminos:
 
 ### 3.1 API oficial / convenio (recomendado)
 ```bash
-UP_RETAILER_API=https://api.tucadena.cl/v1/precios PORT=3100 node server.js
+UP_RETAILER_API=https://api.tucadena.cl/v1/precios npm start
 ```
 El servidor llama `https://api.tucadena.cl/v1/precios?q=<búsqueda>` y espera el JSON con la forma descrita en `data/live-prices.example.json`.
 
