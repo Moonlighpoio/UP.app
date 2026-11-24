@@ -7,9 +7,9 @@
     "start": "node server.js",
     "test": "node --test",
     "lint": "npm run lint:syntax && eslint .",
-    "lint:syntax": "node --check server.js && node --check data/demo.js && for f in src/*.js test/*.js; do node --check \"$f\"; done",
-    "format": "prettier --write 'src/**/*.js' 'test/**/*.js' eslint.config.js",
-    "format:check": "prettier --check 'src/**/*.js' 'test/**/*.js' eslint.config.js"
+    "lint:syntax": "node --check server.js && node --check data/demo.js && for f in lib/*.js src/*.js test/*.js; do node --check \"$f\"; done",
+    "format": "prettier --write 'lib/**/*.js' 'src/**/*.js' 'test/**/*.js' eslint.config.js",
+    "format:check": "prettier --check 'lib/**/*.js' 'src/**/*.js' 'test/**/*.js' eslint.config.js"
   },
   "engines": {
     "node": ">=20"

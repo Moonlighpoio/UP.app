@@ -234,14 +234,17 @@ UP.app/
 │   └── products/                # 9 ilustraciones SVG propias (una por categoría)
 ├── data/
 │   ├── demo.js                  # 30 productos · 10 locales · 6 cadenas
-│   ├── live-prices.example.json # Plantilla documentada del formato real
+│   ├── live-prices.example.json # Plantilla del contrato offers[] (Fase 9)
 │   └── live-prices.json         # (opcional, ignorado por git) activa el modo EN VIVO
+├── lib/
+│   └── feed.js                  # Normalización, TTL y circuit breakers (CJS, sin deps)
 ├── test/
 │   ├── money.test.js            # Dinero puro, redondeo y formato CLP
 │   ├── links.test.js            # Canónica, SKU/GTIN y nunca por nombre
 │   ├── a11y.test.js             # Marcado accesible, CSS de foco y reduced-motion
 │   ├── catalog.test.js          # Heurística de unidades y precio unitario
 │   ├── filters.test.js          # Cadena, despacho gratis, precios y orden
+│   ├── feed.test.js             # Contrato offers[], TTL, circuit breakers y 403/429
 │   ├── server.test.js           # /api/*, SSRF, caché, HEAD→GET, saltos, rate limit y headers
 │   ├── security.test.js         # Saneamiento de URLs y escape HTML
 │   └── package.json             # {"type":"module"} para los tests ESM
@@ -260,13 +263,63 @@ El prototipo ya tiene el **adaptador** listo. Hay tres caminos:
 ```bash
 UP_RETAILER_API=https://api.tucadena.cl/v1/precios npm start
 ```
-El servidor llama `https://api.tucadena.cl/v1/precios?q=<búsqueda>` y espera el JSON con la forma descrita en `data/live-prices.example.json`.
+El servidor llama `https://api.tucadena.cl/v1/precios?q=<búsqueda>` con `Accept: application/json` y un **User-Agent identificable** (`UP-Prototype/1.0`). No hay evasión de antibots, rotación de IPs ni falsos headers de navegador: si el proveedor responde `403/429`, se pausa y se renegocia el acceso.
+
+Variables opcionales (sin dependencias nuevas):
+
+| Variable | Default | Uso |
+|---|---|---|
+| `UP_RETAILER_API` | — | URL del feed autorizado. Tiene la prioridad más alta. |
+| `UP_FEED_TTL_MS` | `900000` (15 min) | Caché en memoria por fuente. Dentro de la ventana **no se llama al upstream**. |
+| `UP_FEED_BREAKER_THRESHOLD` | `3` | Fallos `403/429` antes de abrir el circuit breaker. |
+| `UP_FEED_BREAKER_COOLDOWN_MS` | `60000` | Pausa base; un `Retry-After` del upstream la reemplaza (tope 5 min). |
 
 ### 3.2 Archivo de precios reales
 ```bash
 cp data/live-prices.example.json data/live-prices.json
 ```
-Editarlo con precios reales (obtenidos con autorización) y recargar. El badge pasará a `EN VIVO`.
+Editarlo con precios reales (obtenidos con autorización) y recargar. El badge pasará a `EN VIVO`. El archivo está ignorado por git para no versionar datos de terceros.
+
+### 3.2.1 Contrato del feed (Fase 9)
+
+Cada oferta lleva **identificador + URL canónica opcional + precio + timestamp**. El normalizador (`lib/feed.js`) genera los campos `prices`/`skus` que ya consume el front:
+
+```json
+{
+  "meta": { "feedVersion": "2026-11-24", "generatedAt": "2026-11-24T10:30:00-03:00" },
+  "products": [
+    {
+      "id": "coca-original-15l",
+      "name": "Bebida Coca-Cola Original",
+      "detail": "Botella desechable 1,5 L",
+      "category": "Bebidas y Licores",
+      "offers": [
+        {
+          "chainId": "jumbo",
+          "price": 2290,
+          "capturedAt": "2026-11-24T10:25:00-03:00",
+          "sku": "391",
+          "gtin": "7801610001622",
+          "url": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p",
+          "exact": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+Reglas de aceptación:
+
+- `price`: número CLP finito y positivo; un decimal se redondea y se avisa en `meta.integration.report.warnings`.
+- `capturedAt`: ISO 8601. Sin timestamp se usa `meta.generatedAt` y el feed se marca **`stale: true`**: nunca se presenta como fresco.
+- `sku`/`gtin`: solo `[A-Za-z0-9._-]` (máx. 40). Si no hay identificador, `exact: false` y la UI muestra *Sin SKU mapeado*; **jamás se busca por nombre**.
+- `url`: se valida contra la whitelist de dominios. Si falla, se descarta y se cae al fallback exacto por SKU/GTIN.
+- Cadena desconocida u oferta sin precio válido: se rechaza y se reporta. Si no queda ninguna oferta válida, el feed **no se publica como EN VIVO**.
+- Se acepta también el formato legado (`prices` + `skus`) para no romper feeds ya generados.
+- Límites: 5.000 productos y 20 ofertas por producto.
+
+`GET /api/prices` expone en `meta`: `mode`, `source`, `generatedAt`, `capturedAt`, `ageSeconds`, `stale`, `feedVersion`, `dataPolicy` e `integration` (warnings, report de normalización, caché y breakers). `GET /api/feed-status` expone ese último bloque sin cargar el catálogo.
 
 ### 3.3 Integración futura en producción
 
@@ -450,7 +503,7 @@ Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de
 6. **Sin búsqueda genérica.** El fallback permitido es **solo búsqueda exacta por SKU/GTIN** (`busqueda?ft=`). Si no hay identificador, se muestra “Sin SKU mapeado” y se encola para re-indexación: nunca se arma una URL con el nombre del producto.
 7. **Costo y abuso.** Cachear 5 minutos, limitar dominios, validar cada redirección y aplicar rate limiting por IP (10/min en verificaciones, 60/min en precios) evita floods de peticiones. En producción se agregaría además rate limiting por usuario autenticado y métricas de enlaces rotos.
 8. **Alta concurrencia con frescura de 15–30 min.** Mantener ~450.000 SKU actualizados exige detectar cambios en vez de descargar todo: conditional requests, feeds delta, workers con backpressure y particionado por cadena. El cuello de botella no es el usuario, sino el volumen de observación del catálogo.
-9. **Antibots sin evasión.** Un 403/429 debe interpretarse como una señal para pausar y renegociar acceso, nunca como un obstáculo técnico a sortear. Circuit breakers por cadena y User-Agent identificable son parte del diseño.
+9. **Antibots sin evasión (implementado en Fase 9).** Un 403/429 se interpreta como una señal para pausar y renegociar acceso, nunca como un obstáculo técnico a sortear. El servidor usa User-Agent identificable, circuit breakers por fuente/cadena y `Retry-After`; no hay rotación de IPs ni falsos headers de navegador.
 10. **Búsqueda instantánea a escala.** Con millones de ofertas, el filtro en memoria del prototipo no sirve. Se requiere OpenSearch/Algolia con analyzer en español, facetas y autocomplete, más Redis para consultas calientes.
 
 ---
@@ -464,12 +517,13 @@ Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de
 | **Rate limiting** | Por IP de socket | 10 verificaciones y 60 consultas de precios por minuto. Excederlo responde `429` con `Retry-After`. No se confía en `X-Forwarded-For` (spoofable). |
 | **Headers de seguridad** | En **todas** las respuestas | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` y CSP. Se eliminó `Access-Control-Allow-Origin: *`: el consumo es mismo origen. |
 | **Saneamiento DOM** | `esc`, `safeHttpUrl`, `safeAssetUrl` | Todo texto se escapa antes de `innerHTML`; los `href` solo aceptan `http/https`; las imágenes solo rutas `assets/...` o `http(s)`. Los SKU se codifican con `encodeURIComponent`. |
+| **Feeds autorizados** | `lib/feed.js` + `meta.integration` | Solo `offers[]` con precio + timestamp + SKU/GTIN; URL canónica validada contra la whitelist. TTL de 15 min, circuit breakers y `Retry-After`: un 403/429 pausa el conector, nunca marca un enlace roto ni se evade. Los feeds vencidos se sirven con `stale: true`. |
 
 El CSP del servidor local permite explícitamente el CDN de Tailwind, Google Fonts y los estilos inline generados por el CDN. Verificado con Chrome headless: mismos estilos calculados y mismo flujo que antes del header (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $6.080`).
 
 > ⚠️ **Alcance:** estos headers los envía **`node server.js` / `npm start`**. GitHub Pages es hosting estático y no permite cabeceras personalizadas en este repo, así que la demo pública no los recibe; por eso el front-end mantiene su propio saneamiento y no depende de `/api/*` en Pages.
 
-La suite completa tiene **50 tests**; la cobertura de esta fase incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
+La suite completa tiene **82 tests** (58 de fases anteriores + 24 de Fase 9). La cobertura de esta sección incluye salto hostil no contactado, límite de redirecciones, 3xx sin `Location`, `429` real por HTTP, buckets independientes y presencia de headers.
 
 ---
 
@@ -481,8 +535,8 @@ Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables s
 npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
 npm run lint       # node --check + ESLint (sintaxis + reglas)
 npm run format:check  # verifica formato sin modificar archivos
-npm test           # 58 tests: dinero, deep links, servidor, seguridad, filtros y accesibilidad
-npm run format     # aplica Prettier a src/, test/ y eslint.config.js
+npm test           # 82 tests: dinero, deep links, servidor, seguridad, filtros, a11y y feeds
+npm run format     # aplica Prettier a lib/, src/, test/ y eslint.config.js
 ```
 
 El workflow `.github/workflows/ci.yml` corre en **cada push y pull request** con Node 20: `npm ci` → `npm run lint` → `npm run format:check` → `npm test`. El badge de CI está arriba de este README; el badge de Demo consulta la URL pública.
@@ -507,7 +561,7 @@ gh api repos/Moonlighpoio/UP.app/actions/workflows/ci.yml/runs --jq '.workflow_r
 
 > La API de builds de Pages puede mostrar metadata desfasada justo después de un push. Si el `status`/`commit` parece viejo, valida el **contenido servido** (por ejemplo, que `index.html` apunte a `src/main.js`) en vez de fiarte solo de la API.
 
-En Pages el front-end detecta el host `github.io` y activa el **modo demo estático**: no existen `/api/*`, así que usa `data/demo.js` y no marca enlaces como rotos. El servidor Node (`npm start`, puerto `3100`) es la única forma de ejercitar `/api/prices`, `/api/health` y `/api/verify-link` en local.
+En Pages el front-end detecta el host `github.io` y activa el **modo demo estático**: no existen `/api/*`, así que usa `data/demo.js` y no marca enlaces como rotos. El servidor Node (`npm start`, puerto `3100`) es la única forma de ejercitar `/api/prices`, `/api/health`, `/api/verify-link` y `/api/feed-status` en local. Fase 9 es servidor-only: el front-end y la demo pública no cambiaron.
 
 ---
 
@@ -547,3 +601,36 @@ Nuevo módulo `src/a11y.js`, **sin dependencias**: centraliza el foco de los tre
 Verificación headless frente al baseline `3fab230`: mismos estilos y flujo (`cardBg rgb(20, 20, 20)`, `Libre Caslon Text`, `DotGothic16`, 30 tarjetas, 5 filas, `$2.090 / $21 / $3.990 / $6.080`), CLS `0.003` en ambas versiones. Comportamiento nuevo confirmado: salto visible al enfocarse, tarjeta enfocable con `Enter`, foco en `close-compare-modal` al abrir, `Shift+Tab` dentro del modal, `Escape` cierra y devuelve el foco a la tarjeta, acordeón con `aria-expanded` y foco amarillo. Sin errores JS ni violaciones de CSP.
 
 > ℹ️ `domContentLoadedEventEnd` varió entre ejecuciones (758–920 ms) por el CDN externo de Tailwind y Google Fonts, así que no se reporta como mejora: la señal estable es el CLS idéntico y la reducción de listeners. `test/a11y.test.js` verifica el marcado y las reglas CSS sin agregar paquetes.
+
+---
+
+## 13. Integración de feeds autorizados (Fase 9)
+
+Esta fase ocurre **solo en el servidor**: el front-end, `index.html` y la demo de Pages quedan intactos. No hay dependencias nuevas en runtime.
+
+| Archivo | Cambio |
+|---|---|
+| `lib/feed.js` | CJS sin dependencias: `normalizeFeed` (`offers[]` + formato legado), `createFeedCache` (TTL), `createCircuitBreaker`, `parseRetryAfterMs` y `classifyStatus`. |
+| `server.js` | Prioridad `UP_RETAILER_API` → `data/live-prices.json` → demo; metadata en `/api/prices`; nuevo `/api/feed-status`; pausa por 403/429 también en `verifyLink`; User-Agent `UP-Prototype/1.0`. |
+| `data/live-prices.example.json` | Plantilla migrada al contrato `offers[]` con `price`, `capturedAt`, `sku`/`gtin` y `url` canónica opcional (ver §3.2.1). |
+| `test/feed.test.js` | 24 tests de normalización, TTL, breakers, caché vencida y semántica de pausa. |
+
+La metadata de integración expone `mode`, `source`, `ageSeconds`, `stale`, `feedVersion`, `dataPolicy` e `integration` con `warnings`, `report`, `cache` y `breakers`. Un feed sin timestamp o vencido se sirve **marcado como stale**, nunca como fresco.
+
+Verificación local:
+
+```bash
+npm run lint && npm run format:check && npm test   # 82/82 en verde
+npm start                                          # puerto 3100
+curl -sS http://localhost:3100/api/health
+curl -sS 'http://localhost:3100/api/prices?q=leche' | python3 -m json.tool
+curl -sS http://localhost:3100/api/feed-status | python3 -m json.tool
+```
+
+QA ejecutado:
+
+- **Demo:** `mode: demo`, `source: data/demo.js`, `ageSeconds: null`, `fallbackReason: "Sin feed configurado (data/live-prices.json ni UP_RETAILER_API)"`, `ttlMs: 900000`.
+- **Feed local:** al copiar la plantilla a `data/live-prices.json` (luego borrado), `mode: live`, 24 ofertas válidas, 6 cadenas × 4, `stale: true` por `capturedAt` del 2026-11-23. Comportamiento correcto, no un error.
+- **Upstream simulado con `429` + `Retry-After: 2`:** una sola llamada al falso API (`HIT 1 /feed?q=`), `mode: demo`, breaker `open`, `nextRetryInMs ≈ 2000` y warning `API externa pausada por HTTP 429: se reanuda tras el enfriamiento`. La segunda consulta no volvió a contactar al proveedor.
+
+Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se reinician con el proceso (aceptado en el prototipo); `403/429` significan pausa y renegociación, nunca evasión ni enlace roto; `data/live-prices.json` sigue ignorado por git para no versionar datos de terceros.

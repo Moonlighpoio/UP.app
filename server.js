@@ -13,6 +13,10 @@
  *   2) data/live-prices.json (si existe)
  *   3) data/demo.js (modo demostración)
  *
+ * Fase 9: feeds autorizados únicamente. Normalización con SKU/GTIN + URL
+ * canónica + precio + timestamp, caché con TTL y circuit breakers. Un 403/429
+ * PAUSA el conector; nunca se interpreta como "producto no existe" ni se evade.
+ *
  * Seguridad: sirve solo archivos dentro de esta carpeta (sin path traversal),
  * valida cada salto de redirección, limita peticiones por IP y envía headers
  * de seguridad en TODAS las respuestas.
@@ -21,15 +25,70 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const {
+  CHAIN_IDS,
+  PAUSE_STATUSES,
+  classifyStatus,
+  parseRetryAfterMs,
+  createCircuitBreaker,
+  createFeedCache,
+  normalizeFeed,
+} = require("./lib/feed.js");
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 3100);
 
 // Verificación de enlaces: solo dominios de supermercados permitidos (evita SSRF).
-const LINK_ALLOWLIST = ["jumbo.cl", "lider.cl", "tottus.cl", "unimarc.cl", "santaisabel.cl", "coope.cl"];
+// El mismo mapa permite Derivar la cadena de un host para el circuit breaker.
+const LINK_DOMAINS = {
+  lider: ["lider.cl"],
+  jumbo: ["jumbo.cl"],
+  santaisabel: ["santaisabel.cl"],
+  tottus: ["tottus.cl"],
+  unimarc: ["unimarc.cl"],
+  coope: ["coope.cl"],
+};
+const LINK_ALLOWLIST = Object.values(LINK_DOMAINS).flat();
 const LINK_CACHE_MS = 5 * 60 * 1000;
 const linkCache = new Map();
-const UA = "Mozilla/5.0 (compatible; UP-Prototype/1.0; +verificacion-local)";
+const UA = "UP-Prototype/1.0 (feed autorizado; +info: README)";
+
+// Integración de datos: TTL y pausa configurable por entorno, sin dependencias nuevas.
+const FEED_SCHEMA_VERSION = "2026-11-24";
+const FEED_TTL_MS = positiveInt(process.env.UP_FEED_TTL_MS, 15 * 60 * 1000);
+const FEED_BREAKER_THRESHOLD = positiveInt(process.env.UP_FEED_BREAKER_THRESHOLD, 3);
+const FEED_BREAKER_COOLDOWN_MS = positiveInt(process.env.UP_FEED_BREAKER_COOLDOWN_MS, 60_000);
+const UPSTREAM_KEY = "upstream";
+const DATA_POLICY =
+  "Solo feeds/APIs autorizados. URL canónica o búsqueda exacta por SKU/GTIN; nunca por nombre. " +
+  "403/429 pausa el conector y requiere renegociar acceso.";
+
+function positiveInt(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? Math.floor(number) : fallback;
+}
+
+function chainForUrl(raw) {
+  try {
+    const host = new URL(raw).hostname.toLowerCase().replace(/^www\./, "");
+    const entry = Object.entries(LINK_DOMAINS).find(([, domains]) =>
+      domains.some((domain) => host === domain || host.endsWith("." + domain))
+    );
+    return entry ? entry[0] : null;
+  } catch {
+    return null;
+  }
+}
+
+const upstreamBreaker = createCircuitBreaker({
+  threshold: FEED_BREAKER_THRESHOLD,
+  cooldownMs: FEED_BREAKER_COOLDOWN_MS,
+});
+const linkBreaker = createCircuitBreaker({
+  threshold: FEED_BREAKER_THRESHOLD,
+  cooldownMs: FEED_BREAKER_COOLDOWN_MS,
+});
+const feedCache = createFeedCache({ ttlMs: FEED_TTL_MS });
 
 // Un solo timeout para TODAS las salidas de red (feed externo + verificación).
 const NETWORK_TIMEOUT_MS = 8000;
@@ -83,34 +142,189 @@ function readDemo() {
   return ctx.window.UP_DEMO_DATA;
 }
 
-async function getPrices(query) {
-  const upstream = process.env.UP_RETAILER_API;
-  if (upstream) {
-    try {
-      const url = upstream + (upstream.includes("?") ? "&" : "?") + "q=" + encodeURIComponent(query || "");
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
-      const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
-      clearTimeout(timer);
-      if (!res.ok) throw new Error("Upstream HTTP " + res.status);
-      const json = await res.json();
-      json.meta = Object.assign({}, json.meta, { mode: "live", source: upstream });
-      return json;
-    } catch (err) {
-      console.warn("[UP] API externa no disponible:", err.message, "→ usando fallback local");
+function buildMeta(data, ctx, deps) {
+  const now = (deps.now || Date.now)();
+  const generatedAt = data.meta && data.meta.generatedAt ? data.meta.generatedAt : null;
+  const capturedAt = ctx.report ? ctx.report.newestCapturedAt : null;
+  const ageOf = (iso) => {
+    const time = Date.parse(iso || "");
+    return Number.isFinite(time) ? Math.max(0, now - time) : null;
+  };
+  const ages = [ageOf(generatedAt), ageOf(capturedAt)].filter((value) => value != null);
+  const ageMs = ages.length ? Math.max(...ages) : null;
+  const stampMissing = ctx.report ? ctx.report.timestampMissing > 0 : false;
+  const stale =
+    ctx.mode === "live" &&
+    (ctx.stale || stampMissing || (ageMs != null && ageMs > (deps.cache || feedCache).ttlMs));
+
+  return Object.assign({}, data, {
+    meta: Object.assign({}, data.meta, {
+      mode: ctx.mode,
+      source: ctx.source,
+      generatedAt: generatedAt || null,
+      capturedAt: capturedAt || null,
+      ageSeconds: ctx.mode !== "live" || ageMs == null ? null : Math.round(ageMs / 1000),
+      stale,
+      query: ctx.query || null,
+      feedVersion: FEED_SCHEMA_VERSION,
+      dataPolicy: DATA_POLICY,
+      integration: {
+        ttlMs: (deps.cache || feedCache).ttlMs,
+        policy: DATA_POLICY,
+        warnings: ctx.warnings || [],
+        fallbackReason: ctx.fallbackReason || null,
+        report: ctx.report || null,
+        cache: (deps.cache || feedCache).snapshot(),
+        breakers: {
+          upstream: (deps.breaker || upstreamBreaker).snapshot(),
+          links: (deps.linkBreaker || linkBreaker).snapshot(),
+        },
+      },
+    }),
+  });
+}
+
+function cachedResult(cached, source, reason, warnings) {
+  warnings.push(reason);
+  return {
+    data: cached.data,
+    report: cached.report,
+    mode: "live",
+    source,
+    stale: true,
+    fallbackReason: reason,
+  };
+}
+
+async function loadUpstream(source, query, ctx, deps) {
+  const cache = deps.cache || feedCache;
+  const breaker = deps.breaker || upstreamBreaker;
+  const now = deps.now || Date.now;
+  const doFetch = deps.fetch || fetch;
+  const key = "upstream:" + source;
+  const cached = cache.get(key);
+
+  if (cached && !cached.stale) {
+    return { data: cached.data, report: cached.report, mode: "live", source, stale: false };
+  }
+  if (!breaker.allow(UPSTREAM_KEY)) {
+    if (cached)
+      return cachedResult(cached, source, "API externa en pausa (circuit breaker): se sirve caché", ctx.warnings);
+    ctx.warnings.push("API externa en pausa (circuit breaker): se usa el siguiente origen");
+    return null;
+  }
+
+  const url = source + (source.includes("?") ? "&" : "?") + "q=" + encodeURIComponent(query || "");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
+  try {
+    const res = await doFetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json", "User-Agent": UA },
+    });
+    const status = Number(res && res.status) || 0;
+    if (classifyStatus(status) === "pause") {
+      const header = res.headers && typeof res.headers.get === "function"
+        ? res.headers.get("retry-after")
+        : null;
+      breaker.recordFailure(UPSTREAM_KEY, parseRetryAfterMs(header, now));
+      const reason = `API externa pausada por HTTP ${status}: se reanuda tras el enfriamiento`;
+      console.warn("[UP]", reason);
+      if (cached) return cachedResult(cached, source, reason, ctx.warnings);
+      ctx.warnings.push(reason);
+      return null;
     }
+    // La ausencia de bloqueo es éxito para el breaker: disponibilidad es otra señal.
+    breaker.recordSuccess(UPSTREAM_KEY);
+    if (!res.ok) throw new Error("Upstream HTTP " + status);
+    const normalized = normalizeFeed(await res.json(), {
+      now,
+      source,
+      validateUrl: allowedLink,
+    });
+    cache.set(key, normalized.data, normalized.report);
+    return {
+      data: normalized.data,
+      report: normalized.report,
+      mode: "live",
+      source,
+      stale: false,
+    };
+  } catch (err) {
+    ctx.warnings.push("API externa no disponible: " + err.message);
+    if (cached)
+      return cachedResult(cached, source, "No se pudo refrescar la API externa: se sirve caché", ctx.warnings);
+    return null;
+  } finally {
+    clearTimeout(timer);
   }
+}
 
-  const liveFile = path.join(ROOT, "data", "live-prices.json");
-  if (fs.existsSync(liveFile)) {
-    const json = JSON.parse(fs.readFileSync(liveFile, "utf8"));
-    json.meta = Object.assign({ mode: "live", source: "data/live-prices.json" }, json.meta);
-    return json;
+function loadLocalFeed(ctx, deps) {
+  const cache = deps.cache || feedCache;
+  const now = deps.now || Date.now;
+  const exists = deps.existsSync || fs.existsSync;
+  const read = deps.readFileSync || fs.readFileSync;
+  const file = path.join(ROOT, "data", "live-prices.json");
+  const source = "data/live-prices.json";
+  const key = "file:" + source;
+  const cached = cache.get(key);
+  if (cached && !cached.stale) {
+    return { data: cached.data, report: cached.report, mode: "live", source, stale: false };
   }
+  if (!exists(file)) {
+    if (cached) return cachedResult(cached, source, "Feed local ya no existe: se sirve caché", ctx.warnings);
+    return null;
+  }
+  try {
+    const normalized = normalizeFeed(JSON.parse(read(file, "utf8")), {
+      now,
+      source,
+      validateUrl: allowedLink,
+    });
+    cache.set(key, normalized.data, normalized.report);
+    return {
+      data: normalized.data,
+      report: normalized.report,
+      mode: "live",
+      source,
+      stale: false,
+    };
+  } catch (err) {
+    ctx.warnings.push("Feed local inválido: " + err.message);
+    if (cached) return cachedResult(cached, source, "Feed local inválido: se sirve caché", ctx.warnings);
+    return null;
+  }
+}
 
-  const demo = readDemo();
-  demo.meta = Object.assign({}, demo.meta, { mode: "demo", query: query || null });
-  return demo;
+async function getPrices(query, deps = {}) {
+  const ctx = { warnings: [] };
+  const env = deps.env || process.env;
+  const upstream = deps.upstream !== undefined ? deps.upstream : env.UP_RETAILER_API;
+  const fromApi = upstream ? await loadUpstream(upstream, query, ctx, deps) : null;
+  const live = fromApi || loadLocalFeed(ctx, deps);
+  if (live) return buildMeta(live.data, Object.assign({}, ctx, live, { query }), deps);
+
+  const demo = deps.readDemo ? deps.readDemo() : readDemo();
+  demo.meta = Object.assign({}, demo.meta, {
+    mode: "demo",
+    source: "data/demo.js",
+    query: query || null,
+  });
+  return buildMeta(
+    demo,
+    {
+      mode: "demo",
+      source: "data/demo.js",
+      query,
+      stale: false,
+      warnings: ctx.warnings,
+      fallbackReason: ctx.warnings.length
+        ? "Fuentes EN VIVO no disponibles"
+        : "Sin feed configurado (data/live-prices.json ni UP_RETAILER_API)",
+    },
+    deps
+  );
 }
 
 function allowedLink(raw) {
@@ -151,6 +365,13 @@ function resetRateLimits() {
   checkPricesRate.reset();
 }
 
+// Solo para tests: deja caché y circuit breakers en estado inicial.
+function resetIntegrationState() {
+  feedCache.reset();
+  upstreamBreaker.reset();
+  linkBreaker.reset();
+}
+
 function clientIp(req) {
   // X-Forwarded-For es spoofable si el servidor está expuesto directamente.
   return req.socket.remoteAddress || "unknown";
@@ -188,14 +409,29 @@ async function verifyLink(raw, deps = {}) {
   const doFetch = deps.fetch || fetch;
   const now = deps.now || Date.now;
   const cache = deps.cache || linkCache;
+  const breaker = deps.breaker || linkBreaker;
   const cacheKey = allowedLink(raw);
   if (!cacheKey) {
     return { ok: false, status: 0, error: "Dominio no permitido", checkedAt: new Date(now()).toISOString() };
   }
+  const chain = deps.chain || chainForUrl(cacheKey);
 
   const cached = cache.get(cacheKey);
   if (cached && now() - cached.at < LINK_CACHE_MS) {
     return Object.assign({}, cached.payload, { cached: true });
+  }
+
+  if (chain && !breaker.allow(chain)) {
+    const state = breaker.snapshot()[chain] || {};
+    const seconds = Math.ceil((state.nextRetryInMs || 0) / 1000);
+    return {
+      ok: false,
+      status: 0,
+      chain,
+      paused: true,
+      error: `Verificación pausada para ${chain} por 403/429 previos. Reintento en ${seconds} s`,
+      checkedAt: new Date(now()).toISOString(),
+    };
   }
 
   let currentUrl = cacheKey;
@@ -205,6 +441,21 @@ async function verifyLink(raw, deps = {}) {
   try {
     while (true) {
       const res = await fetchRedirectSafe(doFetch, currentUrl, controller.signal);
+      if (PAUSE_STATUSES.has(res.status)) {
+        const header = res.headers && typeof res.headers.get === "function"
+          ? res.headers.get("retry-after")
+          : null;
+        if (chain) breaker.recordFailure(chain, parseRetryAfterMs(header, now));
+        return {
+          ok: false,
+          status: res.status,
+          chain,
+          paused: true,
+          error: `Acceso pausado por ${chain || "la cadena"} (HTTP ${res.status}); no se marca enlace roto`,
+          finalUrl: currentUrl,
+          checkedAt: new Date(now()).toISOString(),
+        };
+      }
       if (REDIRECT_STATUSES.has(res.status)) {
         const next = redirectLocation(res, currentUrl);
         if (!next) {
@@ -228,6 +479,7 @@ async function verifyLink(raw, deps = {}) {
       if (!allowedLink(finalUrl)) {
         return { ok: false, status: 0, error: "Redirección a host no permitido", finalUrl, checkedAt: new Date(now()).toISOString() };
       }
+      if (chain) breaker.recordSuccess(chain);
       const payload = {
         ok: res.ok,
         status: res.status,
@@ -277,6 +529,21 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, JSON.stringify({ ok: true, service: "UP prototipo" }));
   }
 
+  if (url.pathname === "/api/feed-status") {
+    if (rateLimited(res, checkPricesRate, req)) return;
+    return send(res, 200, JSON.stringify({
+      ok: true,
+      feedVersion: FEED_SCHEMA_VERSION,
+      ttlMs: feedCache.ttlMs,
+      dataPolicy: DATA_POLICY,
+      cache: feedCache.snapshot(),
+      breakers: {
+        upstream: upstreamBreaker.snapshot(),
+        links: linkBreaker.snapshot()
+      }
+    }));
+  }
+
   if (url.pathname === "/api/verify-link") {
     if (rateLimited(res, checkVerifyRate, req)) return;
     const result = await verifyLink(url.searchParams.get("url") || "");
@@ -301,6 +568,7 @@ if (require.main === module) {
     console.log("  Modo datos: " + (process.env.UP_RETAILER_API
       ? "API externa (" + process.env.UP_RETAILER_API + ")"
       : fs.existsSync(path.join(ROOT, "data", "live-prices.json")) ? "live-prices.json" : "demo"));
+    console.log("  TTL de feed: " + Math.round(FEED_TTL_MS / 1000) + " s · pausa 403/429 tras " + FEED_BREAKER_THRESHOLD + " fallos");
     console.log("  Presiona Ctrl+C para detener.\n");
   });
 }
@@ -312,6 +580,20 @@ module.exports = {
   verifyLink,
   createRateLimiter,
   resetRateLimits,
+  resetIntegrationState,
+  chainForUrl,
+  FEED_TTL_MS,
+  FEED_SCHEMA_VERSION,
+  FEED_BREAKER_THRESHOLD,
+  FEED_BREAKER_COOLDOWN_MS,
+  // Re-exportados para una sola superficie de tests.
+  CHAIN_IDS,
+  PAUSE_STATUSES,
+  classifyStatus,
+  parseRetryAfterMs,
+  createCircuitBreaker,
+  createFeedCache,
+  normalizeFeed,
   VERIFY_RATE,
   PRICES_RATE,
   NETWORK_TIMEOUT_MS,
