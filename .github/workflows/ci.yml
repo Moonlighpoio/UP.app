@@ -13,7 +13,7 @@ jobs:
       - name: Configurar Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
 
       - name: Instalar dependencias
@@ -27,6 +27,12 @@ jobs:
 
       - name: Verificar estilos
         run: npx prettier --check styles.css
+
+      - name: Verificar contraste WCAG
+        run: npm run check-contrast
+
+      - name: Validar catálogo SQLite y artefactos
+        run: npm run validate-catalog
 
       - name: Tests
         run: npm test

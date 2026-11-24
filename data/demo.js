@@ -1,473 +1,2323 @@
 /**
- * UP · Datos de demostración
- * ---------------------------------------------------------------------------
- * Precios referenciales (no en tiempo real). Se cargan cuando no hay una API
- * de supermercado conectada. Reemplazar por data/live-prices.json o por la
- * variable de entorno UP_RETAILER_API en server.js para usar datos reales.
- *
- * Imágenes: fotos referenciales recuperadas en assets/products/ (captura original).
- * Descripciones: texto neutral generado por UP, sin copiar fichas comerciales.
- * Ver README para el origen de cada dato y la nota legal.
+ * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (Fase 2).
+ * No editar a mano: npm run build-catalog o npm run export-catalog.
+ * Precios referenciales; todas las ofertas están `pending`. Ver README.
  */
 window.UP_DEMO_DATA = {
-  meta: {
-    mode: "demo",
-    generatedAt: "2026-11-23",
-    note: "Datos de demostración creados por UP. FOTOS REFERENCIALES de productos; precios referenciales, no oferta comercial.",
-    currency: "CLP",
-    locale: "es-CL"
+  "meta": {
+    "mode": "demo",
+    "generatedAt": "2026-11-23",
+    "note": "Datos de demostración creados por UP. FOTOS REFERENCIALES; precios referenciales, no oferta comercial. Ninguna oferta heredada está verificada.",
+    "currency": "CLP",
+    "locale": "es-CL"
   },
-
-  chains: {
-    lider:        { name: "Lider",          color: "#E4002B", freeShippingFrom: 34900, deliveryFee: 2990 },
-    jumbo:        { name: "Jumbo",          color: "#0057B8", freeShippingFrom: 39900, deliveryFee: 3290 },
-    tottus:       { name: "Tottus",         color: "#E2231A", freeShippingFrom: 29900, deliveryFee: 2790 },
-    unimarc:      { name: "Unimarc",        color: "#E8791A", freeShippingFrom: 32900, deliveryFee: 2890 },
-    santaisabel:  { name: "Santa Isabel",   color: "#7B1FA2", freeShippingFrom: 35900, deliveryFee: 3090 },
-    coope:        { name: "Coope",          color: "#00897B", freeShippingFrom: 29900, deliveryFee: 2690 }
+  "chains": {
+    "lider": {
+      "name": "Lider",
+      "color": "#E4002B",
+      "freeShippingFrom": 34900,
+      "deliveryFee": 2990
+    },
+    "jumbo": {
+      "name": "Jumbo",
+      "color": "#0057B8",
+      "freeShippingFrom": 39900,
+      "deliveryFee": 3290
+    },
+    "tottus": {
+      "name": "Tottus",
+      "color": "#E2231A",
+      "freeShippingFrom": 29900,
+      "deliveryFee": 2790
+    },
+    "unimarc": {
+      "name": "Unimarc",
+      "color": "#E8791A",
+      "freeShippingFrom": 32900,
+      "deliveryFee": 2890
+    },
+    "santaisabel": {
+      "name": "Santa Isabel",
+      "color": "#7B1FA2",
+      "freeShippingFrom": 35900,
+      "deliveryFee": 3090
+    },
+    "coope": {
+      "name": "Coope",
+      "color": "#00897B",
+      "freeShippingFrom": 29900,
+      "deliveryFee": 2690
+    }
   },
-
-  stores: [
-    { id: "lid-prov",     chain: "lider",       name: "Lider Providencia",          comuna: "Providencia", distanceKm: 1.2, type: "Supermercado", deliveryMinutes: 35 },
-    { id: "jum-sal",      chain: "jumbo",       name: "Jumbo Salesiano",            comuna: "Ñuñoa",       distanceKm: 2.1, type: "Supermercado", deliveryMinutes: 45 },
-    { id: "tot-mmt",      chain: "tottus",      name: "Tottus Manuel Montt",        comuna: "Providencia", distanceKm: 2.4, type: "Supermercado", deliveryMinutes: 40 },
-    { id: "uni-leones",   chain: "unimarc",     name: "Unimarc Los Leones",         comuna: "Providencia", distanceKm: 2.8, type: "Supermercado", deliveryMinutes: 50 },
-    { id: "sai-12oct",    chain: "santaisabel", name: "Santa Isabel 12 de Octubre", comuna: "Ñuñoa",       distanceKm: 3.0, type: "Supermercado", deliveryMinutes: 55 },
-    { id: "lid-cost",     chain: "lider",       name: "Lider Costanera",            comuna: "Las Condes",  distanceKm: 3.6, type: "Dark store", deliveryMinutes: 30 },
-    { id: "jum-cost",     chain: "jumbo",       name: "Jumbo Costanera Center",     comuna: "Las Condes",  distanceKm: 4.1, type: "Supermercado", deliveryMinutes: 60 },
-    { id: "tot-pa",       chain: "tottus",      name: "Tottus Parque Arauco",       comuna: "Las Condes",  distanceKm: 4.8, type: "Dark store", deliveryMinutes: 35 },
-    { id: "coo-davila",   chain: "coope",       name: "Coope Dávila",               comuna: "Ñuñoa",       distanceKm: 5.2, type: "Supermercado", deliveryMinutes: 65 },
-    { id: "uni-reina",    chain: "unimarc",     name: "Unimarc La Reina",           comuna: "La Reina",    distanceKm: 6.0, type: "Supermercado", deliveryMinutes: 70 }
+  "stores": [
+    {
+      "id": "lid-prov",
+      "chain": "lider",
+      "name": "Lider Providencia",
+      "comuna": "Providencia",
+      "distanceKm": 1.2,
+      "type": "Supermercado",
+      "deliveryMinutes": 35
+    },
+    {
+      "id": "jum-sal",
+      "chain": "jumbo",
+      "name": "Jumbo Salesiano",
+      "comuna": "Ñuñoa",
+      "distanceKm": 2.1,
+      "type": "Supermercado",
+      "deliveryMinutes": 45
+    },
+    {
+      "id": "tot-mmt",
+      "chain": "tottus",
+      "name": "Tottus Manuel Montt",
+      "comuna": "Providencia",
+      "distanceKm": 2.4,
+      "type": "Supermercado",
+      "deliveryMinutes": 40
+    },
+    {
+      "id": "uni-leones",
+      "chain": "unimarc",
+      "name": "Unimarc Los Leones",
+      "comuna": "Providencia",
+      "distanceKm": 2.8,
+      "type": "Supermercado",
+      "deliveryMinutes": 50
+    },
+    {
+      "id": "sai-12oct",
+      "chain": "santaisabel",
+      "name": "Santa Isabel 12 de Octubre",
+      "comuna": "Ñuñoa",
+      "distanceKm": 3,
+      "type": "Supermercado",
+      "deliveryMinutes": 55
+    },
+    {
+      "id": "lid-cost",
+      "chain": "lider",
+      "name": "Lider Costanera",
+      "comuna": "Las Condes",
+      "distanceKm": 3.6,
+      "type": "Dark store",
+      "deliveryMinutes": 30
+    },
+    {
+      "id": "jum-cost",
+      "chain": "jumbo",
+      "name": "Jumbo Costanera Center",
+      "comuna": "Las Condes",
+      "distanceKm": 4.1,
+      "type": "Supermercado",
+      "deliveryMinutes": 60
+    },
+    {
+      "id": "tot-pa",
+      "chain": "tottus",
+      "name": "Tottus Parque Arauco",
+      "comuna": "Las Condes",
+      "distanceKm": 4.8,
+      "type": "Dark store",
+      "deliveryMinutes": 35
+    },
+    {
+      "id": "coo-davila",
+      "chain": "coope",
+      "name": "Coope Dávila",
+      "comuna": "Ñuñoa",
+      "distanceKm": 5.2,
+      "type": "Supermercado",
+      "deliveryMinutes": 65
+    },
+    {
+      "id": "uni-reina",
+      "chain": "unimarc",
+      "name": "Unimarc La Reina",
+      "comuna": "La Reina",
+      "distanceKm": 6,
+      "type": "Supermercado",
+      "deliveryMinutes": 70
+    }
   ],
-
-  products: [
+  "products": [
     {
-      id: "coca-original-15l",
-      name: "Bebida Coca-Cola Original",
-      detail: "Botella desechable 1,5 L",
-      description: "Bebida Coca-Cola Original (1,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/coca-original-1.5l.webp",
-      skus: { lider: { sku: null, gtin: "7801610001622", url: null, exact: false }, jumbo: { sku: "391", gtin: "7801610001622", url: "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7801610001622", url: null, exact: false }, unimarc: { sku: null, gtin: "7801610001622", url: null, exact: false }, santaisabel: { sku: null, gtin: "7801610001622", url: null, exact: false }, coope: { sku: null, gtin: "7801610001622", url: null, exact: false } },
-      category: "Bebidas y Licores",
-      emoji: "🥤",
-      unitLabel: "1,5 L",
-      unitAmount: 1.5,
-      unitName: "litro",
-      prices: { lider: 2190, jumbo: 2290, tottus: 2090, unimarc: 2390, santaisabel: 2450, coope: 2250 },
-      promos: { jumbo: "Lleva 6 por $10.990", tottus: "Oferta Prime" }
+      "id": "coca-original-15l",
+      "name": "Bebida Coca-Cola Original",
+      "detail": "Botella desechable 1,5 L",
+      "description": "Bebida Coca-Cola Original (1,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/coca-original-1.5l.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7801610001622",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "391",
+          "gtin": "7801610001622",
+          "plu": null,
+          "url": "https://www.jumbo.cl/bebida-coca-cola-15-l-botella-desechable/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7801610001622",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7801610001622",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7801610001622",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7801610001622",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Bebidas y Licores",
+      "emoji": "🥤",
+      "unitLabel": "1,5 L",
+      "unitAmount": 1.5,
+      "unitName": "litro",
+      "prices": {
+        "lider": 2190,
+        "jumbo": 2290,
+        "tottus": 2090,
+        "unimarc": 2390,
+        "santaisabel": 2450,
+        "coope": 2250
+      },
+      "promos": {
+        "jumbo": "Lleva 6 por $10.990",
+        "tottus": "Oferta Prime"
+      }
     },
     {
-      id: "coca-zero-15l",
-      name: "Bebida Coca-Cola Zero",
-      detail: "Botella desechable 1,5 L",
-      description: "Bebida Coca-Cola Zero (1,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/coca-zero-1.5l.webp",
-      skus: { lider: { sku: null, gtin: "7801610350409", url: null, exact: false }, jumbo: { sku: "500", gtin: "7801610350409", url: "https://www.jumbo.cl/bebida-cocacola-zero-15-l-botella-desechable/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7801610350409", url: null, exact: false }, unimarc: { sku: null, gtin: "7801610350409", url: null, exact: false }, santaisabel: { sku: null, gtin: "7801610350409", url: null, exact: false }, coope: { sku: null, gtin: "7801610350409", url: null, exact: false } },
-      category: "Bebidas y Licores",
-      emoji: "🥤",
-      unitLabel: "1,5 L",
-      unitAmount: 1.5,
-      unitName: "litro",
-      prices: { lider: 2190, jumbo: 2290, tottus: 2090, unimarc: 2390, santaisabel: 2350, coope: 2250 },
-      promos: { jumbo: "Lleva 2 por $3.090" }
+      "id": "coca-zero-15l",
+      "name": "Bebida Coca-Cola Zero",
+      "detail": "Botella desechable 1,5 L",
+      "description": "Bebida Coca-Cola Zero (1,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/coca-zero-1.5l.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7801610350409",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "500",
+          "gtin": "7801610350409",
+          "plu": null,
+          "url": "https://www.jumbo.cl/bebida-cocacola-zero-15-l-botella-desechable/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7801610350409",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7801610350409",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7801610350409",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7801610350409",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Bebidas y Licores",
+      "emoji": "🥤",
+      "unitLabel": "1,5 L",
+      "unitAmount": 1.5,
+      "unitName": "litro",
+      "prices": {
+        "lider": 2190,
+        "jumbo": 2290,
+        "tottus": 2090,
+        "unimarc": 2390,
+        "santaisabel": 2350,
+        "coope": 2250
+      },
+      "promos": {
+        "jumbo": "Lleva 2 por $3.090"
+      }
     },
     {
-      id: "leche-entera-1l",
-      name: "Leche Colun Entera",
-      detail: "Caja 1 L · UHT natural",
-      description: "Leche Colun Entera (1 L). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/leche-entera-1l.webp",
-      skus: { lider: { sku: null, gtin: "7802920777542", url: null, exact: false }, jumbo: { sku: "6697", gtin: "7802920777542", url: "https://www.jumbo.cl/leche-entera-colun-caja-1-l-natural/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7802920777542", url: null, exact: false }, unimarc: { sku: null, gtin: "7802920777542", url: null, exact: false }, santaisabel: { sku: null, gtin: "7802920777542", url: null, exact: false }, coope: { sku: null, gtin: "7802920777542", url: null, exact: false } },
-      category: "Lácteos y Frescos",
-      emoji: "🥛",
-      unitLabel: "1 L",
-      unitAmount: 1,
-      unitName: "litro",
-      prices: { lider: 990, jumbo: 1080, tottus: 969, unimarc: 1090, santaisabel: 1120, coope: 1010 }
+      "id": "leche-entera-1l",
+      "name": "Leche Colun Entera",
+      "detail": "Caja 1 L · UHT natural",
+      "description": "Leche Colun Entera (1 L). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/leche-entera-1l.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7802920777542",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "6697",
+          "gtin": "7802920777542",
+          "plu": null,
+          "url": "https://www.jumbo.cl/leche-entera-colun-caja-1-l-natural/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7802920777542",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7802920777542",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7802920777542",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7802920777542",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Lácteos y Frescos",
+      "emoji": "🥛",
+      "unitLabel": "1 L",
+      "unitAmount": 1,
+      "unitName": "litro",
+      "prices": {
+        "lider": 990,
+        "jumbo": 1080,
+        "tottus": 969,
+        "unimarc": 1090,
+        "santaisabel": 1120,
+        "coope": 1010
+      },
+      "promos": {}
     },
     {
-      id: "huevos-docena",
-      name: "Huevos Cintazul Grandes Blancos",
-      detail: "Bandeja 12 unidades",
-      description: "Huevos Cintazul Grandes Blancos (12 un). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/huevos-docena.webp",
-      skus: { lider: { sku: null, gtin: "7804133005030", url: null, exact: false }, jumbo: { sku: "6659", gtin: "7804133005030", url: "https://www.jumbo.cl/huevos-grandes-blancos-cintazul-bandeja-12-unid/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7804133005030", url: null, exact: false }, unimarc: { sku: null, gtin: "7804133005030", url: null, exact: false }, santaisabel: { sku: null, gtin: "7804133005030", url: null, exact: false }, coope: { sku: null, gtin: "7804133005030", url: null, exact: false } },
-      category: "Lácteos y Frescos",
-      emoji: "🥚",
-      unitLabel: "12 un",
-      unitAmount: 12,
-      unitName: "unidad",
-      prices: { lider: 3190, jumbo: 3390, tottus: 3290, unimarc: 3590, santaisabel: 3490, coope: 3390 },
-      promos: { tottus: "Oferta semana" }
+      "id": "huevos-docena",
+      "name": "Huevos Cintazul Grandes Blancos",
+      "detail": "Bandeja 12 unidades",
+      "description": "Huevos Cintazul Grandes Blancos (12 un). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/huevos-docena.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7804133005030",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "6659",
+          "gtin": "7804133005030",
+          "plu": null,
+          "url": "https://www.jumbo.cl/huevos-grandes-blancos-cintazul-bandeja-12-unid/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7804133005030",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7804133005030",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7804133005030",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7804133005030",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Lácteos y Frescos",
+      "emoji": "🥚",
+      "unitLabel": "12 un",
+      "unitAmount": 12,
+      "unitName": "unidad",
+      "prices": {
+        "lider": 3190,
+        "jumbo": 3390,
+        "tottus": 3290,
+        "unimarc": 3590,
+        "santaisabel": 3490,
+        "coope": 3390
+      },
+      "promos": {
+        "tottus": "Oferta semana"
+      }
     },
     {
-      id: "arroz-1kg",
-      name: "Arroz Banquete Grado 1 Premium",
-      detail: "Grano largo y ancho · 1 kg",
-      description: "Arroz Banquete Grado 1 Premium (1 kg). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/arroz-1kg.webp",
-      skus: { lider: { sku: null, gtin: "7803110102212", url: null, exact: false }, jumbo: { sku: "1574", gtin: "7803110102212", url: "https://www.jumbo.cl/arroz-grado-1-banquete-1-kg-premium-grano-largo-y-ancho/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7803110102212", url: null, exact: false }, unimarc: { sku: null, gtin: "7803110102212", url: null, exact: false }, santaisabel: { sku: null, gtin: "7803110102212", url: null, exact: false }, coope: { sku: null, gtin: "7803110102212", url: null, exact: false } },
-      category: "Almacén / Despensa",
-      emoji: "🍚",
-      unitLabel: "1 kg",
-      unitAmount: 1,
-      unitName: "kilo",
-      prices: { lider: 1790, jumbo: 1890, tottus: 1690, unimarc: 1950, santaisabel: 1990, coope: 1850 }
+      "id": "arroz-1kg",
+      "name": "Arroz Banquete Grado 1 Premium",
+      "detail": "Grano largo y ancho · 1 kg",
+      "description": "Arroz Banquete Grado 1 Premium (1 kg). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/arroz-1kg.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7803110102212",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "1574",
+          "gtin": "7803110102212",
+          "plu": null,
+          "url": "https://www.jumbo.cl/arroz-grado-1-banquete-1-kg-premium-grano-largo-y-ancho/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7803110102212",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7803110102212",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7803110102212",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7803110102212",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Almacén / Despensa",
+      "emoji": "🍚",
+      "unitLabel": "1 kg",
+      "unitAmount": 1,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 1790,
+        "jumbo": 1890,
+        "tottus": 1690,
+        "unimarc": 1950,
+        "santaisabel": 1990,
+        "coope": 1850
+      },
+      "promos": {}
     },
     {
-      id: "pan-molde-500g",
-      name: "Pan Molde Vollkorn Centeno con Linaza",
-      detail: "Bolsa 500 g",
-      description: "Pan Molde Vollkorn Centeno con Linaza (500 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/pan-molde-500g.webp",
-      skus: { lider: { sku: null, gtin: "7803410000003", url: null, exact: false }, jumbo: { sku: "9054", gtin: "7803410000003", url: "https://www.jumbo.cl/pan-de-molde-centeno-vollkorn-bolsa-500-g-con/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7803410000003", url: null, exact: false }, unimarc: { sku: null, gtin: "7803410000003", url: null, exact: false }, santaisabel: { sku: null, gtin: "7803410000003", url: null, exact: false }, coope: { sku: null, gtin: "7803410000003", url: null, exact: false } },
-      category: "Almacén / Despensa",
-      emoji: "🍞",
-      unitLabel: "500 g",
-      unitAmount: 0.5,
-      unitName: "kilo",
-      prices: { lider: 3190, jumbo: 3350, tottus: 3090, unimarc: 3450, santaisabel: 3590, coope: 3250 }
+      "id": "pan-molde-500g",
+      "name": "Pan Molde Vollkorn Centeno con Linaza",
+      "detail": "Bolsa 500 g",
+      "description": "Pan Molde Vollkorn Centeno con Linaza (500 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/pan-molde-500g.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7803410000003",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "9054",
+          "gtin": "7803410000003",
+          "plu": null,
+          "url": "https://www.jumbo.cl/pan-de-molde-centeno-vollkorn-bolsa-500-g-con/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7803410000003",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7803410000003",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7803410000003",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7803410000003",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Almacén / Despensa",
+      "emoji": "🍞",
+      "unitLabel": "500 g",
+      "unitAmount": 0.5,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 3190,
+        "jumbo": 3350,
+        "tottus": 3090,
+        "unimarc": 3450,
+        "santaisabel": 3590,
+        "coope": 3250
+      },
+      "promos": {}
     },
     {
-      id: "aceite-1l",
-      name: "Aceite de Maravilla Chef",
-      detail: "Botella 1 L",
-      description: "Aceite de Maravilla Chef (1 L). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/aceite-1l.webp",
-      skus: { lider: { sku: null, gtin: "7802810002099", url: null, exact: false }, jumbo: { sku: "13591", gtin: "7802810002099", url: "https://www.jumbo.cl/aceite-maravilla-chef-1-l/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7802810002099", url: null, exact: false }, unimarc: { sku: null, gtin: "7802810002099", url: null, exact: false }, santaisabel: { sku: null, gtin: "7802810002099", url: null, exact: false }, coope: { sku: null, gtin: "7802810002099", url: null, exact: false } },
-      category: "Almacén / Despensa",
-      emoji: "🫗",
-      unitLabel: "1 L",
-      unitAmount: 1,
-      unitName: "litro",
-      prices: { lider: 2590, jumbo: 2792, tottus: 2490, unimarc: 2850, santaisabel: 2990, coope: 2690 }
+      "id": "aceite-1l",
+      "name": "Aceite de Maravilla Chef",
+      "detail": "Botella 1 L",
+      "description": "Aceite de Maravilla Chef (1 L). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/aceite-1l.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7802810002099",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "13591",
+          "gtin": "7802810002099",
+          "plu": null,
+          "url": "https://www.jumbo.cl/aceite-maravilla-chef-1-l/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7802810002099",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7802810002099",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7802810002099",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7802810002099",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Almacén / Despensa",
+      "emoji": "🫗",
+      "unitLabel": "1 L",
+      "unitAmount": 1,
+      "unitName": "litro",
+      "prices": {
+        "lider": 2590,
+        "jumbo": 2792,
+        "tottus": 2490,
+        "unimarc": 2850,
+        "santaisabel": 2990,
+        "coope": 2690
+      },
+      "promos": {}
     },
     {
-      id: "cafe-250g",
-      name: "Café Molido Gold Premier Forte",
-      detail: "Paquete 230 g · 70% arábica",
-      description: "Café Molido Gold Premier Forte (230 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/cafe-250g.webp",
-      skus: { lider: { sku: null, gtin: "7802800505739", url: null, exact: false }, jumbo: { sku: "74568", gtin: "7802800505739", url: "https://www.jumbo.cl/cafe-gold-premier-grano-forte-250-g/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7802800505739", url: null, exact: false }, unimarc: { sku: null, gtin: "7802800505739", url: null, exact: false }, santaisabel: { sku: null, gtin: "7802800505739", url: null, exact: false }, coope: { sku: null, gtin: "7802800505739", url: null, exact: false } },
-      category: "Almacén / Despensa",
-      emoji: "☕",
-      unitLabel: "230 g",
-      unitAmount: 0.23,
-      unitName: "kilo",
-      prices: { lider: 4490, jumbo: 4790, tottus: 4290, unimarc: 4990, santaisabel: 5190, coope: 4590 },
-      promos: { lider: "2x1 en café seleccionado" }
+      "id": "cafe-250g",
+      "name": "Café Molido Gold Premier Forte",
+      "detail": "Paquete 230 g · 70% arábica",
+      "description": "Café Molido Gold Premier Forte (230 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/cafe-250g.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7802800505739",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "74568",
+          "gtin": "7802800505739",
+          "plu": null,
+          "url": "https://www.jumbo.cl/cafe-gold-premier-grano-forte-250-g/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7802800505739",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7802800505739",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7802800505739",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7802800505739",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Almacén / Despensa",
+      "emoji": "☕",
+      "unitLabel": "230 g",
+      "unitAmount": 0.23,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 4490,
+        "jumbo": 4790,
+        "tottus": 4290,
+        "unimarc": 4990,
+        "santaisabel": 5190,
+        "coope": 4590
+      },
+      "promos": {
+        "lider": "2x1 en café seleccionado"
+      }
     },
     {
-      id: "palta-hass-jumbo-granel",
-      name: "Palta Hass Extra Chilena (2 un. Aprox)",
-      detail: "2 unidades aprox.",
-      description: "Palta Hass Extra Chilena (2 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/palta-hass-jumbo-granel.webp",
-      skus: { lider: { sku: null, gtin: "24851794", url: null, exact: false }, jumbo: { sku: "5869", gtin: "24851794", url: "https://www.jumbo.cl/palta-hass-jumbo-granel/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "24851794", url: null, exact: false }, unimarc: { sku: null, gtin: "24851794", url: null, exact: false }, santaisabel: { sku: null, gtin: "24851794", url: null, exact: false }, coope: { sku: null, gtin: "24851794", url: null, exact: false } },
-      category: "Frutas y Verduras",
-      emoji: "🥑",
-      unitLabel: "1 kg",
-      unitAmount: 1,
-      unitName: "kilo",
-      prices: { lider: 3120, jumbo: 3245, tottus: 3050, unimarc: 3370, santaisabel: 3440, coope: 3210 },
-       promos: { tottus: "Oferta fruta" },
+      "id": "palta-hass-jumbo-granel",
+      "name": "Palta Hass Extra Chilena (2 un. Aprox)",
+      "detail": "2 unidades aprox.",
+      "description": "Palta Hass Extra Chilena (2 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/palta-hass-jumbo-granel.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24851794",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "5869",
+          "gtin": null,
+          "plu": "24851794",
+          "url": "https://www.jumbo.cl/palta-hass-jumbo-granel/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24851794",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24851794",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24851794",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24851794",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Frutas y Verduras",
+      "emoji": "🥑",
+      "unitLabel": "1 kg",
+      "unitAmount": 1,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 3120,
+        "jumbo": 3245,
+        "tottus": 3050,
+        "unimarc": 3370,
+        "santaisabel": 3440,
+        "coope": 3210
+      },
+      "promos": {
+        "tottus": "Oferta fruta"
+      }
     },
     {
-      id: "pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-b",
-      name: "Pechuga Deshuesada de Pollo 850 g",
-      detail: "Bandeja 850 g aprox.",
-      description: "Pechuga Deshuesada de Pollo 850 g (1 kg). Corte cárnico: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-bandeja.webp",
-      skus: { lider: { sku: null, gtin: "7809611715081", url: null, exact: false }, jumbo: { sku: "242", gtin: "7809611715081", url: "https://www.jumbo.cl/pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-bandeja/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7809611715081", url: null, exact: false }, unimarc: { sku: null, gtin: "7809611715081", url: null, exact: false }, santaisabel: { sku: null, gtin: "7809611715081", url: null, exact: false }, coope: { sku: null, gtin: "7809611715081", url: null, exact: false } },
-      category: "Carnes",
-      emoji: "🍗",
-      unitLabel: "1 kg",
-      unitAmount: 1,
-      unitName: "kilo",
-      prices: { lider: 6130, jumbo: 6390, tottus: 6010, unimarc: 6650, santaisabel: 6770, coope: 6330 },
+      "id": "pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-b",
+      "name": "Pechuga Deshuesada de Pollo 850 g",
+      "detail": "Bandeja 850 g aprox.",
+      "description": "Pechuga Deshuesada de Pollo 850 g (1 kg). Corte cárnico: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-bandeja.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7809611715081",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "242",
+          "gtin": "7809611715081",
+          "plu": null,
+          "url": "https://www.jumbo.cl/pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-bandeja/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7809611715081",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7809611715081",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7809611715081",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7809611715081",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Carnes",
+      "emoji": "🍗",
+      "unitLabel": "1 kg",
+      "unitAmount": 1,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 6130,
+        "jumbo": 6390,
+        "tottus": 6010,
+        "unimarc": 6650,
+        "santaisabel": 6770,
+        "coope": 6330
+      },
+      "promos": {}
     },
     {
-      id: "mantequilla-con-sal-colun-250-g",
-      name: "Mantequilla Colun con Sal 250 g",
-      detail: "Barra 250 g",
-      description: "Mantequilla Colun con Sal 250 g (250 g). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/mantequilla-con-sal-colun-250-g.webp",
-      skus: { lider: { sku: null, gtin: "7802920203300", url: null, exact: false }, jumbo: { sku: "6870", gtin: "7802920203300", url: "https://www.jumbo.cl/mantequilla-con-sal-colun-250-g/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7802920203300", url: null, exact: false }, unimarc: { sku: null, gtin: "7802920203300", url: null, exact: false }, santaisabel: { sku: null, gtin: "7802920203300", url: null, exact: false }, coope: { sku: null, gtin: "7802920203300", url: null, exact: false } },
-      category: "Lácteos y Frescos",
-      emoji: "🧈",
-      unitLabel: "250 g",
-      unitAmount: 0.25,
-      unitName: "kilo",
-      prices: { lider: 2470, jumbo: 2570, tottus: 2420, unimarc: 2670, santaisabel: 2720, coope: 2540 },
+      "id": "mantequilla-con-sal-colun-250-g",
+      "name": "Mantequilla Colun con Sal 250 g",
+      "detail": "Barra 250 g",
+      "description": "Mantequilla Colun con Sal 250 g (250 g). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/mantequilla-con-sal-colun-250-g.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7802920203300",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "6870",
+          "gtin": "7802920203300",
+          "plu": null,
+          "url": "https://www.jumbo.cl/mantequilla-con-sal-colun-250-g/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7802920203300",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7802920203300",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7802920203300",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7802920203300",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Lácteos y Frescos",
+      "emoji": "🧈",
+      "unitLabel": "250 g",
+      "unitAmount": 0.25,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 2470,
+        "jumbo": 2570,
+        "tottus": 2420,
+        "unimarc": 2670,
+        "santaisabel": 2720,
+        "coope": 2540
+      },
+      "promos": {}
     },
     {
-      id: "limon-jumbo-malla-1-kg",
-      name: "Limón Malla 1 kg",
-      detail: "Malla 1 kg",
-      description: "Limón Malla 1 kg (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/limon-jumbo-malla-1-kg.webp",
-      skus: { lider: { sku: null, gtin: "7804628072165", url: null, exact: false }, jumbo: { sku: "5867", gtin: "7804628072165", url: "https://www.jumbo.cl/limon-jumbo-malla-1-kg/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7804628072165", url: null, exact: false }, unimarc: { sku: null, gtin: "7804628072165", url: null, exact: false }, santaisabel: { sku: null, gtin: "7804628072165", url: null, exact: false }, coope: { sku: null, gtin: "7804628072165", url: null, exact: false } },
-      category: "Frutas y Verduras",
-      emoji: "🍋",
-      unitLabel: "1 kg",
-      unitAmount: 1,
-      unitName: "kilo",
-      prices: { lider: 1530, jumbo: 1590, tottus: 1490, unimarc: 1650, santaisabel: 1690, coope: 1570 },
+      "id": "limon-jumbo-malla-1-kg",
+      "name": "Limón Malla 1 kg",
+      "detail": "Malla 1 kg",
+      "description": "Limón Malla 1 kg (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/limon-jumbo-malla-1-kg.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7804628072165",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "5867",
+          "gtin": "7804628072165",
+          "plu": null,
+          "url": "https://www.jumbo.cl/limon-jumbo-malla-1-kg/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7804628072165",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7804628072165",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7804628072165",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7804628072165",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Frutas y Verduras",
+      "emoji": "🍋",
+      "unitLabel": "1 kg",
+      "unitAmount": 1,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 1530,
+        "jumbo": 1590,
+        "tottus": 1490,
+        "unimarc": 1650,
+        "santaisabel": 1690,
+        "coope": 1570
+      },
+      "promos": {}
     },
     {
-      id: "toalla-papel-nova-ultra-dh-26mt-2un-1939056",
-      name: "Toalla de Papel Nova Ultra Doble Hoja 26 m 2 un.",
-      detail: "Doble hoja · 26 m · 2 un.",
-      description: "Toalla de Papel Nova Ultra Doble Hoja 26 m 2 un. (2 rollos). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/toalla-papel-nova-ultra-dh-26mt-2un-1939056.webp",
-      skus: { lider: { sku: null, gtin: "7806500406846", url: null, exact: false }, jumbo: { sku: "118848", gtin: "7806500406846", url: "https://www.jumbo.cl/toalla-papel-nova-ultra-dh-26mt-2un-1939056/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7806500406846", url: null, exact: false }, unimarc: { sku: null, gtin: "7806500406846", url: null, exact: false }, santaisabel: { sku: null, gtin: "7806500406846", url: null, exact: false }, coope: { sku: null, gtin: "7806500406846", url: null, exact: false } },
-      category: "Aseo y Limpieza",
-      emoji: "🧻",
-      unitLabel: "2 rollos",
-      unitAmount: 2,
-      unitName: "rollo",
-      prices: { lider: 2580, jumbo: 2690, tottus: 2530, unimarc: 2800, santaisabel: 2850, coope: 2660 },
-       promos: { lider: "Lleva 3 por $6.990" },
+      "id": "toalla-papel-nova-ultra-dh-26mt-2un-1939056",
+      "name": "Toalla de Papel Nova Ultra Doble Hoja 26 m 2 un.",
+      "detail": "Doble hoja · 26 m · 2 un.",
+      "description": "Toalla de Papel Nova Ultra Doble Hoja 26 m 2 un. (2 rollos). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/toalla-papel-nova-ultra-dh-26mt-2un-1939056.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7806500406846",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "118848",
+          "gtin": "7806500406846",
+          "plu": null,
+          "url": "https://www.jumbo.cl/toalla-papel-nova-ultra-dh-26mt-2un-1939056/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7806500406846",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7806500406846",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7806500406846",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7806500406846",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Aseo y Limpieza",
+      "emoji": "🧻",
+      "unitLabel": "2 rollos",
+      "unitAmount": 2,
+      "unitName": "rollo",
+      "prices": {
+        "lider": 2580,
+        "jumbo": 2690,
+        "tottus": 2530,
+        "unimarc": 2800,
+        "santaisabel": 2850,
+        "coope": 2660
+      },
+      "promos": {
+        "lider": "Lleva 3 por $6.990"
+      }
     },
     {
-      id: "leche-descremada-surlat-caja-1-l-sin-lactosa",
-      name: "Leche Surlat Descremada Sin Lactosa 1 L",
-      detail: "Caja 1 L · sin lactosa",
-      description: "Leche Surlat Descremada Sin Lactosa 1 L (1 L). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/leche-descremada-surlat-caja-1-l-sin-lactosa.webp",
-      skus: { lider: { sku: null, gtin: "7808709501995", url: null, exact: false }, jumbo: { sku: "6737", gtin: "7808709501995", url: "https://www.jumbo.cl/leche-descremada-surlat-caja-1-l-sin-lactosa/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7808709501995", url: null, exact: false }, unimarc: { sku: null, gtin: "7808709501995", url: null, exact: false }, santaisabel: { sku: null, gtin: "7808709501995", url: null, exact: false }, coope: { sku: null, gtin: "7808709501995", url: null, exact: false } },
-      category: "Lácteos y Frescos",
-      emoji: "🥛",
-      unitLabel: "1 L",
-      unitAmount: 1,
-      unitName: "litro",
-      prices: { lider: 1060, jumbo: 1100, tottus: 1030, unimarc: 1140, santaisabel: 1170, coope: 1090 },
+      "id": "leche-descremada-surlat-caja-1-l-sin-lactosa",
+      "name": "Leche Surlat Descremada Sin Lactosa 1 L",
+      "detail": "Caja 1 L · sin lactosa",
+      "description": "Leche Surlat Descremada Sin Lactosa 1 L (1 L). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/leche-descremada-surlat-caja-1-l-sin-lactosa.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7808709501995",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "6737",
+          "gtin": "7808709501995",
+          "plu": null,
+          "url": "https://www.jumbo.cl/leche-descremada-surlat-caja-1-l-sin-lactosa/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7808709501995",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7808709501995",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7808709501995",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7808709501995",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Lácteos y Frescos",
+      "emoji": "🥛",
+      "unitLabel": "1 L",
+      "unitAmount": 1,
+      "unitName": "litro",
+      "prices": {
+        "lider": 1060,
+        "jumbo": 1100,
+        "tottus": 1030,
+        "unimarc": 1140,
+        "santaisabel": 1170,
+        "coope": 1090
+      },
+      "promos": {}
     },
     {
-      id: "agua-purificada-sin-gas-benedictino-6-5-l",
-      name: "Agua Benedictino Sin Gas Bidón 6.5 L",
-      detail: "Bidón 6,5 L · sin gas",
-      description: "Agua Benedictino Sin Gas Bidón 6.5 L (6,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/agua-purificada-sin-gas-benedictino-6-5-l.webp",
-      skus: { lider: { sku: null, gtin: "7802820650013", url: null, exact: false }, jumbo: { sku: "69235", gtin: "7802820650013", url: "https://www.jumbo.cl/agua-purificada-sin-gas-benedictino-6-5-l/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7802820650013", url: null, exact: false }, unimarc: { sku: null, gtin: "7802820650013", url: null, exact: false }, santaisabel: { sku: null, gtin: "7802820650013", url: null, exact: false }, coope: { sku: null, gtin: "7802820650013", url: null, exact: false } },
-      category: "Bebidas y Licores",
-      emoji: "💧",
-      unitLabel: "6,5 L",
-      unitAmount: 6.5,
-      unitName: "litro",
-      prices: { lider: 2160, jumbo: 2250, tottus: 2120, unimarc: 2340, santaisabel: 2380, coope: 2230 },
+      "id": "agua-purificada-sin-gas-benedictino-6-5-l",
+      "name": "Agua Benedictino Sin Gas Bidón 6.5 L",
+      "detail": "Bidón 6,5 L · sin gas",
+      "description": "Agua Benedictino Sin Gas Bidón 6.5 L (6,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/agua-purificada-sin-gas-benedictino-6-5-l.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7802820650013",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "69235",
+          "gtin": "7802820650013",
+          "plu": null,
+          "url": "https://www.jumbo.cl/agua-purificada-sin-gas-benedictino-6-5-l/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7802820650013",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7802820650013",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7802820650013",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7802820650013",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Bebidas y Licores",
+      "emoji": "💧",
+      "unitLabel": "6,5 L",
+      "unitAmount": 6.5,
+      "unitName": "litro",
+      "prices": {
+        "lider": 2160,
+        "jumbo": 2250,
+        "tottus": 2120,
+        "unimarc": 2340,
+        "santaisabel": 2380,
+        "coope": 2230
+      },
+      "promos": {}
     },
     {
-      id: "tomate-larga-vida-granel",
-      name: "Tomate Larga Vida Granel (1 a 2 un. Aprox)",
-      detail: "Granel · 1 a 2 un. aprox.",
-      description: "Tomate Larga Vida Granel (1 a 2 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/tomate-larga-vida-granel.webp",
-      skus: { lider: { sku: null, gtin: "24015820", url: null, exact: false }, jumbo: { sku: "277", gtin: "24015820", url: "https://www.jumbo.cl/tomate-larga-vida-granel/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "24015820", url: null, exact: false }, unimarc: { sku: null, gtin: "24015820", url: null, exact: false }, santaisabel: { sku: null, gtin: "24015820", url: null, exact: false }, coope: { sku: null, gtin: "24015820", url: null, exact: false } },
-      category: "Frutas y Verduras",
-      emoji: "🍅",
-      unitLabel: "1 kg",
-      unitAmount: 1,
-      unitName: "kilo",
-      prices: { lider: 1000, jumbo: 1045, tottus: 980, unimarc: 1090, santaisabel: 1110, coope: 1030 },
+      "id": "tomate-larga-vida-granel",
+      "name": "Tomate Larga Vida Granel (1 a 2 un. Aprox)",
+      "detail": "Granel · 1 a 2 un. aprox.",
+      "description": "Tomate Larga Vida Granel (1 a 2 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/tomate-larga-vida-granel.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24015820",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "277",
+          "gtin": null,
+          "plu": "24015820",
+          "url": "https://www.jumbo.cl/tomate-larga-vida-granel/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24015820",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24015820",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24015820",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24015820",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Frutas y Verduras",
+      "emoji": "🍅",
+      "unitLabel": "1 kg",
+      "unitAmount": 1,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 1000,
+        "jumbo": 1045,
+        "tottus": 980,
+        "unimarc": 1090,
+        "santaisabel": 1110,
+        "coope": 1030
+      },
+      "promos": {}
     },
     {
-      id: "papas-jumbo-malla-2-kg",
-      name: "Papa Malla 2 kg",
-      detail: "Malla 2 kg",
-      description: "Papa Malla 2 kg (2 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/papas-jumbo-malla-2-kg.webp",
-      skus: { lider: { sku: null, gtin: "7803903202006", url: null, exact: false }, jumbo: { sku: "5872", gtin: "7803903202006", url: "https://www.jumbo.cl/papas-jumbo-malla-2-kg/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7803903202006", url: null, exact: false }, unimarc: { sku: null, gtin: "7803903202006", url: null, exact: false }, santaisabel: { sku: null, gtin: "7803903202006", url: null, exact: false }, coope: { sku: null, gtin: "7803903202006", url: null, exact: false } },
-      category: "Frutas y Verduras",
-      emoji: "🥔",
-      unitLabel: "2 kg",
-      unitAmount: 2,
-      unitName: "kilo",
-      prices: { lider: 3730, jumbo: 3890, tottus: 3660, unimarc: 4050, santaisabel: 4120, coope: 3850 },
+      "id": "papas-jumbo-malla-2-kg",
+      "name": "Papa Malla 2 kg",
+      "detail": "Malla 2 kg",
+      "description": "Papa Malla 2 kg (2 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/papas-jumbo-malla-2-kg.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7803903202006",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "5872",
+          "gtin": "7803903202006",
+          "plu": null,
+          "url": "https://www.jumbo.cl/papas-jumbo-malla-2-kg/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7803903202006",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7803903202006",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7803903202006",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7803903202006",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Frutas y Verduras",
+      "emoji": "🥔",
+      "unitLabel": "2 kg",
+      "unitAmount": 2,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 3730,
+        "jumbo": 3890,
+        "tottus": 3660,
+        "unimarc": 4050,
+        "santaisabel": 4120,
+        "coope": 3850
+      },
+      "promos": {}
     },
     {
-      id: "atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140",
-      name: "Atún Lomitos en Agua 91 g drenado, 140 g neto",
-      detail: "Lomitos en agua · 91 g drenado",
-      description: "Atún Lomitos en Agua 91 g drenado, 140 g neto (140 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-.webp",
-      skus: { lider: { sku: null, gtin: "7807910048510", url: null, exact: false }, jumbo: { sku: "147797", gtin: "7807910048510", url: "https://www.jumbo.cl/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-2017687/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7807910048510", url: null, exact: false }, unimarc: { sku: null, gtin: "7807910048510", url: null, exact: false }, santaisabel: { sku: null, gtin: "7807910048510", url: null, exact: false }, coope: { sku: null, gtin: "7807910048510", url: null, exact: false } },
-      category: "Almacén / Despensa",
-      emoji: "🐟",
-      unitLabel: "140 g",
-      unitAmount: 0.14,
-      unitName: "kilo",
-      prices: { lider: 960, jumbo: 1000, tottus: 940, unimarc: 1040, santaisabel: 1060, coope: 990 },
+      "id": "atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140",
+      "name": "Atún Lomitos en Agua 91 g drenado, 140 g neto",
+      "detail": "Lomitos en agua · 91 g drenado",
+      "description": "Atún Lomitos en Agua 91 g drenado, 140 g neto (140 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7807910048510",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "147797",
+          "gtin": "7807910048510",
+          "plu": null,
+          "url": "https://www.jumbo.cl/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-2017687/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7807910048510",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7807910048510",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7807910048510",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7807910048510",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Almacén / Despensa",
+      "emoji": "🐟",
+      "unitLabel": "140 g",
+      "unitAmount": 0.14,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 960,
+        "jumbo": 1000,
+        "tottus": 940,
+        "unimarc": 1040,
+        "santaisabel": 1060,
+        "coope": 990
+      },
+      "promos": {}
     },
     {
-      id: "zanahoria-jumbo-1-kg",
-      name: "Zanahoria Bolsa 1 kg",
-      detail: "Bolsa 1 kg",
-      description: "Zanahoria Bolsa 1 kg (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/zanahoria-jumbo-1-kg.webp",
-      skus: { lider: { sku: null, gtin: "7809561000466", url: null, exact: false }, jumbo: { sku: "5901", gtin: "7809561000466", url: "https://www.jumbo.cl/zanahoria-jumbo-1-kg/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7809561000466", url: null, exact: false }, unimarc: { sku: null, gtin: "7809561000466", url: null, exact: false }, santaisabel: { sku: null, gtin: "7809561000466", url: null, exact: false }, coope: { sku: null, gtin: "7809561000466", url: null, exact: false } },
-      category: "Frutas y Verduras",
-      emoji: "🥕",
-      unitLabel: "1 kg",
-      unitAmount: 1,
-      unitName: "kilo",
-      prices: { lider: 1530, jumbo: 1590, tottus: 1490, unimarc: 1650, santaisabel: 1690, coope: 1570 },
+      "id": "zanahoria-jumbo-1-kg",
+      "name": "Zanahoria Bolsa 1 kg",
+      "detail": "Bolsa 1 kg",
+      "description": "Zanahoria Bolsa 1 kg (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/zanahoria-jumbo-1-kg.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7809561000466",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "5901",
+          "gtin": "7809561000466",
+          "plu": null,
+          "url": "https://www.jumbo.cl/zanahoria-jumbo-1-kg/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7809561000466",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7809561000466",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7809561000466",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7809561000466",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Frutas y Verduras",
+      "emoji": "🥕",
+      "unitLabel": "1 kg",
+      "unitAmount": 1,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 1530,
+        "jumbo": 1590,
+        "tottus": 1490,
+        "unimarc": 1650,
+        "santaisabel": 1690,
+        "coope": 1570
+      },
+      "promos": {}
     },
     {
-      id: "yoghurt-natural-danone-150-g",
-      name: "Yogurt Griego Danone Oikos Natural Sin Endulzar 150 g",
-      detail: "Yogurt griego natural · 150 g",
-      description: "Yogurt Griego Danone Oikos Natural Sin Endulzar 150 g (150 g). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/yoghurt-natural-danone-150-g.webp",
-      skus: { lider: { sku: null, gtin: "7802955007799", url: null, exact: false }, jumbo: { sku: "7091", gtin: "7802955007799", url: "https://www.jumbo.cl/yoghurt-natural-danone-150-g/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7802955007799", url: null, exact: false }, unimarc: { sku: null, gtin: "7802955007799", url: null, exact: false }, santaisabel: { sku: null, gtin: "7802955007799", url: null, exact: false }, coope: { sku: null, gtin: "7802955007799", url: null, exact: false } },
-      category: "Lácteos y Frescos",
-      emoji: "🥣",
-      unitLabel: "150 g",
-      unitAmount: 0.15,
-      unitName: "kilo",
-      prices: { lider: 550, jumbo: 570, tottus: 540, unimarc: 590, santaisabel: 600, coope: 560 },
+      "id": "yoghurt-natural-danone-150-g",
+      "name": "Yogurt Griego Danone Oikos Natural Sin Endulzar 150 g",
+      "detail": "Yogurt griego natural · 150 g",
+      "description": "Yogurt Griego Danone Oikos Natural Sin Endulzar 150 g (150 g). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/yoghurt-natural-danone-150-g.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7802955007799",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "7091",
+          "gtin": "7802955007799",
+          "plu": null,
+          "url": "https://www.jumbo.cl/yoghurt-natural-danone-150-g/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7802955007799",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7802955007799",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7802955007799",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7802955007799",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Lácteos y Frescos",
+      "emoji": "🥣",
+      "unitLabel": "150 g",
+      "unitAmount": 0.15,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 550,
+        "jumbo": 570,
+        "tottus": 540,
+        "unimarc": 590,
+        "santaisabel": 600,
+        "coope": 560
+      },
+      "promos": {}
     },
     {
-      id: "azucar-blanca-granulada-iansa-1-kg",
-      name: "Azúcar Blanca Iansa 1 kg",
-      detail: "Saco 1 kg",
-      description: "Azúcar Blanca Iansa 1 kg (1 kg). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/azucar-blanca-granulada-iansa-1-kg.webp",
-      skus: { lider: { sku: null, gtin: "7801505231912", url: null, exact: false }, jumbo: { sku: "1638", gtin: "7801505231912", url: "https://www.jumbo.cl/azucar-blanca-granulada-iansa-1-kg/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7801505231912", url: null, exact: false }, unimarc: { sku: null, gtin: "7801505231912", url: null, exact: false }, santaisabel: { sku: null, gtin: "7801505231912", url: null, exact: false }, coope: { sku: null, gtin: "7801505231912", url: null, exact: false } },
-      category: "Almacén / Despensa",
-      emoji: "🍬",
-      unitLabel: "1 kg",
-      unitAmount: 1,
-      unitName: "kilo",
-      prices: { lider: 1240, jumbo: 1290, tottus: 1210, unimarc: 1340, santaisabel: 1370, coope: 1280 },
+      "id": "azucar-blanca-granulada-iansa-1-kg",
+      "name": "Azúcar Blanca Iansa 1 kg",
+      "detail": "Saco 1 kg",
+      "description": "Azúcar Blanca Iansa 1 kg (1 kg). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/azucar-blanca-granulada-iansa-1-kg.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7801505231912",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "1638",
+          "gtin": "7801505231912",
+          "plu": null,
+          "url": "https://www.jumbo.cl/azucar-blanca-granulada-iansa-1-kg/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7801505231912",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7801505231912",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7801505231912",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7801505231912",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Almacén / Despensa",
+      "emoji": "🍬",
+      "unitLabel": "1 kg",
+      "unitAmount": 1,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 1240,
+        "jumbo": 1290,
+        "tottus": 1210,
+        "unimarc": 1340,
+        "santaisabel": 1370,
+        "coope": 1280
+      },
+      "promos": {}
     },
     {
-      id: "papel-higienico-elite-ultra-doble-hoja-18-rollos-50-",
-      name: "Papel Higiénico Elite Ultra Suave Doble Hoja 50 m 18 un.",
-      detail: "18 rollos · 50 m c/u",
-      description: "Papel Higiénico Elite Ultra Suave Doble Hoja 50 m 18 un. (18 rollos). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/papel-higienico-elite-ultra-doble-hoja-18-rollos-50-m-c-u.webp",
-      skus: { lider: { sku: null, gtin: "7806500509776", url: null, exact: false }, jumbo: { sku: "8122", gtin: "7806500509776", url: "https://www.jumbo.cl/papel-higienico-elite-ultra-doble-hoja-18-rollos-50-m-c-u/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7806500509776", url: null, exact: false }, unimarc: { sku: null, gtin: "7806500509776", url: null, exact: false }, santaisabel: { sku: null, gtin: "7806500509776", url: null, exact: false }, coope: { sku: null, gtin: "7806500509776", url: null, exact: false } },
-      category: "Aseo y Limpieza",
-      emoji: "🧻",
-      unitLabel: "18 rollos",
-      unitAmount: 18,
-      unitName: "rollo",
-      prices: { lider: 15350, jumbo: 15990, tottus: 15030, unimarc: 16630, santaisabel: 16950, coope: 15830 },
-       promos: { jumbo: "18 rollos por $15.990" },
+      "id": "papel-higienico-elite-ultra-doble-hoja-18-rollos-50-",
+      "name": "Papel Higiénico Elite Ultra Suave Doble Hoja 50 m 18 un.",
+      "detail": "18 rollos · 50 m c/u",
+      "description": "Papel Higiénico Elite Ultra Suave Doble Hoja 50 m 18 un. (18 rollos). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/papel-higienico-elite-ultra-doble-hoja-18-rollos-50-m-c-u.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7806500509776",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "8122",
+          "gtin": "7806500509776",
+          "plu": null,
+          "url": "https://www.jumbo.cl/papel-higienico-elite-ultra-doble-hoja-18-rollos-50-m-c-u/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7806500509776",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7806500509776",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7806500509776",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7806500509776",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Aseo y Limpieza",
+      "emoji": "🧻",
+      "unitLabel": "18 rollos",
+      "unitAmount": 18,
+      "unitName": "rollo",
+      "prices": {
+        "lider": 15350,
+        "jumbo": 15990,
+        "tottus": 15030,
+        "unimarc": 16630,
+        "santaisabel": 16950,
+        "coope": 15830
+      },
+      "promos": {
+        "jumbo": "18 rollos por $15.990"
+      }
     },
     {
-      id: "spaghetti-n-5-talliani-bolsa-400-g-con-huevos-fresco",
-      name: "Spaghetti N°5 Talliani Al Huevo 400 g",
-      detail: "Bolsa 400 g · al huevo",
-      description: "Spaghetti N°5 Talliani Al Huevo 400 g (400 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/spaghetti-talliani-400g.webp",
-      skus: { lider: { sku: null, gtin: "7802500007021", url: null, exact: false }, jumbo: { sku: "2432", gtin: "7802500007021", url: "https://www.jumbo.cl/spaghetti-n-5-talliani-bolsa-400-g-con-huevos-frescos/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7802500007021", url: null, exact: false }, unimarc: { sku: null, gtin: "7802500007021", url: null, exact: false }, santaisabel: { sku: null, gtin: "7802500007021", url: null, exact: false }, coope: { sku: null, gtin: "7802500007021", url: null, exact: false } },
-      category: "Almacén / Despensa",
-      emoji: "🍝",
-      unitLabel: "400 g",
-      unitAmount: 0.4,
-      unitName: "kilo",
-      prices: { lider: 1300, jumbo: 1350, tottus: 1270, unimarc: 1400, santaisabel: 1430, coope: 1340 },
+      "id": "spaghetti-n-5-talliani-bolsa-400-g-con-huevos-fresco",
+      "name": "Spaghetti N°5 Talliani Al Huevo 400 g",
+      "detail": "Bolsa 400 g · al huevo",
+      "description": "Spaghetti N°5 Talliani Al Huevo 400 g (400 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/spaghetti-talliani-400g.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7802500007021",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "2432",
+          "gtin": "7802500007021",
+          "plu": null,
+          "url": "https://www.jumbo.cl/spaghetti-n-5-talliani-bolsa-400-g-con-huevos-frescos/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7802500007021",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7802500007021",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7802500007021",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7802500007021",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Almacén / Despensa",
+      "emoji": "🍝",
+      "unitLabel": "400 g",
+      "unitAmount": 0.4,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 1300,
+        "jumbo": 1350,
+        "tottus": 1270,
+        "unimarc": 1400,
+        "santaisabel": 1430,
+        "coope": 1340
+      },
+      "promos": {}
     },
     {
-      id: "bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bi",
-      name: "Bolsa de Basura Virutex Bio Mediana 70 x 90 cm 10 un.",
-      detail: "70 x 90 cm · 10 un.",
-      description: "Bolsa de Basura Virutex Bio Mediana 70 x 90 cm 10 un. (10 un). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bio-rollo.webp",
-      skus: { lider: { sku: null, gtin: "7806810800440", url: null, exact: false }, jumbo: { sku: "7328", gtin: "7806810800440", url: "https://www.jumbo.cl/bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bio-rollo/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7806810800440", url: null, exact: false }, unimarc: { sku: null, gtin: "7806810800440", url: null, exact: false }, santaisabel: { sku: null, gtin: "7806810800440", url: null, exact: false }, coope: { sku: null, gtin: "7806810800440", url: null, exact: false } },
-      category: "Aseo y Limpieza",
-      emoji: "🗑️",
-      unitLabel: "10 un",
-      unitAmount: 10,
-      unitName: "unidad",
-      prices: { lider: 960, jumbo: 1000, tottus: 940, unimarc: 1040, santaisabel: 1060, coope: 990 },
+      "id": "bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bi",
+      "name": "Bolsa de Basura Virutex Bio Mediana 70 x 90 cm 10 un.",
+      "detail": "70 x 90 cm · 10 un.",
+      "description": "Bolsa de Basura Virutex Bio Mediana 70 x 90 cm 10 un. (10 un). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bio-rollo.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7806810800440",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "7328",
+          "gtin": "7806810800440",
+          "plu": null,
+          "url": "https://www.jumbo.cl/bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bio-rollo/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7806810800440",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7806810800440",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7806810800440",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7806810800440",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Aseo y Limpieza",
+      "emoji": "🗑️",
+      "unitLabel": "10 un",
+      "unitAmount": 10,
+      "unitName": "unidad",
+      "prices": {
+        "lider": 960,
+        "jumbo": 1000,
+        "tottus": 940,
+        "unimarc": 1040,
+        "santaisabel": 1060,
+        "coope": 990
+      },
+      "promos": {}
     },
     {
-      id: "carne-molida-vacuno-10-500g-prodj-1995701",
-      name: "Carne Molida Vacuno 10% Grasa 500 g",
-      detail: "Vacuno 10% grasa · 500 g",
-      description: "Carne Molida Vacuno 10% Grasa 500 g (500 g). Corte cárnico: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/carne-molida-vacuno-10-500g-prodj-1995701.webp",
-      skus: { lider: { sku: null, gtin: "7804684740008", url: null, exact: false }, jumbo: { sku: "137417", gtin: "7804684740008", url: "https://www.jumbo.cl/carne-molida-vacuno-10-500g-prodj-1995701/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7804684740008", url: null, exact: false }, unimarc: { sku: null, gtin: "7804684740008", url: null, exact: false }, santaisabel: { sku: null, gtin: "7804684740008", url: null, exact: false }, coope: { sku: null, gtin: "7804684740008", url: null, exact: false } },
-      category: "Carnes",
-      emoji: "🥩",
-      unitLabel: "500 g",
-      unitAmount: 0.5,
-      unitName: "kilo",
-      prices: { lider: 5750, jumbo: 5990, tottus: 5630, unimarc: 6230, santaisabel: 6350, coope: 5930 },
+      "id": "carne-molida-vacuno-10-500g-prodj-1995701",
+      "name": "Carne Molida Vacuno 10% Grasa 500 g",
+      "detail": "Vacuno 10% grasa · 500 g",
+      "description": "Carne Molida Vacuno 10% Grasa 500 g (500 g). Corte cárnico: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/carne-molida-vacuno-10-500g-prodj-1995701.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7804684740008",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "137417",
+          "gtin": "7804684740008",
+          "plu": null,
+          "url": "https://www.jumbo.cl/carne-molida-vacuno-10-500g-prodj-1995701/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7804684740008",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7804684740008",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7804684740008",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7804684740008",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Carnes",
+      "emoji": "🥩",
+      "unitLabel": "500 g",
+      "unitAmount": 0.5,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 5750,
+        "jumbo": 5990,
+        "tottus": 5630,
+        "unimarc": 6230,
+        "santaisabel": 6350,
+        "coope": 5930
+      },
+      "promos": {}
     },
     {
-      id: "manzana-fuji-granel-2",
-      name: "Manzana Fuji Importada Granel (2 a 3 un. Aprox)",
-      detail: "Importada · 2 a 3 un. aprox.",
-      description: "Manzana Fuji Importada Granel (2 a 3 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/manzana-fuji-granel-2.webp",
-      skus: { lider: { sku: null, gtin: "24936347", url: null, exact: false }, jumbo: { sku: "45350", gtin: "24936347", url: "https://www.jumbo.cl/manzana-fuji-granel-2/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "24936347", url: null, exact: false }, unimarc: { sku: null, gtin: "24936347", url: null, exact: false }, santaisabel: { sku: null, gtin: "24936347", url: null, exact: false }, coope: { sku: null, gtin: "24936347", url: null, exact: false } },
-      category: "Frutas y Verduras",
-      emoji: "🍎",
-      unitLabel: "1 kg",
-      unitAmount: 1,
-      unitName: "kilo",
-      prices: { lider: 1240, jumbo: 1295, tottus: 1220, unimarc: 1350, santaisabel: 1370, coope: 1280 },
+      "id": "manzana-fuji-granel-2",
+      "name": "Manzana Fuji Importada Granel (2 a 3 un. Aprox)",
+      "detail": "Importada · 2 a 3 un. aprox.",
+      "description": "Manzana Fuji Importada Granel (2 a 3 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/manzana-fuji-granel-2.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24936347",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "45350",
+          "gtin": null,
+          "plu": "24936347",
+          "url": "https://www.jumbo.cl/manzana-fuji-granel-2/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24936347",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24936347",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24936347",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": null,
+          "plu": "24936347",
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Frutas y Verduras",
+      "emoji": "🍎",
+      "unitLabel": "1 kg",
+      "unitAmount": 1,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 1240,
+        "jumbo": 1295,
+        "tottus": 1220,
+        "unimarc": 1350,
+        "santaisabel": 1370,
+        "coope": 1280
+      },
+      "promos": {}
     },
     {
-      id: "cif-cr-bio-multiuso-original-bot-750-g-1956146",
-      name: "Limpiador Crema Cif Original 500 ml",
-      detail: "Crema limpiadora · 500 ml",
-      description: "Limpiador Crema Cif Original 500 ml (500 ml). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/cif-cr-bio-multiuso-original-bot-750-g-1956146.webp",
-      skus: { lider: { sku: null, gtin: "7791290794221", url: null, exact: false }, jumbo: { sku: "123435", gtin: "7791290794221", url: "https://www.jumbo.cl/cif-cr-bio-multiuso-original-bot-750-g-1956146/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7791290794221", url: null, exact: false }, unimarc: { sku: null, gtin: "7791290794221", url: null, exact: false }, santaisabel: { sku: null, gtin: "7791290794221", url: null, exact: false }, coope: { sku: null, gtin: "7791290794221", url: null, exact: false } },
-      category: "Aseo y Limpieza",
-      emoji: "🧴",
-      unitLabel: "500 ml",
-      unitAmount: 0.5,
-      unitName: "litro",
-      prices: { lider: 1910, jumbo: 1990, tottus: 1870, unimarc: 2070, santaisabel: 2110, coope: 1970 },
+      "id": "cif-cr-bio-multiuso-original-bot-750-g-1956146",
+      "name": "Limpiador Crema Cif Original 500 ml",
+      "detail": "Crema limpiadora · 500 ml",
+      "description": "Limpiador Crema Cif Original 500 ml (500 ml). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/cif-cr-bio-multiuso-original-bot-750-g-1956146.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7791290794221",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "123435",
+          "gtin": "7791290794221",
+          "plu": null,
+          "url": "https://www.jumbo.cl/cif-cr-bio-multiuso-original-bot-750-g-1956146/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7791290794221",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7791290794221",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7791290794221",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7791290794221",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Aseo y Limpieza",
+      "emoji": "🧴",
+      "unitLabel": "500 ml",
+      "unitAmount": 0.5,
+      "unitName": "litro",
+      "prices": {
+        "lider": 1910,
+        "jumbo": 1990,
+        "tottus": 1870,
+        "unimarc": 2070,
+        "santaisabel": 2110,
+        "coope": 1970
+      },
+      "promos": {}
     },
     {
-      id: "choclo-la-crianza-bolsa-400-g-premium-tiernos-congel",
-      name: "Choclo Tierno La Crianza 400 g",
-      detail: "Bolsa 400 g · tierno",
-      description: "Choclo Tierno La Crianza 400 g (400 g). Producto congelado: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/choclo-la-crianza-bolsa-400-g-premium-tiernos-congelado-2.webp",
-      skus: { lider: { sku: null, gtin: "7809611701268", url: null, exact: false }, jumbo: { sku: "1394", gtin: "7809611701268", url: "https://www.jumbo.cl/choclo-la-crianza-bolsa-400-g-premium-tiernos-congelado-2/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7809611701268", url: null, exact: false }, unimarc: { sku: null, gtin: "7809611701268", url: null, exact: false }, santaisabel: { sku: null, gtin: "7809611701268", url: null, exact: false }, coope: { sku: null, gtin: "7809611701268", url: null, exact: false } },
-      category: "Congelados",
-      emoji: "🌽",
-      unitLabel: "400 g",
-      unitAmount: 0.4,
-      unitName: "kilo",
-      prices: { lider: 2200, jumbo: 2290, tottus: 2150, unimarc: 2380, santaisabel: 2430, coope: 2270 },
+      "id": "choclo-la-crianza-bolsa-400-g-premium-tiernos-congel",
+      "name": "Choclo Tierno La Crianza 400 g",
+      "detail": "Bolsa 400 g · tierno",
+      "description": "Choclo Tierno La Crianza 400 g (400 g). Producto congelado: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/choclo-la-crianza-bolsa-400-g-premium-tiernos-congelado-2.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7809611701268",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "1394",
+          "gtin": "7809611701268",
+          "plu": null,
+          "url": "https://www.jumbo.cl/choclo-la-crianza-bolsa-400-g-premium-tiernos-congelado-2/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7809611701268",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7809611701268",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7809611701268",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7809611701268",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Congelados",
+      "emoji": "🌽",
+      "unitLabel": "400 g",
+      "unitAmount": 0.4,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 2200,
+        "jumbo": 2290,
+        "tottus": 2150,
+        "unimarc": 2380,
+        "santaisabel": 2430,
+        "coope": 2270
+      },
+      "promos": {}
     },
     {
-      id: "alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-19",
-      name: "Alimento Perro Adulto Dog Chow Carne y Pollo 8 kg",
-      detail: "Perro adulto · 8 kg",
-      description: "Alimento Perro Adulto Dog Chow Carne y Pollo 8 kg (8 kg). Alimento para mascotas: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-1925888.webp",
-      skus: { lider: { sku: null, gtin: "8445291684201", url: null, exact: false }, jumbo: { sku: "119589", gtin: "8445291684201", url: "https://www.jumbo.cl/alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-1925888/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "8445291684201", url: null, exact: false }, unimarc: { sku: null, gtin: "8445291684201", url: null, exact: false }, santaisabel: { sku: null, gtin: "8445291684201", url: null, exact: false }, coope: { sku: null, gtin: "8445291684201", url: null, exact: false } },
-      category: "Mascotas",
-      emoji: "🐶",
-      unitLabel: "8 kg",
-      unitAmount: 8,
-      unitName: "kilo",
-      prices: { lider: 23030, jumbo: 23990, tottus: 22550, unimarc: 24950, santaisabel: 25430, coope: 23750 },
-       promos: { unimarc: "2x1 en alimento seleccionado" },
+      "id": "alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-19",
+      "name": "Alimento Perro Adulto Dog Chow Carne y Pollo 8 kg",
+      "detail": "Perro adulto · 8 kg",
+      "description": "Alimento Perro Adulto Dog Chow Carne y Pollo 8 kg (8 kg). Alimento para mascotas: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-1925888.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "8445291684201",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "119589",
+          "gtin": "8445291684201",
+          "plu": null,
+          "url": "https://www.jumbo.cl/alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-1925888/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "8445291684201",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "8445291684201",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "8445291684201",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "8445291684201",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Mascotas",
+      "emoji": "🐶",
+      "unitLabel": "8 kg",
+      "unitAmount": 8,
+      "unitName": "kilo",
+      "prices": {
+        "lider": 23030,
+        "jumbo": 23990,
+        "tottus": 22550,
+        "unimarc": 24950,
+        "santaisabel": 25430,
+        "coope": 23750
+      },
+      "promos": {
+        "unimarc": "2x1 en alimento seleccionado"
+      }
     },
     {
-      id: "serum-dove-2088443",
-      name: "Serum Dove Derma Care Anti-Caída 50 ml",
-      detail: "Sérum anti-caída · 50 ml",
-      description: "Serum Dove Derma Care Anti-Caída 50 ml (50 ml). Artículo de cuidado personal: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
-      image: "assets/products/serum-dove-2088443.webp",
-      skus: { lider: { sku: null, gtin: "7891150102194", url: null, exact: false }, jumbo: { sku: "169770", gtin: "7891150102194", url: "https://www.jumbo.cl/serum-dove-2088443/p", exact: true, verifiedAt: "2026-11-23" }, tottus: { sku: null, gtin: "7891150102194", url: null, exact: false }, unimarc: { sku: null, gtin: "7891150102194", url: null, exact: false }, santaisabel: { sku: null, gtin: "7891150102194", url: null, exact: false }, coope: { sku: null, gtin: "7891150102194", url: null, exact: false } },
-      category: "Cuidado Personal",
-      emoji: "💇",
-      unitLabel: "50 ml",
-      unitAmount: 0.05,
-      unitName: "litro",
-      prices: { lider: 12470, jumbo: 12990, tottus: 12210, unimarc: 13510, santaisabel: 13770, coope: 12860 },
+      "id": "serum-dove-2088443",
+      "name": "Serum Dove Derma Care Anti-Caída 50 ml",
+      "detail": "Sérum anti-caída · 50 ml",
+      "description": "Serum Dove Derma Care Anti-Caída 50 ml (50 ml). Artículo de cuidado personal: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "image": "assets/products/serum-dove-2088443.webp",
+      "skus": {
+        "lider": {
+          "sku": null,
+          "gtin": "7891150102194",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "jumbo": {
+          "sku": "169770",
+          "gtin": "7891150102194",
+          "plu": null,
+          "url": "https://www.jumbo.cl/serum-dove-2088443/p",
+          "exact": true,
+          "status": "pending",
+          "verifiedAt": "2026-11-23"
+        },
+        "tottus": {
+          "sku": null,
+          "gtin": "7891150102194",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "unimarc": {
+          "sku": null,
+          "gtin": "7891150102194",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "santaisabel": {
+          "sku": null,
+          "gtin": "7891150102194",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        },
+        "coope": {
+          "sku": null,
+          "gtin": "7891150102194",
+          "plu": null,
+          "url": null,
+          "exact": false,
+          "status": "pending"
+        }
+      },
+      "category": "Cuidado Personal",
+      "emoji": "💇",
+      "unitLabel": "50 ml",
+      "unitAmount": 0.05,
+      "unitName": "litro",
+      "prices": {
+        "lider": 12470,
+        "jumbo": 12990,
+        "tottus": 12210,
+        "unimarc": 13510,
+        "santaisabel": 13770,
+        "coope": 12860
+      },
+      "promos": {}
     }
   ]
 };

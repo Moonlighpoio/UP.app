@@ -22,18 +22,38 @@ test('los 30 productos tienen identificador y enlace en las 5 cadenas de la UI',
   }
 });
 
-test('Jumbo conserva SKU propio y ficha canónica; las demás cadenas usan el GTIN', () => {
+function ean13(value) {
+  if (!/^\d{13}$/.test(value || '')) return false;
+  const digits = [...value].map(Number);
+  const sum = digits.slice(0, 12).reduce((total, digit, i) => total + digit * (i % 2 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === digits[12];
+}
+
+test('Jumbo conserva SKU propio y ficha canónica; las demás usan GTIN o PLU', () => {
+  let gtinCount = 0;
+  let pluCount = 0;
   for (const product of products) {
     const jumbo = offerLink(product, 'jumbo');
     assert.equal(jumbo.canonical, true);
     assert.match(jumbo.token, /^[0-9]+$/);
+    const universal = product.skus.jumbo.gtin || product.skus.jumbo.plu;
+    assert.ok(universal, `${product.id} sin GTIN ni PLU`);
+    if (product.skus.jumbo.gtin) {
+      assert.equal(ean13(product.skus.jumbo.gtin), true, product.id);
+      gtinCount += 1;
+    } else {
+      assert.match(product.skus.jumbo.plu, /^\d{8}$/);
+      pluCount += 1;
+    }
     for (const chainId of UI_CHAINS.filter((id) => id !== 'jumbo')) {
       const link = offerLink(product, chainId);
       assert.equal(link.canonical, false);
-      assert.equal(link.token, product.skus.jumbo.gtin);
-      assert.equal(link.url, CHAIN_SEARCH[chainId] + product.skus.jumbo.gtin);
+      assert.equal(link.token, universal);
+      assert.equal(link.url, CHAIN_SEARCH[chainId] + universal);
     }
   }
+  assert.equal(gtinCount, 27);
+  assert.equal(pluCount, 3);
 });
 
 test('los patrones de búsqueda VTEX vigentes usan /busca?ft=', () => {

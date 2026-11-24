@@ -1,0 +1,670 @@
+/**
+ * UP · Catálogo SQLite versionado (Fase 2), sin dependencias externas.
+ * ---------------------------------------------------------------------------
+ * Fuente de verdad: data/catalog.sqlite.
+ * data/catalog.json y data/demo.js son ARTEFACTOS derivados: se regeneran con
+ * `npm run build-catalog` o `npm run export-catalog` y nunca se editan a mano.
+ *
+ * Regla de fallo seguro: todo precio heredado es referencial, por eso cada
+ * oferta sembrada queda en status `pending` (sin priceCapturedAt). Un registro
+ * `verified` exige sourceUrl + capturedAt + priceCapturedAt (CHECK en SQL).
+ * Los códigos PLU de 8 dígitos NO se disfrazan de GTIN EAN-13.
+ */
+const fs = require('node:fs');
+const path = require('node:path');
+const sqlite = require('node:sqlite');
+
+const Database = sqlite.Database || sqlite.DatabaseSync;
+
+const ROOT = path.resolve(__dirname, '..');
+const CATALOG_SCHEMA_VERSION = '1.0.0';
+const FEED_VERSION = '2026-11-24';
+const CHAIN_ORDER = ['lider', 'jumbo', 'tottus', 'unimarc', 'santaisabel', 'coope'];
+const OFFER_STATUSES = Object.freeze([
+  'verified',
+  'pending',
+  'unavailable',
+  'broken',
+  'stale',
+  'paused',
+]);
+const IDENTIFIER_KINDS = Object.freeze(['sku', 'gtin', 'plu']);
+const DOMAIN_BY_CHAIN = {
+  lider: 'lider.cl',
+  jumbo: 'jumbo.cl',
+  tottus: 'tottus.cl',
+  unimarc: 'unimarc.cl',
+  santaisabel: 'santaisabel.cl',
+  coope: 'coope.cl',
+};
+const DATA_POLICY =
+  'Solo datos autorizados. URL canónica o búsqueda exacta por SKU/GTIN/PLU verificado; nunca por nombre. ' +
+  '403/429 pausa el conector y requiere renegociar acceso.';
+const NOTE =
+  'Datos de demostración creados por UP. FOTOS REFERENCIALES; precios referenciales, ' +
+  'no oferta comercial. Ninguna oferta heredada está verificada.';
+
+const DB_FILE = path.join(ROOT, 'data', 'catalog.sqlite');
+const MIGRATIONS_DIR = path.join(ROOT, 'db', 'migrations');
+const LEGACY_FILE = path.join(ROOT, 'db', 'legacy', 'demo-2026-11-23.json');
+const CATALOG_JSON_FILE = path.join(ROOT, 'data', 'catalog.json');
+const DEMO_JS_FILE = path.join(ROOT, 'data', 'demo.js');
+const LEGACY_SOURCE = 'db/legacy/demo-2026-11-23.json';
+const DB_SOURCE = 'data/catalog.sqlite';
+
+/** Dígito verificador EAN-13 (ponderación 1/3 sobre los primeros 12 dígitos). */
+function ean13CheckDigit(body) {
+  const total = body
+    .split('')
+    .reduce((sum, digit, index) => sum + Number(digit) * (index % 2 === 0 ? 1 : 3), 0);
+  return (10 - (total % 10)) % 10;
+}
+
+function isEan13(value) {
+  if (typeof value !== 'string' || !/^\d{13}$/.test(value)) return false;
+  return ean13CheckDigit(value.slice(0, 12)) === Number(value[12]);
+}
+
+function isPlu(value) {
+  return typeof value === 'string' && /^\d{8}$/.test(value);
+}
+
+function isPositiveInt(value) {
+  return Number.isInteger(value) && value > 0;
+}
+
+function migrationFiles() {
+  return fs
+    .readdirSync(MIGRATIONS_DIR)
+    .filter((name) => name.endsWith('.sql'))
+    .sort();
+}
+
+function openCatalogDb({ file = DB_FILE, readOnly = false } = {}) {
+  const db = new Database(file, { readOnly, enableForeignKeyConstraints: true });
+  return db;
+}
+
+function ensureMigrationTable(db) {
+  db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY) STRICT');
+  return new Set(
+    db
+      .prepare('SELECT name FROM schema_migrations')
+      .all()
+      .map((row) => row.name)
+  );
+}
+
+/** Aplica migraciones pendientes en orden, cada una en su propia transacción. */
+function applyMigrations(db) {
+  const applied = ensureMigrationTable(db);
+  const files = migrationFiles();
+  for (const name of files) {
+    if (applied.has(name)) continue;
+    const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, name), 'utf8');
+    db.exec('BEGIN');
+    try {
+      db.exec(sql);
+      db.prepare('INSERT INTO schema_migrations (name) VALUES (?)').run(name);
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+    applied.add(name);
+  }
+  return files;
+}
+
+/** Crea una base vacía desde cero (para reconstruir el artefacto versionado). */
+function createCatalogDb(file = DB_FILE) {
+  if (file !== ':memory:' && fs.existsSync(file)) fs.unlinkSync(file);
+  if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
+  const db = openCatalogDb({ file });
+  applyMigrations(db);
+  return db;
+}
+
+function loadLegacy() {
+  if (!fs.existsSync(LEGACY_FILE)) {
+    throw new Error(`Falta la instantánea heredada: ${path.relative(ROOT, LEGACY_FILE)}`);
+  }
+  const legacy = JSON.parse(fs.readFileSync(LEGACY_FILE, 'utf8'));
+  if (
+    !legacy ||
+    !Array.isArray(legacy.products) ||
+    !legacy.chains ||
+    !Array.isArray(legacy.stores)
+  ) {
+    throw new Error('La instantánea heredada no tiene products/chains/stores');
+  }
+  return legacy;
+}
+
+function allowedSourceUrl(raw, chainId) {
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+    if (url.protocol !== 'https:') return null;
+    if (host !== DOMAIN_BY_CHAIN[chainId] && !host.endsWith('.' + DOMAIN_BY_CHAIN[chainId])) {
+      return null;
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clasifica el identificador heredado sin inventar nada:
+ *   - EAN-13 válido → gtin.
+ *   - 8 dígitos → plu de granel (nunca gtin).
+ *   - cualquier otro valor → error: requiere revisión humana.
+ */
+function legacyIdentifier(raw) {
+  if (isEan13(raw)) return { kind: 'gtin', gtin: raw, plu: null, value: raw };
+  if (isPlu(raw)) return { kind: 'plu', gtin: null, plu: raw, value: raw };
+  throw new Error(`Identificador no verificable: ${JSON.stringify(raw)}`);
+}
+
+/** Siembra la BD con los 30 productos heredados. Todo queda `pending`. */
+function seedCatalog(db, legacy = loadLegacy()) {
+  const stamp = legacy.meta && legacy.meta.generatedAt ? legacy.meta.generatedAt : '1970-01-01';
+  const metaRows = [
+    ['schemaVersion', CATALOG_SCHEMA_VERSION],
+    ['feedVersion', FEED_VERSION],
+    ['meta', JSON.stringify(legacy.meta || {})],
+    ['chains', JSON.stringify(legacy.chains)],
+    ['stores', JSON.stringify(legacy.stores)],
+    ['source', LEGACY_SOURCE],
+    ['generatedAt', stamp],
+    ['note', NOTE],
+    ['dataPolicy', DATA_POLICY],
+  ];
+  const putMeta = db.prepare('INSERT INTO meta (key, value) VALUES (?, ?)');
+  const putProduct = db.prepare(`
+    INSERT INTO products (
+      id, name, detail, description, image, category, emoji, unit_label, unit_amount,
+      unit_name, gtin, identifier_kind, identifier_value, promos_json, sort_index,
+      created_at, updated_at
+    ) VALUES (
+      @id, @name, @detail, @description, @image, @category, @emoji, @unit_label,
+      @unit_amount, @unit_name, @gtin, @identifier_kind, @identifier_value, @promos_json,
+      @sort_index, @created_at, @updated_at
+    )
+  `);
+  const putOffer = db.prepare(`
+    INSERT INTO offers (
+      product_id, chain_id, sku, gtin, plu, identifier_kind, identifier_value, price,
+      currency, status, canonical_url, source_url, captured_at, price_captured_at,
+      exact, note, created_at, updated_at
+    ) VALUES (
+      @product_id, @chain_id, @sku, @gtin, @plu, @identifier_kind, @identifier_value, @price,
+      @currency, @status, @canonical_url, @source_url, @captured_at, @price_captured_at,
+      @exact, @note, @created_at, @updated_at
+    )
+  `);
+  const putMatch = db.prepare(`
+    INSERT INTO match_queue (
+      product_id, chain_id, gtin, sku, plu, candidate_url, status, reason, created_at, updated_at
+    ) VALUES (
+      @product_id, @chain_id, @gtin, @sku, @plu, @candidate_url, @status, @reason,
+      @created_at, @updated_at
+    )
+  `);
+  const putUrl = db.prepare(`
+    INSERT INTO url_queue (
+      product_id, chain_id, url, status, http_status, checked_at, last_error, created_at, updated_at
+    ) VALUES (
+      @product_id, @chain_id, @url, @status, @http_status, @checked_at, @last_error,
+      @created_at, @updated_at
+    )
+  `);
+
+  db.exec('BEGIN');
+  try {
+    for (const [key, value] of metaRows) putMeta.run(key, value);
+    legacy.products.forEach((product, index) => {
+      const raw = product.skus && product.skus.jumbo && product.skus.jumbo.gtin;
+      const id = legacyIdentifier(raw);
+      putProduct.run({
+        id: product.id,
+        name: product.name,
+        detail: product.detail,
+        description: product.description,
+        image: product.image,
+        category: product.category,
+        emoji: product.emoji,
+        unit_label: product.unitLabel,
+        unit_amount: product.unitAmount,
+        unit_name: product.unitName,
+        gtin: id.gtin,
+        identifier_kind: id.kind,
+        identifier_value: id.value,
+        promos_json: JSON.stringify(product.promos || {}),
+        sort_index: index,
+        created_at: stamp,
+        updated_at: stamp,
+      });
+
+      for (const chainId of CHAIN_ORDER) {
+        const mapping = (product.skus && product.skus[chainId]) || {};
+        const price = product.prices && product.prices[chainId];
+        if (!isPositiveInt(price)) {
+          throw new Error(`${product.id}/${chainId}: precio CLP inválido ${JSON.stringify(price)}`);
+        }
+        const sku = typeof mapping.sku === 'string' && mapping.sku ? mapping.sku : null;
+        const sourceUrl =
+          chainId === 'jumbo' && mapping.url ? allowedSourceUrl(mapping.url, chainId) : null;
+        if (chainId === 'jumbo' && mapping.url && !sourceUrl) {
+          throw new Error(`${product.id}: URL canónica fuera de la whitelist (${mapping.url})`);
+        }
+        const capturedAt = chainId === 'jumbo' && mapping.verifiedAt ? mapping.verifiedAt : null;
+        const kind = sku ? 'sku' : id.kind;
+        const value = sku || id.value;
+        const noteForChain =
+          id.kind === 'plu'
+            ? 'PLU de granel: confirmar identificador en ficha; precio sin fuente verificable'
+            : sku
+              ? 'SKU y ficha mapeados; precio referencial sin fuente verificable'
+              : 'Identificador universal provisional; sin SKU propio verificado';
+
+        putOffer.run({
+          product_id: product.id,
+          chain_id: chainId,
+          sku,
+          gtin: id.gtin,
+          plu: id.plu,
+          identifier_kind: kind,
+          identifier_value: value,
+          price,
+          currency: 'CLP',
+          status: 'pending',
+          canonical_url: sourceUrl,
+          source_url: sourceUrl,
+          captured_at: capturedAt,
+          price_captured_at: null,
+          exact: chainId === 'jumbo' && mapping.exact === true ? 1 : 0,
+          note: noteForChain,
+          created_at: stamp,
+          updated_at: stamp,
+        });
+
+        if (chainId !== 'jumbo' || id.kind === 'plu') {
+          putMatch.run({
+            product_id: product.id,
+            chain_id: chainId,
+            gtin: id.gtin,
+            sku: null,
+            plu: id.plu,
+            candidate_url: null,
+            status: 'pending',
+            reason:
+              id.kind === 'plu'
+                ? 'PLU de granel: verificar identificador y ficha de la cadena'
+                : 'Sin SKU propio verificado en ficha; el identificador universal es provisional',
+            created_at: stamp,
+            updated_at: stamp,
+          });
+        }
+        if (sourceUrl) {
+          putUrl.run({
+            product_id: product.id,
+            chain_id: chainId,
+            url: sourceUrl,
+            status: 'pending',
+            http_status: null,
+            checked_at: null,
+            last_error: null,
+            created_at: stamp,
+            updated_at: stamp,
+          });
+        }
+      }
+    });
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  return db;
+}
+
+/** Construye la BD versionada desde cero y valida el resultado. */
+function buildCatalogDb(file = DB_FILE) {
+  const db = createCatalogDb(file);
+  try {
+    seedCatalog(db);
+    const { errors } = validateDb(db);
+    if (errors.length) throw new Error(errors.join('; '));
+    return db;
+  } catch (err) {
+    db.close();
+    throw err;
+  }
+}
+
+function parseJson(value, label) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    throw new Error(`JSON inválido en ${label}`);
+  }
+}
+
+function metaMap(db) {
+  return Object.fromEntries(
+    db
+      .prepare('SELECT key, value FROM meta ORDER BY key')
+      .all()
+      .map((row) => [row.key, row.value])
+  );
+}
+
+/** Exporta la BD a un objeto estable y versionado (data/catalog.json). */
+function readCatalog(db) {
+  const meta = metaMap(db);
+  const originalMeta = parseJson(meta.meta, 'meta.meta');
+  const chains = parseJson(meta.chains, 'meta.chains');
+  const stores = parseJson(meta.stores, 'meta.stores');
+  const productRows = db.prepare('SELECT * FROM products ORDER BY sort_index').all();
+  const offerRows = db.prepare('SELECT * FROM offers').all();
+  const byProduct = new Map();
+  for (const offer of offerRows) {
+    if (!byProduct.has(offer.product_id)) byProduct.set(offer.product_id, []);
+    byProduct.get(offer.product_id).push(offer);
+  }
+  const rank = Object.fromEntries(CHAIN_ORDER.map((chainId, index) => [chainId, index]));
+  const products = productRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    detail: row.detail,
+    description: row.description,
+    image: row.image,
+    category: row.category,
+    emoji: row.emoji,
+    unitLabel: row.unit_label,
+    unitAmount: row.unit_amount,
+    unitName: row.unit_name,
+    identifier: { kind: row.identifier_kind, value: row.identifier_value, gtin: row.gtin },
+    promos: parseJson(row.promos_json, `promos de ${row.id}`),
+    offers: (byProduct.get(row.id) || [])
+      .slice()
+      .sort((a, b) => (rank[a.chain_id] ?? 99) - (rank[b.chain_id] ?? 99))
+      .map((offer) => ({
+        chainId: offer.chain_id,
+        sku: offer.sku,
+        gtin: offer.gtin,
+        plu: offer.plu,
+        identifierKind: offer.identifier_kind,
+        identifierValue: offer.identifier_value,
+        price: offer.price,
+        currency: offer.currency,
+        status: offer.status,
+        canonicalUrl: offer.canonical_url,
+        sourceUrl: offer.source_url,
+        capturedAt: offer.captured_at,
+        priceCapturedAt: offer.price_captured_at,
+        exact: offer.exact === 1,
+        note: offer.note,
+      })),
+  }));
+
+  const counts = {
+    products: productRows.length,
+    offers: offerRows.length,
+    matchQueue: db.prepare('SELECT COUNT(*) AS n FROM match_queue').get().n,
+    urlQueue: db.prepare('SELECT COUNT(*) AS n FROM url_queue').get().n,
+    chains: Object.keys(chains).length,
+    stores: stores.length,
+  };
+  return {
+    schemaVersion: CATALOG_SCHEMA_VERSION,
+    feedVersion: meta.feedVersion || FEED_VERSION,
+    meta: {
+      mode: 'demo',
+      generatedAt: meta.generatedAt || originalMeta.generatedAt || null,
+      currency: originalMeta.currency || 'CLP',
+      locale: originalMeta.locale || 'es-CL',
+      note: meta.note || NOTE,
+      source: LEGACY_SOURCE,
+      catalogSource: DB_SOURCE,
+      dataPolicy: DATA_POLICY,
+      counts,
+    },
+    chains,
+    stores,
+    products,
+  };
+}
+
+/** Convierte el catálogo versionado al contrato que ya consume el front-end. */
+function toFrontPayload(catalog) {
+  const products = catalog.products.map((product) => {
+    const skus = {};
+    const prices = {};
+    for (const offer of product.offers) {
+      skus[offer.chainId] = {
+        sku: offer.sku,
+        gtin: offer.gtin,
+        plu: offer.plu,
+        url: offer.canonicalUrl,
+        exact: offer.exact,
+        status: offer.status,
+        ...(offer.capturedAt ? { verifiedAt: offer.capturedAt } : {}),
+      };
+      prices[offer.chainId] = offer.price;
+    }
+    return {
+      id: product.id,
+      name: product.name,
+      detail: product.detail,
+      description: product.description,
+      image: product.image,
+      skus,
+      category: product.category,
+      emoji: product.emoji,
+      unitLabel: product.unitLabel,
+      unitAmount: product.unitAmount,
+      unitName: product.unitName,
+      prices,
+      promos: product.promos,
+    };
+  });
+  return {
+    meta: {
+      mode: 'demo',
+      generatedAt: catalog.meta.generatedAt,
+      note: catalog.meta.note,
+      currency: catalog.meta.currency,
+      locale: catalog.meta.locale,
+    },
+    chains: catalog.chains,
+    stores: catalog.stores,
+    products,
+  };
+}
+
+function renderDemoJs(catalog) {
+  const header = [
+    '/**',
+    ' * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (Fase 2).',
+    ' * No editar a mano: npm run build-catalog o npm run export-catalog.',
+    ' * Precios referenciales; todas las ofertas están `pending`. Ver README.',
+    ' */',
+  ].join('\n');
+  return (
+    header + '\nwindow.UP_DEMO_DATA = ' + JSON.stringify(toFrontPayload(catalog), null, 2) + ';\n'
+  );
+}
+
+/** Validación estructural del catálogo exportado (errores = bloqueantes). */
+function validateCatalogObject(catalog) {
+  const errors = [];
+  if (!catalog || typeof catalog !== 'object') return ['catálogo ausente'];
+  if (catalog.schemaVersion !== CATALOG_SCHEMA_VERSION) {
+    errors.push(`schemaVersion esperado ${CATALOG_SCHEMA_VERSION}, got ${catalog.schemaVersion}`);
+  }
+  if (!catalog.meta || !catalog.meta.counts) errors.push('meta.counts ausente');
+  if (!catalog.chains || !Array.isArray(catalog.stores) || !Array.isArray(catalog.products)) {
+    errors.push('chains/stores/products ausentes');
+    return errors;
+  }
+  if (Object.keys(catalog.chains).some((id) => !CHAIN_ORDER.includes(id))) {
+    errors.push('cadena desconocida en chains');
+  }
+  const ids = new Set();
+  for (const product of catalog.products) {
+    if (!product.id || ids.has(product.id)) errors.push(`id duplicado/vacío: ${product.id}`);
+    ids.add(product.id);
+    if (
+      typeof product.unitAmount !== 'number' ||
+      !Number.isFinite(product.unitAmount) ||
+      product.unitAmount <= 0
+    ) {
+      errors.push(`${product.id}: unitAmount inválido`);
+    }
+    const identifier = product.identifier || {};
+    if (identifier.kind === 'gtin' && !isEan13(identifier.gtin)) {
+      errors.push(`${product.id}: gtin no es EAN-13 válido (${identifier.gtin})`);
+    }
+    if (identifier.kind === 'plu' && (!isPlu(identifier.value) || identifier.gtin !== null)) {
+      errors.push(`${product.id}: PLU inválido o gtin no nulo`);
+    }
+    if (!IDENTIFIER_KINDS.includes(identifier.kind)) {
+      errors.push(`${product.id}: identifierKind desconocido`);
+    }
+    if (!Array.isArray(product.offers) || product.offers.length !== CHAIN_ORDER.length) {
+      errors.push(`${product.id}: ofertas incompletas`);
+      continue;
+    }
+    const seen = new Set();
+    for (const offer of product.offers) {
+      if (seen.has(offer.chainId)) errors.push(`${product.id}: cadena duplicada ${offer.chainId}`);
+      seen.add(offer.chainId);
+      if (!CHAIN_ORDER.includes(offer.chainId)) {
+        errors.push(`${product.id}: cadena desconocida ${offer.chainId}`);
+      }
+      if (!isPositiveInt(offer.price))
+        errors.push(`${product.id}/${offer.chainId}: precio inválido`);
+      if (offer.currency !== 'CLP') errors.push(`${product.id}/${offer.chainId}: moneda inválida`);
+      if (!OFFER_STATUSES.includes(offer.status)) {
+        errors.push(`${product.id}/${offer.chainId}: status inválido`);
+      }
+      if (offer.status === 'verified') {
+        if (!offer.sourceUrl || !offer.capturedAt || !offer.priceCapturedAt) {
+          errors.push(`${product.id}/${offer.chainId}: verified sin sourceUrl/capturedAt`);
+        }
+      }
+      if (offer.gtin !== null && !isEan13(offer.gtin)) {
+        errors.push(`${product.id}/${offer.chainId}: gtin no EAN-13`);
+      }
+      if (offer.canonicalUrl && !allowedSourceUrl(offer.canonicalUrl, offer.chainId)) {
+        errors.push(`${product.id}/${offer.chainId}: canonicalUrl fuera de whitelist`);
+      }
+    }
+  }
+  return errors;
+}
+
+/** Validación de la BD: esquema, migraciones, índices, datos y consistencia. */
+function validateDb(db) {
+  const errors = [];
+  const objects = db
+    .prepare("SELECT type, name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'")
+    .all();
+  const tables = new Set(objects.filter((row) => row.type === 'table').map((row) => row.name));
+  const indexes = new Set(objects.filter((row) => row.type === 'index').map((row) => row.name));
+  for (const table of ['products', 'offers', 'match_queue', 'url_queue', 'meta']) {
+    if (!tables.has(table)) errors.push(`falta tabla ${table}`);
+  }
+  for (const index of [
+    'idx_products_gtin',
+    'idx_offers_gtin',
+    'idx_offers_chain_sku',
+    'idx_offers_product_url',
+    'idx_url_queue_product_url',
+  ]) {
+    if (!indexes.has(index)) errors.push(`falta índice ${index}`);
+  }
+  const migrations = db.prepare('SELECT name FROM schema_migrations').all().length;
+  if (migrations !== migrationFiles().length) {
+    errors.push(`migraciones aplicadas ${migrations}/${migrationFiles().length}`);
+  }
+  const badProducts = db.prepare('SELECT id, gtin FROM products WHERE gtin IS NOT NULL').all();
+  for (const row of badProducts) {
+    if (!isEan13(row.gtin)) errors.push(`${row.id}: gtin inválido en BD`);
+  }
+  const rows = db.prepare('SELECT * FROM offers').all();
+  for (const row of rows) {
+    if (!isPositiveInt(row.price)) errors.push(`${row.product_id}/${row.chain_id}: price inválido`);
+    if (!OFFER_STATUSES.includes(row.status)) {
+      errors.push(`${row.product_id}/${row.chain_id}: status inválido`);
+    }
+    if (
+      row.status === 'verified' &&
+      (!row.source_url || !row.captured_at || !row.price_captured_at)
+    ) {
+      errors.push(`${row.product_id}/${row.chain_id}: verified sin trazabilidad`);
+    }
+  }
+  let catalog = null;
+  if (!errors.length) {
+    catalog = readCatalog(db);
+    errors.push(...validateCatalogObject(catalog));
+  }
+  return { errors, catalog };
+}
+
+/** Escribe los artefactos derivados de la BD. */
+function exportArtifacts(catalog) {
+  fs.writeFileSync(CATALOG_JSON_FILE, JSON.stringify(catalog, null, 2) + '\n');
+  fs.writeFileSync(DEMO_JS_FILE, renderDemoJs(catalog));
+  return {
+    catalogJson: path.relative(ROOT, CATALOG_JSON_FILE),
+    demoJs: path.relative(ROOT, DEMO_JS_FILE),
+  };
+}
+
+/** Lectura usada por server.js: devuelve el contrato histórico de data/demo.js. */
+function readCatalogPayload() {
+  const db = openCatalogDb({ readOnly: true });
+  try {
+    const { errors, catalog } = validateDb(db);
+    if (errors.length) throw new Error('Catálogo inválido: ' + errors.join('; '));
+    return toFrontPayload(catalog);
+  } finally {
+    db.close();
+  }
+}
+
+module.exports = {
+  CATALOG_SCHEMA_VERSION,
+  FEED_VERSION,
+  CHAIN_ORDER,
+  OFFER_STATUSES,
+  IDENTIFIER_KINDS,
+  DATA_POLICY,
+  DB_FILE,
+  LEGACY_FILE,
+  CATALOG_JSON_FILE,
+  DEMO_JS_FILE,
+  LEGACY_SOURCE,
+  DB_SOURCE,
+  ean13CheckDigit,
+  isEan13,
+  isPlu,
+  applyMigrations,
+  buildCatalogDb,
+  createCatalogDb,
+  exportArtifacts,
+  loadLegacy,
+  openCatalogDb,
+  readCatalog,
+  readCatalogPayload,
+  renderDemoJs,
+  seedCatalog,
+  toFrontPayload,
+  validateCatalogObject,
+  validateDb,
+};

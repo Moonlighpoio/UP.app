@@ -7,13 +7,16 @@
     "start": "node server.js",
     "test": "node --test",
     "check-contrast": "node scripts/check-contrast.js",
+    "build-catalog": "node scripts/build-catalog.js",
+    "export-catalog": "node scripts/export-catalog.js",
+    "validate-catalog": "node scripts/validate-catalog.js",
     "lint": "npm run lint:syntax && eslint .",
     "lint:syntax": "node --check server.js && node --check data/demo.js && for f in lib/*.js scripts/*.js src/*.js test/*.js; do node --check \"$f\"; done",
     "format": "prettier --write 'lib/**/*.js' 'scripts/**/*.js' 'src/**/*.js' 'test/**/*.js' eslint.config.js",
     "format:check": "prettier --check 'lib/**/*.js' 'scripts/**/*.js' 'src/**/*.js' 'test/**/*.js' eslint.config.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "license": "UNLICENSED",
   "devDependencies": {

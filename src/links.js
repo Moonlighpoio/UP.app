@@ -1,7 +1,8 @@
 /**
  * UP · Deep links y verificación de enlaces.
  * Regla crítica: URL canónica primero; si no existe, búsqueda EXACTA por
- * SKU/GTIN. Nunca se construye una URL a partir del nombre del producto.
+ * SKU/GTIN/PLU. Nunca se construye una URL a partir del nombre del producto.
+ * Los PLU de granel se conservan como PLU (nunca como GTIN EAN-13).
  */
 import { $, safeHttpUrl } from './utils.js';
 import { state, getLinkVerification, setLinkVerification, addReindex } from './state.js';
@@ -19,9 +20,14 @@ export function offerLink(product, chainId) {
   // La URL del feed pasa por saneamiento: nunca se inyecta javascript:/data: en un href.
   const canonical = safeHttpUrl(mapping.url);
   if (canonical) {
-    return { url: canonical, canonical: true, token: mapping.sku || mapping.gtin, kind: 'ficha' };
+    return {
+      url: canonical,
+      canonical: true,
+      token: mapping.sku || mapping.gtin || mapping.plu,
+      kind: 'ficha',
+    };
   }
-  const token = mapping.sku || mapping.gtin;
+  const token = mapping.sku || mapping.gtin || mapping.plu;
   const search =
     token && CHAIN_SEARCH[chainId]
       ? safeHttpUrl(CHAIN_SEARCH[chainId] + encodeURIComponent(token))

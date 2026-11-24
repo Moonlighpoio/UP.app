@@ -8,11 +8,11 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 
 > ⚠️ **Estado de los datos:** precios **referenciales de demostración**, no precios en tiempo real. Ver [¿Por qué no hay conexión real ya?](#4-por-qué-no-hay-conexión-real-ya).
 >
-> 🌐 **Demo pública (GitHub Pages):** https://moonlighpoio.github.io/UP.app/ · Repo: https://github.com/Moonlighpoio/UP.app. En Pages se activa automáticamente el **modo demo estático**: usa `data/demo.js`, no llama a `/api/prices` ni a `/api/verify-link`, y los badges muestran `Demo · sin verificación` en lugar de marcar enlaces como rotos.
+> 🌐 **Demo pública (GitHub Pages):** https://moonlighpoio.github.io/UP.app/ · Repo: https://github.com/Moonlighpoio/UP.app. En Pages se activa automáticamente el **modo demo estático**: usa `data/demo.js` (artefacto generado desde `data/catalog.sqlite`), no llama a `/api/prices` ni a `/api/verify-link`, y los badges muestran `Demo · sin verificación` en lugar de marcar enlaces como rotos.
 >
 > 🔒 **Privacidad y contenidos:** el repo y la demo son públicos para recibir opiniones. Las **fotos referenciales de los 30 productos** fueron restauradas desde la captura original y las descripciones son textos neutrales creados por UP; los SVG propios por categoría se conservan como *fallback*. Las imágenes se usan sólo para demostración: validar derechos antes de cualquier uso comercial. Los nombres, SKU/GTIN y URLs canónicas siguen siendo datos de referencia necesarios para el *deep link*. Ver [Imágenes, textos y origen de los datos](#imágenes-textos-y-origen-de-los-datos). **Esto no es asesoría legal.**
 
-**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
+**Índice rápido:** [cómo abrirlo](#1-cómo-abrirlo) · [estructura](#2-estructura) · [catálogo SQLite / Fase 2](#131-catálogo-sqlite-versionado-fase-2) · [feeds autorizados](#3-cómo-conectar-supermercados-reales) · [notas legales](#5-notas-legales-chile) · [CI y Pages](#9-calidad-y-ci) · [Fase 9](#13-integración-de-feeds-autorizados-fase-9) · [entrega final](#14-entrega-final-y-checklist).
 
 ---
 
@@ -238,11 +238,22 @@ UP.app/
 │   ├── up-logo.jpeg             # Referencia visual del logotipo
 │   └── products/                # 9 ilustraciones SVG propias (una por categoría)
 ├── data/
-│   ├── demo.js                  # 30 productos · 10 locales · 6 cadenas
+│   ├── catalog.sqlite           # FUENTE DE VERDAD (Fase 2): products/offers/match_queue/url_queue
+│   ├── catalog.json             # Export versionado, derivado de SQLite (schemaVersion 1.0.0)
+│   ├── demo.js                  # Artefacto derivado para Pages; no editar a mano
 │   ├── live-prices.example.json # Plantilla del contrato offers[] (Fase 9)
 │   └── live-prices.json         # (opcional, ignorado por git) activa el modo EN VIVO
+├── db/
+│   ├── migrations/001_init.sql  # Esquema reproducible + índices gtin / chain+sku / product_url
+│   └── legacy/demo-2026-11-23.json # Instantánea congelada de los 30 productos originales
 ├── lib/
 │   └── feed.js                  # Normalización, TTL y circuit breakers (CJS, sin deps)
+├── scripts/
+│   ├── catalog-db.js            # Migraciones, semilla, validación y export (node:sqlite)
+│   ├── build-catalog.js         # Reconstruye la BD y los artefactos
+│   ├── export-catalog.js        # Regenera catalog.json + demo.js desde la BD
+│   ├── validate-catalog.js      # Valida esquema, EAN-13, estados y artefactos
+│   └── check-contrast.js        # Auditoría WCAG 2.1 sin dependencias (Fase 1)
 ├── test/
 │   ├── money.test.js            # Dinero puro, redondeo y formato CLP
 │   ├── links.test.js            # Canónica, SKU/GTIN y nunca por nombre
@@ -250,6 +261,7 @@ UP.app/
 │   ├── catalog.test.js          # Heurística de unidades y precio unitario
 │   ├── filters.test.js          # Cadena, despacho gratis, precios y orden
 │   ├── feed.test.js             # Contrato offers[], TTL, circuit breakers y 403/429
+│   ├── catalog-db.test.js       # SQLite: esquema, EAN-13, precios, estados y export
 │   ├── server.test.js           # /api/*, SSRF, caché, HEAD→GET, saltos, rate limit y headers
 │   ├── security.test.js         # Saneamiento de URLs y escape HTML
 │   └── package.json             # {"type":"module"} para los tests ESM
@@ -650,7 +662,7 @@ La metadata de integración expone `mode`, `source`, `ageSeconds`, `stale`, `fee
 Verificación local:
 
 ```bash
-npm run lint && npm run format:check && npm test   # 92/92 en verde
+npm run lint && npm run format:check && npm test   # 99/99 en verde (tras Fase 2)
 npm start                                          # puerto 3100
 curl -sS http://localhost:3100/api/health
 curl -sS 'http://localhost:3100/api/prices?q=leche' | python3 -m json.tool
@@ -659,11 +671,39 @@ curl -sS http://localhost:3100/api/feed-status | python3 -m json.tool
 
 QA ejecutado:
 
-- **Demo:** `mode: demo`, `source: data/demo.js`, `ageSeconds: null`, `fallbackReason: "Sin feed configurado (data/live-prices.json ni UP_RETAILER_API)"`, `ttlMs: 900000`.
+- **Demo:** `mode: demo`, `source: data/catalog.sqlite` (antes `data/demo.js`; Fase 2), `ageSeconds: null`, `fallbackReason: "Sin feed configurado (data/live-prices.json ni UP_RETAILER_API)"`, `ttlMs: 900000`.
 - **Feed local:** al copiar la plantilla a `data/live-prices.json` (luego borrado), `mode: live`, 24 ofertas válidas, 6 cadenas × 4, `stale: true` por `capturedAt` del 2026-11-23. Comportamiento correcto, no un error.
 - **Upstream simulado con `429` + `Retry-After: 2`:** una sola llamada al falso API (`HIT 1 /feed?q=`), `mode: demo`, breaker `open`, `nextRetryInMs ≈ 2000` y warning `API externa pausada por HTTP 429: se reanuda tras el enfriamiento`. La segunda consulta no volvió a contactar al proveedor.
 
 Riesgos y decisiones: la caché y los breakers viven en memoria, por lo que se reinician con el proceso (aceptado en el prototipo); `403/429` significan pausa y renegociación, nunca evasión ni enlace roto; `data/live-prices.json` sigue ignorado por git para no versionar datos de terceros.
+
+---
+
+## 13.1 Catálogo SQLite versionado (Fase 2)
+
+`data/catalog.sqlite` reemplaza a `data/demo.js` como **fuente de verdad**. No se añadió ninguna dependencia: se usa `node:sqlite` (Node 24 LTS; CI actualizado desde Node 20, que ya era forzado a 24 por el runner). Pages sigue idéntico porque `data/demo.js` se regenera como artefacto compatible.
+
+| Elemento | Definición |
+|---|---|
+| `products` | 30 productos con identificador canónico, `unit_*`, `promos_json` y `sort_index`. |
+| `offers` | 180 filas (30 × 6 cadenas): `price` entero CLP > 0, `status`, `source_url`, `captured_at`, `price_captured_at` y `exact`. |
+| `match_queue` | 153 pendientes de SKU propio verificado por cadena (150 de fallback universal + 3 PLU). |
+| `url_queue` | 30 fichas canónicas de Jumbo a verificar en Fase 4. |
+| Índices | `idx_products_gtin`, `idx_offers_gtin`, `idx_offers_chain_sku`, `idx_offers_product_url`, `idx_url_queue_product_url`. |
+| Estados | `verified`, `pending`, `unavailable`, `broken`, `stale`, `paused`. `verified` exige `sourceUrl` + `capturedAt` + `priceCapturedAt` (CHECK en SQL). |
+
+**Fallos de datos detectados y corregidos sin inventar información:** tres productos a granel (`palta-hass-jumbo-granel`, `tomate-larga-vida-granel`, `manzana-fuji-granel-2`) tenían un código de **8 dígitos** guardado como «GTIN». No son EAN-13: ahora se almacenan como `plu`, con `gtin = NULL`, y entran a `match_queue`. Los 27 restantes sí son EAN-13 con dígito verificador validado. Ningún precio heredado tiene fuente autorizada: **las 180 ofertas quedan `pending`**, con `priceCapturedAt = NULL`. Las fichas de Jumbo conservan `sku`, `sourceUrl` y `capturedAt: 2026-11-23` del mapeo anterior; el precio de esas fichas **no** se marca verificado.
+
+Comandos (sin red, sin scraping):
+
+```bash
+npm run build-catalog      # reconstruye la BD desde db/legacy/ y regenera artefactos
+npm run export-catalog     # regenera catalog.json + demo.js desde la BD actual
+npm run validate-catalog   # valida esquema, migraciones, índices, EAN-13, estados y artefactos
+npm test                   # 99/99 (incluye 7 tests de SQLite)
+```
+
+`server.js` lee la BD en `/api/prices` (`meta.source: data/catalog.sqlite`) y bloquea el acceso estático a `*.sqlite`. El front-end y el carrito/checkout no cambiaron: `src/links.js` sólo añadió `plu` como tercer fallback de búsqueda exacta, para no romper los 5/5 enlaces de esos tres productos a granel. **Todavía no existen** `npm run verify-links` (Fase 4) ni `npm run sync` (Fase 6); no se han creado stubs que simulen éxito.
 
 ---
 

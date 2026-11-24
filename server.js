@@ -11,8 +11,10 @@
  * Orden de prioridad para /api/prices:
  *   1) UP_RETAILER_API=https://tu-api-de-supermercados/precios
  *   2) data/live-prices.json (si existe)
- *   3) data/demo.js (modo demostración)
+ *   3) data/catalog.sqlite (modo demostración; Fase 2)
  *
+ * Fase 2: la fuente de verdad es SQLite. data/catalog.json y data/demo.js son
+ * artefactos derivados: Pages sigue funcionando sin servidor ni SQLite.
  * Fase 9: feeds autorizados únicamente. Normalización con SKU/GTIN + URL
  * canónica + precio + timestamp, caché con TTL y circuit breakers. Un 403/429
  * PAUSA el conector; nunca se interpreta como "producto no existe" ni se evade.
@@ -24,7 +26,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
+const { readCatalogPayload } = require('./scripts/catalog-db.js');
 const {
   CHAIN_IDS,
   PAUSE_STATUSES,
@@ -37,6 +39,7 @@ const {
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 3100);
+const DEMO_SOURCE = 'data/catalog.sqlite';
 
 // Verificación de enlaces: solo dominios de supermercados permitidos (evita SSRF).
 // El mismo mapa permite Derivar la cadena de un host para el circuit breaker.
@@ -136,12 +139,9 @@ const MIME = {
 };
 
 function readDemo() {
-  // demo.js es un literal JS (claves sin comillas), no JSON estricto.
-  // Se evalúa en un contexto aislado con un `window` propio.
-  const raw = fs.readFileSync(path.join(ROOT, 'data', 'demo.js'), 'utf8');
-  const ctx = { window: {} };
-  vm.runInNewContext(raw, ctx, { timeout: 1000 });
-  return ctx.window.UP_DEMO_DATA;
+  // Mantiene el contrato histórico de data/demo.js, pero leyendo la BD canónica.
+  // data/demo.js queda como artefacto estático para GitHub Pages.
+  return readCatalogPayload();
 }
 
 function buildMeta(data, ctx, deps) {
@@ -323,14 +323,14 @@ async function getPrices(query, deps = {}) {
   const demo = deps.readDemo ? deps.readDemo() : readDemo();
   demo.meta = Object.assign({}, demo.meta, {
     mode: 'demo',
-    source: 'data/demo.js',
+    source: DEMO_SOURCE,
     query: query || null,
   });
   return buildMeta(
     demo,
     {
       mode: 'demo',
-      source: 'data/demo.js',
+      source: DEMO_SOURCE,
       query,
       stale: false,
       warnings: ctx.warnings,
@@ -618,6 +618,10 @@ const server = http.createServer(async (req, res) => {
   if (!filePath.startsWith(ROOT + path.sep) && filePath !== path.join(ROOT, 'index.html')) {
     return send(res, 403, 'Forbidden', 'text/plain; charset=utf-8');
   }
+  // La BD es fuente interna: nunca se sirve como archivo estático.
+  if (path.extname(filePath).toLowerCase() === '.sqlite') {
+    return send(res, 403, 'Forbidden', 'text/plain; charset=utf-8');
+  }
 
   fs.readFile(filePath, (err, data) => {
     if (err) return send(res, 404, 'Not found', 'text/plain; charset=utf-8');
@@ -634,7 +638,7 @@ if (require.main === module) {
           ? 'API externa (' + process.env.UP_RETAILER_API + ')'
           : fs.existsSync(path.join(ROOT, 'data', 'live-prices.json'))
             ? 'live-prices.json'
-            : 'demo')
+            : 'catalog.sqlite (demo)')
     );
     console.log(
       '  TTL de feed: ' +

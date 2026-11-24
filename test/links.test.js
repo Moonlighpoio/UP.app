@@ -32,6 +32,14 @@ test('offerLink cae al GTIN si no hay SKU', () => {
   assert.equal(link.kind, 'SKU');
 });
 
+test('offerLink cae al PLU de granel sin confundirlo con GTIN', () => {
+  const p = product({ lider: { gtin: null, plu: '24851794', url: null } });
+  const link = offerLink(p, 'lider');
+  assert.equal(link.url, CHAIN_SEARCH.lider + '24851794');
+  assert.equal(link.token, '24851794');
+  assert.equal(link.kind, 'SKU');
+});
+
 test('offerLink sin SKU mapeado devuelve url null', () => {
   const p = product({ tottus: { sku: null, url: null } });
   assert.deepEqual(offerLink(p, 'tottus'), {
