@@ -8,7 +8,7 @@ import { calculateMoney } from './money.js';
 
 const hooks = {
   notify: () => {},
-  render: () => {}
+  render: () => {},
 };
 
 export function initCart(nextHooks = {}) {

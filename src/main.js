@@ -17,7 +17,7 @@ import {
   initUI,
   openCartDrawer,
   closeCartDrawer,
-  closeCheckoutModal
+  closeCheckoutModal,
 } from './ui.js';
 
 function renderAll() {
@@ -105,7 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const icon = trigger.querySelector('.accordion-icon');
       const isOpen = !content.classList.contains('hidden');
       document.querySelectorAll('.accordion-content').forEach((c) => c.classList.add('hidden'));
-      document.querySelectorAll('.accordion-icon').forEach((i) => { i.textContent = '+'; });
+      document.querySelectorAll('.accordion-icon').forEach((i) => {
+        i.textContent = '+';
+      });
       if (!isOpen) {
         content.classList.remove('hidden');
         icon.textContent = '−';

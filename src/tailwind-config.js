@@ -29,7 +29,7 @@ tailwind.config = {
         panel: '8px',
         control: '6px',
         action: '4px',
-      }
-    }
-  }
+      },
+    },
+  },
 };

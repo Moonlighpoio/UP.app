@@ -59,7 +59,7 @@ test('allowedLink rechaza SSRF: IPs, localhost, esquemas y subdominios engañoso
     'https://jumbo.cl.evil.com/',
     'https://eviljumbo.cl/',
     'https://jumbo.cl@evil.com/',
-    'https://notjumbo.cl/'
+    'https://notjumbo.cl/',
   ];
   bad.forEach((url) => assert.equal(allowedLink(url), null, url));
 });
@@ -67,7 +67,10 @@ test('allowedLink rechaza SSRF: IPs, localhost, esquemas y subdominios engañoso
 test('verifyLink no llama a fetch si el dominio no está permitido', async () => {
   let called = false;
   const result = await verifyLink('https://jumbo.cl.evil.com/x', {
-    fetch: async () => { called = true; throw new Error('no debió llamarse'); }
+    fetch: async () => {
+      called = true;
+      throw new Error('no debió llamarse');
+    },
   });
   assert.equal(called, false);
   assert.equal(result.ok, false);
@@ -111,7 +114,10 @@ test('verifyLink reintenta HEAD → GET ante 403/405/501', async () => {
         ? { ok: false, status, url: 'https://www.jumbo.cl/x' }
         : { ok: true, status: 200, url: 'https://www.jumbo.cl/x' };
     };
-    const result = await verifyLink('https://www.jumbo.cl/x', { fetch: fakeFetch, cache: new Map() });
+    const result = await verifyLink('https://www.jumbo.cl/x', {
+      fetch: fakeFetch,
+      cache: new Map(),
+    });
     assert.deepEqual(methods, ['HEAD', 'GET']);
     assert.equal(result.ok, true);
     assert.equal(result.status, 200);
@@ -129,7 +135,11 @@ test('verifyLink rechaza redirecciones a hosts no permitidos', async () => {
 });
 
 test('verifyLink acepta redirecciones dentro de la whitelist', async () => {
-  const fakeFetch = async () => ({ ok: true, status: 200, url: 'https://www.jumbo.cl/ficha-final' });
+  const fakeFetch = async () => ({
+    ok: true,
+    status: 200,
+    url: 'https://www.jumbo.cl/ficha-final',
+  });
   const result = await verifyLink('https://jumbo.cl/x', { fetch: fakeFetch, cache: new Map() });
   assert.equal(result.ok, true);
   assert.equal(result.finalUrl, 'https://www.jumbo.cl/ficha-final');

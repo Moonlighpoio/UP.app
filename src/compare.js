@@ -2,7 +2,7 @@
  * UP · Modal comparador: 5 supermercados ordenados por precio.
  */
 import { $, esc, formatCLP, getProductSVG } from './utils.js';
-import { state, getProduct, setActiveProduct, addReindex } from './state.js';
+import { getProduct, setActiveProduct, addReindex } from './state.js';
 import { getProductStats } from './catalog.js';
 import { linkMarkup } from './ui.js';
 import { offerLink, verifyLink } from './links.js';
@@ -26,17 +26,20 @@ export function openCompareModal(productId) {
     ? `<img src="${esc(product.image)}" alt="${esc(product.name)}" class="max-h-full max-w-full object-contain" />`
     : getProductSVG(product.icon);
   $('modal-product-name').textContent = product.name;
-  $('modal-product-desc').textContent = `${product.unit} — Comparativa ordenada de menor a mayor precio en 5 supermercados de Chile.`;
-  $('modal-best-price-badge').textContent = `MEJOR PRECIO: ${formatCLP(stats.minPrice)} (${stats.bestStore ? stats.bestStore.short : '—'})`;
+  $('modal-product-desc').textContent =
+    `${product.unit} — Comparativa ordenada de menor a mayor precio en 5 supermercados de Chile.`;
+  $('modal-best-price-badge').textContent =
+    `MEJOR PRECIO: ${formatCLP(stats.minPrice)} (${stats.bestStore ? stats.bestStore.short : '—'})`;
   $('modal-savings-badge').textContent = `AHORRO MÁXIMO: ${formatCLP(stats.maxSavings)}`;
 
   const listEl = $('modal-stores-list');
-  listEl.innerHTML = stats.sorted.map((entry, idx) => {
-    const isBest = idx === 0;
-    const diff = entry.price - stats.minPrice;
-    const linkInfo = linkMarkup(product, entry.storeId);
+  listEl.innerHTML = stats.sorted
+    .map((entry, idx) => {
+      const isBest = idx === 0;
+      const diff = entry.price - stats.minPrice;
+      const linkInfo = linkMarkup(product, entry.storeId);
 
-    return `
+      return `
       <div class="p-3.5 sm:p-4 rounded-[6px] ${isBest ? 'bg-stage border border-signal/80' : 'utility-surface'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="flex items-start sm:items-center gap-3">
           <div class="w-8 h-8 rounded-[4px] ${isBest ? 'bg-signal text-ink' : 'bg-utility text-muted'} flex items-center justify-center font-dot text-[14px] shrink-0">#${idx + 1}</div>
@@ -60,7 +63,8 @@ export function openCompareModal(productId) {
           </div>
         </div>
       </div>`;
-  }).join('');
+    })
+    .join('');
 
   listEl.querySelectorAll('.add-to-cart-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -80,7 +84,7 @@ export function openCompareModal(productId) {
       if (link.url) {
         verifyLink(link.url, productId, chainId, false, {
           onUpdate: () => openCompareModal(productId),
-          notify: hooks.notify
+          notify: hooks.notify,
         });
       }
     });

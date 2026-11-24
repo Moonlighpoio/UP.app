@@ -4,12 +4,20 @@
 
 export const $ = (id) => document.getElementById(id);
 
-export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+export const esc = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+  );
 
 // La única implementación de formato CLP vive en money.js (pura y testeable).
 export { formatCLP } from './money.js';
 
-export const norm = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+export const norm = (s) =>
+  String(s)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
 export function getProductSVG(iconType) {
   const svgs = {
@@ -73,7 +81,7 @@ export function getProductSVG(iconType) {
       <rect x="14" y="20" width="36" height="24" rx="3" stroke="#ffffff"/>
       <rect x="20" y="26" width="24" height="12" stroke="#ffc700" stroke-dasharray="2 2"/>
       <circle cx="32" cy="32" r="2" fill="#ffc700"/>
-    </svg>`
+    </svg>`,
   };
   return svgs[iconType] || svgs.bag;
 }

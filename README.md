@@ -1,5 +1,9 @@
 # UP · Prototipo de comparador de precios de supermercados (Chile)
 
+[![CI](https://github.com/Moonlighpoio/UP.app/actions/workflows/ci.yml/badge.svg)](https://github.com/Moonlighpoio/UP.app/actions/workflows/ci.yml)
+[![Demo](https://img.shields.io/website?url=https%3A%2F%2Fmoonlighpoio.github.io%2FUP.app%2F&label=demo&up_message=online&down_message=offline)](https://moonlighpoio.github.io/UP.app/)
+[![Licencia](https://img.shields.io/badge/licencia-propietaria-dark)](LICENSE)
+
 Prototipo web de demostración de **UP**: busca entre **30 productos de despensa**, compara precios en **5 cadenas en la interfaz** (el feed de demo incluye 6 cadenas y 10 locales), arma **carritos múltiples visibles** separados por supermercado, muestra umbrales de despacho gratis y simula un **resumen de pago unificado** con **split payment 99% / 1%** (modelo **marketplace**, UP no es vendedor de los productos).
 
 > ⚠️ **Estado de los datos:** precios **referenciales de demostración**, no precios en tiempo real. Ver [¿Por qué no hay conexión real ya?](#4-por-qué-no-hay-conexión-real-ya).
@@ -214,7 +218,11 @@ UP.app/
 │   ├── ui.js                    # Toasts, render y paneles
 │   └── utils.js                 # Helpers puros de UI
 ├── server.js                    # Servidor Node sin dependencias + /api/prices + /api/verify-link
-├── package.json                 # Scripts npm start / test / lint
+├── package.json                 # Scripts start / test / lint / format; devDependencies ESLint + Prettier
+├── package-lock.json            # Lockfile para npm ci reproducible en CI
+├── eslint.config.js             # ESLint 9 flat config, sin plugins externos
+├── .prettierrc.json             # Reglas de formato (100 columnas, comillas simples)
+├── .github/workflows/ci.yml     # CI: npm ci + lint + format:check + test
 ├── .gitignore                   # Ignora dependencias, entorno y datos reales opcionales
 ├── .nojekyll                    # Evita el procesamiento Jekyll en GitHub Pages
 ├── LICENSE                      # Todos los derechos reservados
@@ -436,3 +444,41 @@ Los 30 productos incluyen `image` e `description` propios. Las fotos y textos de
 8. **Alta concurrencia con frescura de 15–30 min.** Mantener ~450.000 SKU actualizados exige detectar cambios en vez de descargar todo: conditional requests, feeds delta, workers con backpressure y particionado por cadena. El cuello de botella no es el usuario, sino el volumen de observación del catálogo.
 9. **Antibots sin evasión.** Un 403/429 debe interpretarse como una señal para pausar y renegociar acceso, nunca como un obstáculo técnico a sortear. Circuit breakers por cadena y User-Agent identificable son parte del diseño.
 10. **Búsqueda instantánea a escala.** Con millones de ofertas, el filtro en memoria del prototipo no sirve. Se requiere OpenSearch/Algolia con analyzer en español, facetas y autocomplete, más Redis para consultas calientes.
+
+---
+
+## 9. Calidad y CI
+
+Dos **devDependencies** (justificadas): `eslint@9` detecta errores y variables sin uso, y `prettier@3` mantiene un formato único. `node:test` y `node:assert` son nativos, por eso los tests no agregan paquetes.
+
+```bash
+npm ci             # instala exactamente lo del lockfile (equivale a lo que hace CI)
+npm run lint       # node --check + ESLint (sintaxis + reglas)
+npm run format:check  # verifica formato sin modificar archivos
+npm test           # 26 tests: dinero, deep links y servidor
+npm run format     # aplica Prettier a src/, test/ y eslint.config.js
+```
+
+El workflow `.github/workflows/ci.yml` corre en **cada push y pull request** con Node 20: `npm ci` → `npm run lint` → `npm run format:check` → `npm test`. El badge de CI está arriba de este README; el badge de Demo consulta la URL pública.
+
+> ℹ️ Se mantiene **ESLint 9** por la decisión aprobada. npm avisa que la rama 9 está deprecated (latest: 10.x, que exige Node ≥20.19); la actualización a 10 queda como decisión futura y no afecta al prototipo ni a la CI con Node 20.
+
+### Despliegue de la demo (GitHub Pages)
+
+El sitio **ya está publicado** en https://moonlighpoio.github.io/UP.app/ desde el repo público `Moonlighpoio/UP.app`. La fuente de deployment es la rama, no un workflow de Pages; no cambiarla evita interrumpir la demo:
+
+1. En el repo: **Settings → Pages**.
+2. En *Build and deployment*: **Source = Deploy from a branch**.
+3. **Branch = `main`**, carpeta **`/ (root)`** → **Save**.
+4. El archivo `.nojekyll` en la raíz evita que Jekyll ignore carpetas como `src/`.
+5. Cada push a `main` dispara un rebuild automático (1–2 min). Para comprobarlo:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' -L https://moonlighpoio.github.io/UP.app/
+curl -sS -o /dev/null -w '%{http_code}\n' https://moonlighpoio.github.io/UP.app/src/main.js
+gh api repos/Moonlighpoio/UP.app/actions/workflows/ci.yml/runs --jq '.workflow_runs[0] | {status, conclusion, head_sha}'
+```
+
+> La API de builds de Pages puede mostrar metadata desfasada justo después de un push. Si el `status`/`commit` parece viejo, valida el **contenido servido** (por ejemplo, que `index.html` apunte a `src/main.js`) en vez de fiarte solo de la API.
+
+En Pages el front-end detecta el host `github.io` y activa el **modo demo estático**: no existen `/api/*`, así que usa `data/demo.js` y no marca enlaces como rotos. El servidor Node (`npm start`, puerto `3100`) es la única forma de ejercitar `/api/prices`, `/api/health` y `/api/verify-link` en local.

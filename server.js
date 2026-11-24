@@ -83,7 +83,7 @@ async function getPrices(query) {
 
 function allowedLink(raw) {
   let parsed;
-  try { parsed = new URL(raw); } catch (_) { return null; }
+  try { parsed = new URL(raw); } catch { return null; }
   if (!["http:", "https:"].includes(parsed.protocol)) return null;
   const host = parsed.hostname.toLowerCase();
   const ok = LINK_ALLOWLIST.some((domain) => host === domain || host.endsWith("." + domain));

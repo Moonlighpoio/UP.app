@@ -13,11 +13,16 @@ export const state = {
   activeProductId: null,
   cart: [],
   linkVerification: new Map(),
-  reindexQueue: new Set()
+  reindexQueue: new Set(),
 };
 
 export function categoriesFrom(products) {
-  return ['TODOS', ...Array.from(new Set(products.map((p) => p.category))).sort((a, b) => a.localeCompare(b, 'es'))];
+  return [
+    'TODOS',
+    ...Array.from(new Set(products.map((p) => p.category))).sort((a, b) =>
+      a.localeCompare(b, 'es')
+    ),
+  ];
 }
 
 export function setCatalog(products, categories) {

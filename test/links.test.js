@@ -6,7 +6,7 @@ const product = (skus, name = 'Bebida Coca-Cola Original') => ({ id: 'coca', nam
 
 test('offerLink prioriza la URL canónica aunque haya SKU y GTIN', () => {
   const p = product({
-    jumbo: { sku: '391', gtin: '7801610001622', url: 'https://www.jumbo.cl/ficha-coca/p' }
+    jumbo: { sku: '391', gtin: '7801610001622', url: 'https://www.jumbo.cl/ficha-coca/p' },
   });
   const link = offerLink(p, 'jumbo');
   assert.equal(link.url, 'https://www.jumbo.cl/ficha-coca/p');
@@ -34,7 +34,12 @@ test('offerLink cae al GTIN si no hay SKU', () => {
 
 test('offerLink sin SKU mapeado devuelve url null', () => {
   const p = product({ tottus: { sku: null, url: null } });
-  assert.deepEqual(offerLink(p, 'tottus'), { url: null, canonical: false, token: null, kind: 'none' });
+  assert.deepEqual(offerLink(p, 'tottus'), {
+    url: null,
+    canonical: false,
+    token: null,
+    kind: 'none',
+  });
 });
 
 test('offerLink nunca construye una URL a partir del nombre del producto', () => {

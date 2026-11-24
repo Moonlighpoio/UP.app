@@ -11,7 +11,7 @@ export const CHAIN_SEARCH = {
   jumbo: 'https://www.jumbo.cl/busqueda?ft=',
   santaisabel: 'https://www.santaisabel.cl/busqueda?ft=',
   tottus: 'https://www.tottus.cl/tottus/busqueda?ft=',
-  unimarc: 'https://www.unimarc.cl/busqueda?ft='
+  unimarc: 'https://www.unimarc.cl/busqueda?ft=',
 };
 
 export function offerLink(product, chainId) {
@@ -21,12 +21,19 @@ export function offerLink(product, chainId) {
   }
   const token = mapping.sku || mapping.gtin;
   if (token && CHAIN_SEARCH[chainId]) {
-    return { url: CHAIN_SEARCH[chainId] + encodeURIComponent(token), canonical: false, token, kind: 'SKU' };
+    return {
+      url: CHAIN_SEARCH[chainId] + encodeURIComponent(token),
+      canonical: false,
+      token,
+      kind: 'SKU',
+    };
   }
   return { url: null, canonical: false, token: null, kind: 'none' };
 }
 
-export function reindexKey(productId, chainId) { return productId + '|' + chainId; }
+export function reindexKey(productId, chainId) {
+  return productId + '|' + chainId;
+}
 
 /**
  * @param {object} hooks onUpdate vuelve a renderizar el modal activo; notify muestra un toast.
@@ -38,7 +45,9 @@ export async function verifyLink(url, productId, chainId, quiet, hooks = {}) {
   if (!url || (getLinkVerification(url) || {}).loading) return;
   setLinkVerification(url, { loading: true });
   try {
-    const res = await fetch('/api/verify-link?url=' + encodeURIComponent(url), { headers: { Accept: 'application/json' } });
+    const res = await fetch('/api/verify-link?url=' + encodeURIComponent(url), {
+      headers: { Accept: 'application/json' },
+    });
     const json = await res.json();
     setLinkVerification(url, Object.assign({}, json, { loading: false }));
     if (!json.ok) addReindex(reindexKey(productId, chainId));

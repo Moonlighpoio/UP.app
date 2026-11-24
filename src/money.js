@@ -70,7 +70,15 @@ export function calculateMoney({ lines, stores, feeRate = UP_FEE_RATE }) {
   const upFee = storeGroups.reduce((acc, g) => acc + g.fee, 0);
   const payoutTotal = productsSubtotal - upFee;
   const grandTotal = grandTotalFor(productsSubtotal, totalShipping);
-  return { storeGroups, totalItems, productsSubtotal, totalShipping, upFee, payoutTotal, grandTotal };
+  return {
+    storeGroups,
+    totalItems,
+    productsSubtotal,
+    totalShipping,
+    upFee,
+    payoutTotal,
+    grandTotal,
+  };
 }
 
 export function formatCLP(amount) {
