@@ -208,10 +208,150 @@
       </div>
 
       <div class="up-filter-bar" id="filter-bar">
-        <select id="chain-filter" aria-label="Filtrar por cadena"></select>
-        <button id="free-shipping-toggle" type="button" aria-pressed="false">
-          Despacho gratis en carrito
+        <div class="up-filter-popover">
+          <button
+            type="button"
+            class="up-filter-trigger"
+            data-popover-trigger="chain"
+            aria-expanded="false"
+            aria-controls="popover-chain"
+          >
+            Cadena
+            <span class="up-filter-badge" data-active-count="chain"></span>
+          </button>
+          <div
+            id="popover-chain"
+            class="up-popover"
+            data-popover="chain"
+            role="group"
+            aria-label="Filtrar por cadena"
+            hidden
+          >
+            <p class="up-popover-title">Filtrar por cadena</p>
+            <div data-filter-options="chain"></div>
+          </div>
+        </div>
+
+        <div class="up-filter-popover">
+          <button
+            type="button"
+            class="up-filter-trigger"
+            data-popover-trigger="price"
+            aria-expanded="false"
+            aria-controls="popover-price"
+          >
+            Precio
+            <span class="up-filter-badge" data-active-count="price"></span>
+          </button>
+          <div
+            id="popover-price"
+            class="up-popover"
+            data-popover="price"
+            role="group"
+            aria-label="Filtrar por precio"
+            hidden
+          >
+            <p class="up-popover-title">Rango de precio</p>
+            <div data-filter-options="price">
+              <label class="up-price-field">
+                <span>Mínimo</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  inputmode="numeric"
+                  data-filter-input="min-price"
+                  aria-label="Precio mínimo"
+                />
+              </label>
+              <label class="up-price-field">
+                <span>Máximo</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  inputmode="numeric"
+                  data-filter-input="max-price"
+                  aria-label="Precio máximo"
+                />
+              </label>
+              <p class="up-facet-note" data-count-for="price"></p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          id="offers-toggle"
+          type="button"
+          class="up-filter-trigger"
+          data-toggle-filter="offers"
+          aria-pressed="false"
+        >
+          Solo ofertas
+          <span class="up-filter-badge" data-active-count="offers"></span>
         </button>
+
+        <button
+          id="free-shipping-toggle"
+          type="button"
+          class="up-filter-trigger"
+          data-toggle-filter="shipping"
+          aria-pressed="false"
+        >
+          Despacho gratis
+          <span class="up-filter-badge" data-active-count="shipping"></span>
+        </button>
+
+        <div class="up-filter-popover">
+          <button
+            type="button"
+            class="up-filter-trigger"
+            data-popover-trigger="delivery"
+            aria-expanded="false"
+            aria-controls="popover-delivery"
+          >
+            Plazo
+            <span class="up-filter-badge" data-active-count="delivery"></span>
+          </button>
+          <div
+            id="popover-delivery"
+            class="up-popover"
+            data-popover="delivery"
+            role="group"
+            aria-label="Filtrar por plazo de despacho"
+            hidden
+          >
+            <p class="up-popover-title">Plazo de despacho</p>
+            <div data-filter-options="delivery"></div>
+            <p class="up-facet-note">Estimación de demostración.</p>
+          </div>
+        </div>
+
+        <div class="up-filter-popover">
+          <button
+            type="button"
+            class="up-filter-trigger"
+            data-popover-trigger="availability"
+            aria-expanded="false"
+            aria-controls="popover-availability"
+          >
+            Precio verificado
+            <span class="up-filter-badge" data-active-count="availability"></span>
+          </button>
+          <div
+            id="popover-availability"
+            class="up-popover"
+            data-popover="availability"
+            role="group"
+            aria-label="Filtrar por disponibilidad del precio"
+            hidden
+          >
+            <p class="up-popover-title">Disponibilidad del precio</p>
+            <div data-filter-options="availability"></div>
+          </div>
+        </div>
+
+        <button id="clear-filters-btn" type="button" class="up-clear-btn hidden">Limpiar todo</button>
         <button id="open-filters-btn" type="button" class="up-mobile-filter-btn">
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M3 5h14M6 10h8M8 15h4" stroke-linecap="round" />
@@ -219,6 +359,8 @@
           Filtrar y ordenar
         </button>
       </div>
+
+      <div id="active-filters" class="up-active-filters" aria-label="Filtros activos"></div>
 
       <div id="product-grid" class="up-product-grid"></div>
 
@@ -482,6 +624,103 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <div
+      id="filter-sheet-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="filter-sheet-title"
+      class="hidden up-drawer up-drawer--bottom"
+    >
+      <section id="filter-sheet" class="up-sheet-panel">
+        <div class="up-drawer-head">
+          <div>
+            <h2 id="filter-sheet-title">Filtrar productos</h2>
+            <p>Ajusta precio, cadena, plazo y disponibilidad.</p>
+          </div>
+          <button id="close-filter-sheet-btn" type="button" aria-label="Cerrar filtros" class="up-icon-btn">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="up-sheet-body">
+          <fieldset class="up-sheet-section">
+            <legend>Cadena</legend>
+            <div data-filter-options="chain-sheet"></div>
+          </fieldset>
+
+          <fieldset class="up-sheet-section">
+            <legend>Precio</legend>
+            <div data-filter-options="price-sheet">
+              <label class="up-price-field">
+                <span>Mínimo</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  inputmode="numeric"
+                  data-filter-input="min-price"
+                  aria-label="Precio mínimo"
+                />
+              </label>
+              <label class="up-price-field">
+                <span>Máximo</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  inputmode="numeric"
+                  data-filter-input="max-price"
+                  aria-label="Precio máximo"
+                />
+              </label>
+              <p class="up-facet-note" data-count-for="price"></p>
+            </div>
+          </fieldset>
+
+          <fieldset class="up-sheet-section">
+            <legend>Promociones</legend>
+            <button
+              type="button"
+              class="up-sheet-toggle"
+              data-toggle-filter="offers"
+              aria-pressed="false"
+            >
+              Solo ofertas
+              <span class="up-facet-count" data-count-for="offers"></span>
+            </button>
+          </fieldset>
+
+          <fieldset class="up-sheet-section">
+            <legend>Despacho y plazo</legend>
+            <button
+              type="button"
+              class="up-sheet-toggle"
+              data-toggle-filter="shipping"
+              aria-pressed="false"
+            >
+              Despacho gratis en carrito
+              <span class="up-facet-count" data-count-for="shipping"></span>
+            </button>
+            <div data-filter-options="delivery-sheet"></div>
+          </fieldset>
+
+          <fieldset class="up-sheet-section">
+            <legend>Disponibilidad del precio</legend>
+            <div data-filter-options="availability-sheet"></div>
+          </fieldset>
+        </div>
+
+        <div class="up-sheet-footer">
+          <button id="clear-sheet-filters-btn" type="button" class="up-clear-btn">Limpiar todo</button>
+          <button id="apply-filters-btn" type="button" class="up-btn-primary">
+            Ver <span data-count-for="all"></span> productos
+          </button>
+        </div>
+      </section>
     </div>
 
     <div id="toast" role="status" aria-live="polite" aria-atomic="true" class="up-toast up-toast-out">

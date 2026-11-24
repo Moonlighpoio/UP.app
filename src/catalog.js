@@ -95,6 +95,7 @@ export function mapDemoData(data) {
     image: p.image || null,
     icon: iconFor(p.category),
     skus: p.skus || {},
+    promos: p.promos || {},
     source: p.source || null,
     prices: Object.fromEntries(
       CHAIN_IDS.filter((c) => p.prices[c] != null).map((c) => [c, p.prices[c]])

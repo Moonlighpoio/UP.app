@@ -9,15 +9,23 @@ import { refreshPrices } from './api.js';
 import { initCart } from './cart.js';
 import { initCompare, openCompareModal, closeCompareModal } from './compare.js';
 import { finishCheckout, processUnifiedCheckout } from './checkout.js';
-import { freeShippingChainIds, resetAdvancedFilters } from './filters.js';
+import {
+  applyUrlFilters,
+  clearFilter,
+  freeShippingChainIds,
+  resetAllFilters,
+  syncUrlFilters,
+} from './filters.js';
 import { trapDialogTab } from './a11y.js';
 import {
   showToast,
   renderCategories,
   renderChainStrip,
   renderChainFilter,
-  updateFreeShippingButton,
+  renderFilterControls,
   renderProducts,
+  openFilterSheet,
+  closeFilterSheet,
   renderCartUI,
   initUI,
   openCartDrawer,
@@ -28,8 +36,10 @@ import {
 function renderAll() {
   renderCategories();
   renderChainStrip();
+  renderChainFilter();
   renderProducts();
   renderCartUI();
+  renderFilterControls();
 }
 
 function refreshActiveModal() {
@@ -47,9 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const demo = window.UP_DEMO_DATA;
   if (demo) applyDemoData(demo);
+  applyUrlFilters(window.location.search);
 
-  renderChainFilter();
-  updateFreeShippingButton();
   renderAll();
   refreshPrices(true, priceHooks);
 
@@ -58,6 +67,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const suggestions = $('search-suggestions');
   let suggestionItems = [];
   let suggestionIndex = -1;
+
+  function syncFilterInputs() {
+    searchInput.value = state.searchQuery;
+    clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+    $('sort-select').value = state.sortBy;
+  }
+
+  function closePopovers() {
+    document.querySelectorAll('[data-popover-trigger]').forEach((trigger) => {
+      trigger.setAttribute('aria-expanded', 'false');
+      const panel = document.getElementById(trigger.dataset.popoverTrigger);
+      if (panel) panel.hidden = true;
+    });
+  }
+
+  function togglePopover(trigger) {
+    const panel = document.getElementById(trigger.dataset.popoverTrigger);
+    if (!panel) return;
+    const shouldOpen = panel.hidden;
+    closePopovers();
+    panel.hidden = !shouldOpen;
+    trigger.setAttribute('aria-expanded', String(shouldOpen));
+  }
+
+  function refreshFilters() {
+    renderCategories();
+    renderChainFilter();
+    renderProducts();
+    renderFilterControls();
+    syncUrlFilters();
+  }
+
+  syncFilterInputs();
 
   function hideSuggestions() {
     suggestions.hidden = true;
@@ -107,14 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
     state.searchQuery = product.name;
     hideSuggestions();
     clearSearchBtn.classList.remove('hidden');
-    renderProducts();
+    refreshFilters();
   }
 
   searchInput.addEventListener('input', (e) => {
     state.searchQuery = e.target.value;
     clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
     showSuggestions();
-    renderProducts();
+    refreshFilters();
   });
 
   searchInput.addEventListener('keydown', (e) => {
@@ -142,7 +184,84 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-popover-trigger]');
+    if (trigger) {
+      togglePopover(trigger);
+      return;
+    }
+
+    const choice = e.target.closest('[data-filter-choice]');
+    if (choice) {
+      const kind = choice.dataset.filterChoice;
+      const value = choice.dataset.filterValue;
+      if (kind === 'chain') state.selectedChain = value;
+      else if (kind === 'delivery') state.maxDelivery = Number(value);
+      else if (kind === 'availability') state.availability = value;
+      refreshFilters();
+      closePopovers();
+      return;
+    }
+
+    const toggle = e.target.closest('[data-toggle-filter]');
+    if (toggle) {
+      if (toggle.dataset.toggleFilter === 'offers') {
+        state.offersOnly = !state.offersOnly;
+      } else if (toggle.dataset.toggleFilter === 'shipping') {
+        if (!freeShippingChainIds().length) {
+          showToast('AGREGA PRODUCTOS PARA DESBLOQUEAR DESPACHO GRATIS');
+          return;
+        }
+        state.freeShippingOnly = !state.freeShippingOnly;
+      }
+      refreshFilters();
+      return;
+    }
+
+    const chipClear = e.target.closest('[data-clear-filter]');
+    if (chipClear) {
+      clearFilter(chipClear.dataset.clearFilter);
+      syncFilterInputs();
+      refreshFilters();
+      return;
+    }
+
+    if (e.target.closest('#clear-filters-btn') || e.target.closest('#clear-sheet-filters-btn')) {
+      resetAllFilters();
+      syncFilterInputs();
+      refreshFilters();
+      return;
+    }
+
+    if (e.target.closest('#open-filters-btn')) {
+      openFilterSheet();
+      return;
+    }
+    if (e.target.closest('#apply-filters-btn') || e.target.closest('#close-filter-sheet-btn')) {
+      closeFilterSheet();
+      return;
+    }
+    if (e.target.id === 'filter-sheet-backdrop') {
+      closeFilterSheet();
+      return;
+    }
+
+    if (!e.target.closest('.up-filter-popover')) closePopovers();
     if (!e.target.closest('.up-search')) hideSuggestions();
+  });
+
+  document.querySelectorAll('[data-filter-input]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const raw = input.value.trim();
+      const value = raw === '' ? NaN : Number(raw);
+      if (input.dataset.filterInput === 'min-price') {
+        state.minPrice = Number.isFinite(value) ? Math.max(0, value) : 0;
+        if (state.minPrice > state.maxPrice) state.maxPrice = state.minPrice;
+      } else {
+        state.maxPrice = Number.isFinite(value) ? Math.max(0, value) : Infinity;
+        if (state.maxPrice < state.minPrice) state.minPrice = state.maxPrice;
+      }
+      refreshFilters();
+    });
   });
 
   clearSearchBtn.addEventListener('click', () => {
@@ -150,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.searchQuery = '';
     clearSearchBtn.classList.add('hidden');
     hideSuggestions();
-    renderProducts();
+    refreshFilters();
   });
 
   $('nav-search-btn').addEventListener('click', () => {
@@ -165,38 +284,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('sort-select').addEventListener('change', (e) => {
     state.sortBy = e.target.value;
-    renderProducts();
-  });
-
-  $('chain-filter').addEventListener('change', (e) => {
-    state.selectedChain = e.target.value;
-    renderProducts();
-  });
-
-  $('free-shipping-toggle').addEventListener('click', () => {
-    if (!freeShippingChainIds().length) {
-      showToast('AGREGA PRODUCTOS PARA DESBLOQUEAR DESPACHO GRATIS');
-      return;
-    }
-    state.freeShippingOnly = !state.freeShippingOnly;
-    updateFreeShippingButton();
-    renderProducts();
+    refreshFilters();
   });
 
   $('reset-filters-btn').addEventListener('click', () => {
-    state.selectedCategory = 'TODOS';
-    state.searchQuery = '';
-    searchInput.value = '';
-    clearSearchBtn.classList.add('hidden');
-    resetAdvancedFilters();
-    $('sort-select').value = 'default';
-    $('chain-filter').value = 'TODOS';
-    updateFreeShippingButton();
-    renderCategories();
-    renderProducts();
+    resetAllFilters();
+    syncFilterInputs();
+    refreshFilters();
   });
 
   $('refresh-prices-btn').addEventListener('click', () => refreshPrices(false, priceHooks));
+
+  window.addEventListener('popstate', () => {
+    applyUrlFilters(window.location.search);
+    syncFilterInputs();
+    closeFilterSheet();
+    closePopovers();
+    refreshFilters();
+  });
 
   $('close-compare-modal').addEventListener('click', closeCompareModal);
   $('compare-modal').addEventListener('click', (e) => {
@@ -239,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tag = e.target.tagName;
     const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || e.target.isContentEditable;
 
-    if (e.key === '/' && !typing) {
+    if (e.key === '/' && !typing && $('filter-sheet-backdrop').classList.contains('hidden')) {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       searchInput.focus();
@@ -248,6 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (e.key === 'Escape') {
       if (!suggestions.hidden) hideSuggestions();
+      closePopovers();
+      closeFilterSheet();
       closeCompareModal();
       closeCartDrawer();
       closeCheckoutModal();

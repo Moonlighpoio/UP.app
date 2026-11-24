@@ -10,9 +10,14 @@ import { offerLink, reindexKey } from './links.js';
 import { calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
 import { openDialog, closeDialog } from './a11y.js';
 import {
+  activeFilterChips,
+  AVAILABILITY_OPTIONS,
+  DELIVERY_OPTIONS,
+  facetCounts,
   matchesFilters,
   sortProducts,
   priceForDisplay,
+  priceBounds,
   syncFreeShippingFilter,
 } from './filters.js';
 
@@ -97,23 +102,147 @@ export function renderChainStrip() {
     .join('');
 }
 
+function choiceMarkup(kind, value, label, count, active) {
+  return `
+    <button
+      type="button"
+      class="up-choice${active ? ' up-active' : ''}"
+      data-filter-choice="${kind}"
+      data-filter-value="${esc(String(value))}"
+      aria-pressed="${active}"
+      ${!count && !active ? 'disabled' : ''}
+    >
+      <span>${esc(label)}</span>
+      <span class="up-facet-count">${count}</span>
+    </button>`;
+}
+
 export function renderChainFilter() {
-  const select = $('chain-filter');
-  select.innerHTML = [
-    '<option value="TODOS">Todas las cadenas</option>',
-    ...Object.values(STORES).map(
-      (store) => `<option value="${esc(store.id)}">${esc(store.name)}</option>`
-    ),
-  ].join('');
-  select.value = state.selectedChain;
+  const counts = facetCounts().chain;
+  const containers = document.querySelectorAll(
+    '[data-filter-options="chain"], [data-filter-options="chain-sheet"]'
+  );
+  containers.forEach((container) => {
+    container.innerHTML = [
+      ['TODOS', 'Todas las cadenas'],
+      ...Object.values(STORES).map((store) => [store.id, store.name]),
+    ]
+      .map(([id, label]) =>
+        choiceMarkup('chain', id, label, counts[id] || 0, state.selectedChain === id)
+      )
+      .join('');
+  });
 }
 
 export function updateFreeShippingButton() {
-  const button = $('free-shipping-toggle');
-  if (!button) return;
-  const active = state.freeShippingOnly;
-  button.setAttribute('aria-pressed', String(active));
-  button.classList.toggle('up-active', active);
+  document.querySelectorAll('[data-toggle-filter="shipping"]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(state.freeShippingOnly));
+    button.classList.toggle('up-active', state.freeShippingOnly);
+  });
+}
+
+export function renderFilterControls() {
+  const counts = facetCounts();
+  const bounds = priceBounds();
+
+  document.querySelectorAll('input[data-filter-input="min-price"]').forEach((input) => {
+    input.min = String(bounds.min);
+    input.max = String(bounds.max);
+    if (document.activeElement !== input)
+      input.value = state.minPrice ? String(state.minPrice) : '';
+  });
+  document.querySelectorAll('input[data-filter-input="max-price"]').forEach((input) => {
+    input.min = String(bounds.min);
+    input.max = String(bounds.max);
+    input.placeholder = 'Sin límite';
+    if (document.activeElement !== input) {
+      input.value = Number.isFinite(state.maxPrice) ? String(state.maxPrice) : '';
+    }
+  });
+
+  document
+    .querySelectorAll('[data-filter-options="delivery"], [data-filter-options="delivery-sheet"]')
+    .forEach((container) => {
+      container.innerHTML = DELIVERY_OPTIONS.map((option) =>
+        choiceMarkup(
+          'delivery',
+          option.value,
+          option.label,
+          counts.delivery[String(option.value)] || 0,
+          state.maxDelivery === option.value
+        )
+      ).join('');
+    });
+
+  document
+    .querySelectorAll(
+      '[data-filter-options="availability"], [data-filter-options="availability-sheet"]'
+    )
+    .forEach((container) => {
+      container.innerHTML = AVAILABILITY_OPTIONS.map((option) =>
+        choiceMarkup(
+          'availability',
+          option.value,
+          option.label,
+          counts.availability[option.value] || 0,
+          state.availability === option.value
+        )
+      ).join('');
+    });
+
+  document.querySelectorAll('[data-toggle-filter="offers"]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(state.offersOnly));
+    button.classList.toggle('up-active', state.offersOnly);
+  });
+  updateFreeShippingButton();
+
+  const productWord = counts.all === 1 ? 'producto' : 'productos';
+  document.querySelectorAll('[data-count-for="price"]').forEach((el) => {
+    el.textContent = `${counts.all} ${productWord} en este rango`;
+  });
+  document.querySelectorAll('[data-count-for="offers"]').forEach((el) => {
+    el.textContent = counts.offers;
+  });
+  document.querySelectorAll('[data-count-for="shipping"]').forEach((el) => {
+    el.textContent = counts.shipping;
+  });
+  document.querySelectorAll('[data-count-for="all"]').forEach((el) => {
+    el.textContent = counts.all;
+  });
+
+  const activeCounts = {
+    chain: state.selectedChain !== 'TODOS' ? '1' : '',
+    price: state.minPrice > 0 || Number.isFinite(state.maxPrice) ? '1' : '',
+    offers: state.offersOnly ? '1' : '',
+    shipping: state.freeShippingOnly ? '1' : '',
+    delivery: state.maxDelivery > 0 ? '1' : '',
+    availability: state.availability !== 'TODOS' ? '1' : '',
+  };
+  document.querySelectorAll('[data-active-count]').forEach((el) => {
+    const text = activeCounts[el.dataset.activeCount] || '';
+    el.textContent = text;
+    el.hidden = !text;
+  });
+
+  const chips = activeFilterChips();
+  $('active-filters').innerHTML = chips
+    .map(
+      (chip) => `
+      <span class="up-filter-chip">
+        ${esc(chip.label)}
+        <button type="button" data-clear-filter="${chip.key}" aria-label="Quitar filtro ${esc(chip.label)}">✕</button>
+      </span>`
+    )
+    .join('');
+  $('clear-filters-btn').classList.toggle('hidden', chips.length === 0);
+}
+
+export function openFilterSheet() {
+  openDialog($('filter-sheet-backdrop'), 'close-filter-sheet-btn');
+}
+
+export function closeFilterSheet() {
+  closeDialog($('filter-sheet-backdrop'));
 }
 
 export function renderProducts() {

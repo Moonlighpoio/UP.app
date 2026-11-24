@@ -32,7 +32,7 @@ export function openDialog(el, focusId) {
   document.body.style.overflow = 'hidden';
   const target = focusId ? document.getElementById(focusId) : null;
   const node = target || visibleFocusables(el)[0] || el;
-  // requestAnimationFrame evita enfocar un nodo todavía oculto por Tailwind.
+  // requestAnimationFrame evita enfocar un nodo todavía oculto por CSS.
   requestAnimationFrame(() => node.focus({ preventScroll: true }));
 }
 

@@ -3,6 +3,8 @@
  * Sin dependencias: solo constantes del sistema visual y de negocio.
  */
 
+// deliveryHours es una estimación de demostración para el filtro de plazo;
+// no sustituye los tiempos reales que publica cada supermercado.
 export const STORES = {
   lider: {
     id: 'lider',
@@ -10,6 +12,7 @@ export const STORES = {
     short: 'LIDER',
     freeShippingThreshold: 50000,
     shippingCost: 3990,
+    deliveryHours: 24,
   },
   jumbo: {
     id: 'jumbo',
@@ -17,6 +20,7 @@ export const STORES = {
     short: 'JUMBO',
     freeShippingThreshold: 50000,
     shippingCost: 4490,
+    deliveryHours: 24,
   },
   santaisabel: {
     id: 'santaisabel',
@@ -24,6 +28,7 @@ export const STORES = {
     short: 'STA ISABEL',
     freeShippingThreshold: 35000,
     shippingCost: 3490,
+    deliveryHours: 48,
   },
   tottus: {
     id: 'tottus',
@@ -31,6 +36,7 @@ export const STORES = {
     short: 'TOTTUS',
     freeShippingThreshold: 50000,
     shippingCost: 3990,
+    deliveryHours: 24,
   },
   unimarc: {
     id: 'unimarc',
@@ -38,6 +44,7 @@ export const STORES = {
     short: 'UNIMARC',
     freeShippingThreshold: 35000,
     shippingCost: 3290,
+    deliveryHours: 48,
   },
 };
 

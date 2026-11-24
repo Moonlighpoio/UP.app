@@ -11,10 +11,10 @@ const browserGlobals = {
   clearTimeout: 'readonly',
   console: 'readonly',
   URL: 'readonly',
+  URLSearchParams: 'readonly',
   AbortController: 'readonly',
   AbortSignal: 'readonly',
   requestAnimationFrame: 'readonly',
-  tailwind: 'readonly',
 };
 
 const nodeGlobals = {
@@ -27,6 +27,7 @@ const nodeGlobals = {
   setTimeout: 'readonly',
   clearTimeout: 'readonly',
   URL: 'readonly',
+  URLSearchParams: 'readonly',
   AbortController: 'readonly',
   AbortSignal: 'readonly',
 };
