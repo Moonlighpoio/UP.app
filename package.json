@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test",
-    "lint": "node --check server.js && node --check data/demo.js"
+    "lint": "node --check server.js && node --check data/demo.js && for f in src/*.js; do node --check \"$f\"; done"
   },
   "engines": {
     "node": ">=20"

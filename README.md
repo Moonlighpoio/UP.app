@@ -21,7 +21,7 @@ Prototipo web de demostración de **UP**: busca entre **30 productos de despensa
 7. **Checkout consolidado y comprobante split.** Un solo resumen con subtotales por cadena, despachos, comisión UP del 1% y un cargo final. **Confirmar pago** genera el **comprobante de boleta dividida**: 99% dispersado a supermercados, 1% retenido por UP, dispersión por franquicia y detalle de entrega coordinada.
 8. **Avisos breves.** Los eventos usan un toast deslizante que desaparece solo; no hay popups persistentes ni avisos que bloqueen el catálogo.
 
-> Implementado en `index.html` (Tailwind CDN + JS inline: `offerLink`, `verifyLink`, `refreshPrices`, `openCompareModal`, `calculateCartTotals`, `processUnifiedCheckout`), `styles.css` (tokens y estilos propios) y `server.js` (`/api/prices`, `/api/verify-link`). En GitHub Pages el front-end detecta el host `github.io` y usa el catálogo estático sin depender del servidor local.
+> Implementado en **módulos ES nativos** bajo `src/` (sin bundler): `api.js`, `links.js`, `cart.js`, `compare.js`, `checkout.js`, `ui.js`, más `state.js` (estado central), `config.js`, `catalog.js`, `utils.js` y `main.js` (entrada). `index.html` solo contiene el marcado; `styles.css` tiene los tokens y estilos propios; `server.js` expone `/api/prices`, `/api/verify-link` y `/api/health`. En GitHub Pages se detecta el host `github.io` y se usa el catálogo estático sin depender del servidor local.
 
 ---
 
@@ -71,7 +71,7 @@ sku_mapping(product_id, chain_id, retailer_sku, retailer_gtin, canonical_url,
 **Reglas obligatorias:**
 
 - Se usa **siempre** `sku_mapping.canonical_url` cuando existe; tiene prioridad y se verifica con `/api/verify-link`.
-- Si no hay URL canónica pero hay `sku` o `gtin`, se genera una **búsqueda exacta por ese identificador** (`CHAIN_SEARCH` en el JS inline de `index.html`, patrón `busqueda?ft=`). La UI lo rotula **“Búsqueda SKU exacta”** y no lo trata como enlace roto aunque la cadena responda con un antibot.
+- Si no hay URL canónica pero hay `sku` o `gtin`, se genera una **búsqueda exacta por ese identificador** (`CHAIN_SEARCH` en `src/links.js`, patrón `busqueda?ft=`). La UI lo rotula **“Búsqueda SKU exacta”** y no lo trata como enlace roto aunque la cadena responda con un antibot.
 - **Nunca** se genera una URL de búsqueda por nombre de producto.
 - Si no hay URL ni SKU/GTIN, se muestra **“Sin SKU mapeado”** y se encola para re-indexación.
 - Si `GET /api/verify-link` devuelve 404 u otro estado no OK, se marca `product_id + chain_id` para **re-indexación inmediata**. La fila se rotula **“⚠ Enlace roto · reindexar”** y el botón *Agregar* se deshabilita para no mostrar un precio engañoso.
@@ -154,8 +154,10 @@ El alcance objetivo es la **despensa familiar chilena completa**, ya reflejada e
 
 ## 1. Cómo abrirlo
 
-### Opción A — Sin servidor (más rápida)
-Abrir `index.html` con doble clic. Funciona con `data/demo.js` y `styles.css` locales, pero sin `/api/verify-link` (los badges quedarán en “Demo · sin verificación”). Requiere internet para Tailwind CDN y Google Fonts.
+### Opción A — Demo estática en GitHub Pages (sin servidor)
+Visitar **https://moonlighpoio.github.io/UP.app/**. Usa `data/demo.js`, no llama a `/api/*` y los badges muestran `Demo · sin verificación`. Requiere internet para Tailwind CDN y Google Fonts.
+
+> ℹ️ **Nota:** al usar módulos ES nativos, abrir `index.html` con doble clic (`file://`) ya no funciona en Chrome/Firefox por las restricciones CORS del navegador. Para probar en local usa la Opción B.
 
 ### Opción B — Con servidor local (recomendada)
 ```bash
@@ -178,8 +180,22 @@ Respuesta esperada de `/api/prices`: `30 productos · 10 tiendas · 6 cadenas` e
 
 ```
 UP.app/
-├── index.html                   # Interfaz (Tailwind por CDN) + JS inline
+├── index.html                   # Solo marcado UI + Tailwind por CDN
 ├── styles.css                   # Tokens de diseño y estilos propios, cargados por index.html
+├── src/
+│   ├── package.json             # {"type":"module"}: ESM en src/, CJS en server.js
+│   ├── tailwind-config.js       # Config del CDN (script clásico)
+│   ├── main.js                  # Entrada: cablea módulos y eventos
+│   ├── config.js                # Cadenas, umbrales, fee y detección de modo demo
+│   ├── state.js                 # Estado central: catálogo, filtros, carrito, verificación
+│   ├── catalog.js               # Normalización del feed y estadísticas de precio
+│   ├── api.js                   # /api/prices y refreshPrices; modo estático
+│   ├── links.js                 # CHAIN_SEARCH, offerLink, verifyLink
+│   ├── cart.js                  # Carrito y cálculo de totales
+│   ├── compare.js               # Modal comparador y orden por precio
+│   ├── checkout.js              # Checkout simulado y split 99%/1%
+│   ├── ui.js                    # Toasts, render y paneles
+│   └── utils.js                 # Helpers puros de UI
 ├── server.js                    # Servidor Node sin dependencias + /api/prices + /api/verify-link
 ├── package.json                 # Scripts npm start / test / lint
 ├── .gitignore                   # Ignora dependencias, entorno y datos reales opcionales
@@ -196,7 +212,7 @@ UP.app/
 └── README.md
 ```
 
-> No quedan archivos legacy: `app.js` y la versión anterior de `styles.css` fueron reemplazados por el CSS realmente cargado.
+> No quedan archivos legacy ni JS de aplicación inline en `index.html`; `app.js` y la versión anterior de `styles.css` ya no existen.
 
 ---
 
