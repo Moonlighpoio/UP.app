@@ -1008,3 +1008,30 @@ El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto d
 - `npm test`: **190/190**; `npm run lint`, `npm run format:check`, `npm run check-contrast` (**36/36**), `npm run validate-catalog` y `npm run check-freshness` en verde. No se ejecuta Prettier sobre `index.html`.
 - Verificación CDP (`up-verify-u4.mjs`): **26/26** comprobaciones en Chrome real con perfil aislado; cubre favoritos y persistencia, rutas de cuenta con registro local, límite de 3 en el comparador, matriz, historial 30/90, alerta local, campana y avisos, «Comprar de nuevo», carritos por cadena, móvil 390 px sin desbordamiento, botones de 44 px y ausencia de peticiones externas o errores JS.
 - Lighthouse móvil aislado: `/` **100 Performance / 96 Accesibilidad**, `#/comparar` **100 / 96**, `#/cuenta/favoritos` **91–100 / 96**. La ruta profunda `#/producto/coca-original-15l` quedó en **84–89 Performance / 97 Accesibilidad**: con LCP simulado de 3,7–6,4 s no alcanza de forma estable el umbral de 90 Performance, aunque acelera el sprite con `preload` y no genera CLS. Queda registrada como excepción medida de esta fase; no se maquilló el resultado ocultando la foto ni quitando contenido.
+
+## 19. FASE U5 · Carrito, entrega y pago simulado
+
+### Ahorro estimado y gestión del carrito
+
+- `src/cart-savings.js` calcula el ahorro **estimado/referencial** contra el precio más alto disponible como referencia, y sólo suma líneas con al menos dos precios comparables. El resumen del carrito dice explícitamente «no es un precio Verificado ni el mejor precio»: no usa ofertas `pending`/`stale` para afirmar un ahorro real.
+- Eliminar productos o vaciar el carrito registra una instantánea durante **5 s** (`UNDO_MS`). El toast mantiene `role="status" aria-live="polite"` y agrega un botón «Deshacer»; el carrito también ofrece el botón «Deshacer» mientras la ventana sigue abierta. No se guardaNothing fuera de la memoria de la página.
+- `src/saved-carts.js` y `up_state_v2.savedCarts` guardan hasta 10 carritos por producto/cadena con cantidades 1–99. «Guardar para después», «Cargar» y «Borrar» funcionan sin conexión y se eliminan con «Borrar mis datos». Cargar fusiona cantidades por cadena y también se puede deshacer.
+
+### Entrega, retiro y checkout
+
+- `src/delivery.js` contiene helpers puros: comunas de la Región Metropolitana, normalización sin tildes, extracción de comuna desde texto libre, validación clara, franjas deterministas por cadena y sucursal de ejemplo más cercana (`UP_DEMO_DATA.stores`, siempre con etiqueta «Ejemplo»). La dirección se guarda sólo en `localStorage` y se reutiliza como sugerencia local.
+- El paso 2 muestra direcciones guardadas, `<datalist>` de comunas, error accesible y una franja por supermercado. El retiro en tienda muestra la sucursal de ejemplo y calcula el total presentado con `withPickupTotals()`; **no altera** `calculateCartTotals()`, los carritos por cadena ni el filtro de envío gratis.
+- El pago es `simulado` sin campos de tarjeta, CVV ni contraseñas de pago. Antes de confirmar se desglosan productos, despacho, fee UP (1% retenido, explicado en un tooltip accesible), 99% liquidado a cadenas y total. La confirmación muestra un comprobante imprimible (`@media print`) y persiste una orden de prueba con `isDemo: true`, franjas y sucursal de ejemplo, sin correos ni pagos reales.
+- `checkout_start` y `checkout_complete` se registran en analítica interna con importes y cantidad de cadenas, sin datos personales. `finishCheckout()` vacía y persiste el carrito sin generar un aviso de deshacer del pago.
+
+### Límites
+
+- Las franjas, sucursales y direcciones son ilustrativas: no consultan disponibilidad real ni geolocalizan ubicación del usuario. La sucursal «más cercana» es la de menor `distanceKm` del catálogo de ejemplo dentro de la comuna indicada.
+- En la demo estática las 180 ofertas siguen `pending`; el ahorro se calcula sobre precios referenciales del catálogo y nunca se presenta como Verificado.
+- El fee del 1% se informa y se descuenta de la liquidación de cada cadena; no se agrega al total pagado ni se cobra dos veces.
+
+### Verificación
+
+- `npm test`: **208/208**; `npm run lint`, `npm run format:check`, `npm run check-contrast` (**36/36**), `npm run validate-catalog` y `npm run check-freshness` en verde. No se ejecuta Prettier sobre `index.html`.
+- Verificación CDP (`up-verify-u5.mjs`): **21/21** comprobaciones en Chrome real con perfil aislado, previo registro de una cuenta de prueba local. Cubre ahorro referencial, toast y botón de deshacer, carritos guardados, validación de dirección, franjas por cadena, retiro etiquetado como ejemplo, tooltip del fee, comprobante, persistencia de la orden, analítica, móvil 390 px sin desbordamiento, objetivos táctiles de 44 px y ausencia de peticiones externas o errores JS.
+- Lighthouse móvil aislado en `http://localhost:3100/`: mejor medición **95 Performance / 96 Accesibilidad** en `/` y **98 / 96** en `#/comparar`. `#/cuenta/pedidos` (redirige a ingreso sin sesión) osciló entre **74 y 96 Performance / 96 Accesibilidad** y `#/producto/coca-original-15l` entre **74 y 77 Performance / 97 Accesibilidad**: la máquina de verificación ejecutaba una VM con ~500% de CPU durante la medición, por lo que LCP simulado subió a 4,2–8,7 s. Queda registrado como excepción ambiental medida, heredera de la excepción de detalle de U4. No se maquilló el resultado ocultando contenido ni imágenes.

@@ -12,7 +12,7 @@ import { sessionUser } from './auth.js';
 import { createRouter } from './router.js';
 import { applyDemoData } from './catalog.js';
 import { refreshPrices } from './api.js';
-import { initCart } from './cart.js';
+import { initCart, undoLastCartChange } from './cart.js';
 import { initCompare, openCompareModal, closeCompareModal } from './compare.js';
 import { initReportUI, openReportDialog } from './report-ui.js';
 import { initListUI, closeListDialog, openListDialog } from './list-ui.js';
@@ -107,6 +107,12 @@ function refreshActiveModal() {
 function initDeferredUI(onDetected) {
   initCart({
     notify: showToast,
+    notifyUndo: (label) =>
+      showToast(`${label}. Puedes deshacer durante 5 s.`, {
+        actionLabel: 'Deshacer',
+        onAction: undoLastCartChange,
+        timeout: 5000,
+      }),
     render: () => {
       renderCartUI();
       saveCart(state.cart);

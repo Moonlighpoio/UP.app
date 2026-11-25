@@ -17,7 +17,18 @@ import { isFavorite, toggleFavorite } from './favorites.js';
 import { isInComparison, toggleProductInComparison } from './compare-picker.js';
 import { approximateMatch, didYouMean, highlightMatch } from './suggest.js';
 import { offerLink, reindexKey } from './links.js';
-import { addToCart, calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
+import {
+  addToCart,
+  calculateCartTotals,
+  clearCartItems,
+  getUndoState,
+  loadSavedCartItems,
+  removeFromCart,
+  undoLastCartChange,
+  updateCartQty,
+} from './cart.js';
+import { cartSavings } from './cart-savings.js';
+import { addSavedCart, findSavedCart, makeSavedCart, removeSavedCart } from './saved-carts.js';
 import { openDialog, closeDialog } from './a11y.js';
 import {
   activeFilterChips,
@@ -42,6 +53,44 @@ let toastTimer;
 export function initUI(nextHooks = {}) {
   uiHooks.onOpenCompare = nextHooks.onOpenCompare || uiHooks.onOpenCompare;
   uiHooks.onAddToList = nextHooks.onAddToList || uiHooks.onAddToList;
+  bindCartTools();
+}
+
+function bindCartTools() {
+  $('cart-undo').addEventListener('click', () => undoLastCartChange());
+  $('cart-clear').addEventListener('click', () => clearCartItems());
+  $('cart-save').addEventListener('click', () => {
+    const savedCarts = loadState().savedCarts || [];
+    const name = `Carrito ${savedCarts.length + 1} · ${new Date().toLocaleDateString('es-CL')}`;
+    const saved = makeSavedCart({ name, items: state.cart });
+    if (!saved) {
+      showToast('Agrega productos antes de guardar el carrito');
+      return;
+    }
+    updateState((current) => {
+      current.savedCarts = addSavedCart(current.savedCarts, saved);
+    });
+    showToast(`Carrito guardado: ${name}`);
+    renderCartUI();
+  });
+
+  $('saved-carts-list').addEventListener('click', (event) => {
+    const loadButton = event.target.closest('[data-saved-load]');
+    const removeButton = event.target.closest('[data-saved-remove]');
+    if (loadButton) {
+      const saved = findSavedCart(loadState().savedCarts, loadButton.dataset.savedLoad);
+      if (!loadSavedCartItems(saved?.items))
+        showToast('Ese carrito guardado ya no está disponible');
+      return;
+    }
+    if (removeButton) {
+      updateState((current) => {
+        current.savedCarts = removeSavedCart(current.savedCarts, removeButton.dataset.savedRemove);
+      });
+      showToast('Carrito guardado eliminado');
+      renderCartUI();
+    }
+  });
 }
 
 /** La paginación es solo presentación: las tarjetas siguen en el DOM. */
@@ -68,12 +117,38 @@ function updateProductVisibility() {
   if (label) label.textContent = remaining ? `Cargar más (${remaining})` : 'Cargar más';
 }
 
-export function showToast(msg) {
+export function hideToast() {
+  clearTimeout(toastTimer);
+  $('toast')?.classList.add('up-toast-out');
+  const action = $('toast-action');
+  if (action) {
+    action.hidden = true;
+    action.onclick = null;
+  }
+}
+
+/**
+ * Aviso accesible con acción opcional (usado por Deshacer).
+ * Mantiene intacto el contenedor role="status" aria-live="polite" aria-atomic="true".
+ */
+export function showToast(msg, { actionLabel = '', onAction = null, timeout = 2800 } = {}) {
   const toast = $('toast');
+  const action = $('toast-action');
   $('toast-message').textContent = msg;
+  if (typeof onAction === 'function' && actionLabel) {
+    action.textContent = actionLabel;
+    action.hidden = false;
+    action.onclick = () => {
+      hideToast();
+      onAction();
+    };
+  } else {
+    action.hidden = true;
+    action.onclick = null;
+  }
   toast.classList.remove('up-toast-out');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.add('up-toast-out'), 2800);
+  toastTimer = setTimeout(hideToast, timeout);
 }
 
 const CATEGORY_ICONS = {
@@ -661,8 +736,8 @@ export function linkMarkup(product, chainId) {
 }
 
 export function renderCartUI() {
-  const { storeGroups, totalItems, productsSubtotal, totalShipping, upFee, grandTotal } =
-    calculateCartTotals();
+  const totals = calculateCartTotals();
+  const { storeGroups, totalItems, productsSubtotal, totalShipping, upFee, grandTotal } = totals;
 
   $('nav-cart-count').textContent = totalItems;
   $('nav-cart-total').textContent = formatCLP(grandTotal);
@@ -777,6 +852,40 @@ export function renderCartUI() {
     totalShipping === 0 && totalItems > 0 ? 'GRATIS' : formatCLP(totalShipping);
   $('summary-fee').textContent = formatCLP(upFee);
   $('summary-total').textContent = formatCLP(grandTotal);
+
+  const savings = cartSavings({
+    lines: storeGroups.flatMap((group) => group.items),
+    products: state.products,
+    stores: STORES,
+  });
+  $('cart-savings').innerHTML = storeGroups.length
+    ? `<p><strong>${esc(savings.label)}</strong></p>
+       <small>Estimación referencial: no es un precio Verificado ni el «mejor precio».</small>`
+    : '';
+
+  const savedCarts = loadState().savedCarts || [];
+  $('saved-carts-count').textContent = savedCarts.length;
+  $('saved-carts-list').innerHTML = savedCarts.length
+    ? `<ul class="up-saved-carts-list">${savedCarts
+        .map(
+          (saved) => `<li>
+            <span>
+              <b>${esc(saved.name)}</b>
+              <small>${saved.items.length} producto${saved.items.length === 1 ? '' : 's'} · ${esc(
+                new Date(saved.savedAt).toLocaleDateString('es-CL')
+              )}</small>
+            </span>
+            <button type="button" class="up-link-btn" data-saved-load="${esc(saved.id)}">Cargar</button>
+            <button type="button" class="up-link-btn" data-saved-remove="${esc(saved.id)}">Borrar</button>
+          </li>`
+        )
+        .join('')}</ul>`
+    : '<p class="up-text-muted">Aún no guardas carritos. El botón «Guardar para después» los conserva en este navegador.</p>';
+
+  const undoButton = $('cart-undo');
+  undoButton.hidden = !getUndoState();
+  $('cart-save').disabled = !storeGroups.length;
+  $('cart-clear').disabled = !storeGroups.length;
 
   // Si el carrito deja de tener despacho gratis, el filtro se apaga solo.
   if (syncFreeShippingFilter()) {

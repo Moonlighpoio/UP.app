@@ -43,6 +43,7 @@ function defaultState() {
     favorites: [],
     alerts: [],
     notifications: [],
+    savedCarts: [],
     preferences: null,
     surveys: [],
     jobs: [],
@@ -69,6 +70,30 @@ function sanitizeCart(value) {
       storeId: item.storeId,
       qty: Number(item.qty),
     }));
+}
+
+function sanitizeSavedCarts(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  return value
+    .filter((saved) => {
+      if (!isObject(saved) || typeof saved.id !== 'string' || typeof saved.name !== 'string') {
+        return false;
+      }
+      if (!Array.isArray(saved.items) || !saved.items.length || seen.has(saved.id)) return false;
+      seen.add(saved.id);
+      return true;
+    })
+    .map((saved) => ({
+      id: saved.id,
+      name: saved.name.slice(0, 60),
+      items: sanitizeCart(saved.items),
+      savedAt: Number.isFinite(Date.parse(saved.savedAt))
+        ? new Date(saved.savedAt).toISOString()
+        : new Date(0).toISOString(),
+    }))
+    .filter((saved) => saved.items.length)
+    .slice(0, 12);
 }
 
 function sanitizeUsers(value) {
@@ -381,6 +406,7 @@ export function loadState() {
       favorites: sanitizeFavorites(parsed.favorites),
       alerts: sanitizeAlerts(parsed.alerts),
       notifications: sanitizeNotifications(parsed.notifications),
+      savedCarts: sanitizeSavedCarts(parsed.savedCarts),
       preferences: sanitizePreferences(parsed.preferences),
       surveys: sanitizeSurveys(parsed.surveys),
       jobs: sanitizeJobs(parsed.jobs),
@@ -441,6 +467,7 @@ export function clearPersonalData() {
     state.favorites = [];
     state.alerts = [];
     state.notifications = [];
+    state.savedCarts = [];
     state.preferences = null;
     state.surveys = [];
   });

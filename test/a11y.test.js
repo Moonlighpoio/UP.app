@@ -74,6 +74,16 @@ test('las tarjetas son enfocables y usan listeners delegados', () => {
   assert.match(ui, /decoding="async"/);
 });
 
+test('el checkout U5 no pide tarjeta y ofrece comprobante imprimible', () => {
+  assert.match(html, /name="payment-method" value="simulado" checked/);
+  assert.doesNotMatch(html, /name="payment-method" value="tarjeta"/);
+  assert.match(html, /id="toast-action" class="up-toast-action" hidden/);
+  assert.match(html, /id="checkout-fee-info"[\s\S]{0,220}aria-expanded="false"/);
+  assert.match(html, /id="checkout-fee-help" class="up-tooltip" role="tooltip" hidden/);
+  assert.match(html, /id="print-receipt-btn"/);
+  assert.match(css, /@media print/);
+});
+
 test('el módulo a11y expone las primitivas sin ejecutar DOM al importarlo', () => {
   for (const fn of [visibleFocusables, openDialog, closeDialog, trapDialogTab]) {
     assert.equal(typeof fn, 'function');

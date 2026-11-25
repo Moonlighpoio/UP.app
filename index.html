@@ -839,6 +839,16 @@
           </button>
         </div>
         <div id="cart-items-container" class="up-drawer-items"></div>
+        <div id="cart-savings" class="up-savings" aria-live="polite"></div>
+        <div class="up-cart-tools">
+          <button type="button" id="cart-undo" class="up-btn-secondary" hidden>Deshacer</button>
+          <button type="button" id="cart-save" class="up-btn-secondary">Guardar para después</button>
+          <button type="button" id="cart-clear" class="up-link-btn">Vaciar carrito</button>
+        </div>
+        <details id="saved-carts-details" class="up-saved-carts">
+          <summary>Carritos guardados (<span id="saved-carts-count">0</span>)</summary>
+          <div id="saved-carts-list"></div>
+        </details>
         <div id="cart-summary-footer" class="up-drawer-summary">
           <div class="up-summary-line">
             <span>Subtotal productos</span>
@@ -876,7 +886,7 @@
       <div class="up-modal-card up-checkout-card">
         <div class="up-modal-head">
           <div>
-            <span class="up-eyebrow">COMPRA SEGURA</span>
+            <span class="up-eyebrow">MODO PRUEBA · COMPRA SIMULADA</span>
             <h2 id="checkout-title">Paso 1 de 4 · Resumen</h2>
           </div>
           <button
@@ -942,9 +952,24 @@
             </fieldset>
             <label class="up-checkout-field">
               <span>Dirección o comuna</span>
-              <input type="text" placeholder="Ej. Providencia, Santiago" autocomplete="off" />
+              <input
+                id="checkout-address"
+                name="address"
+                type="text"
+                list="checkout-commune-options"
+                placeholder="Ej. Providencia, Santiago"
+                autocomplete="off"
+                aria-describedby="checkout-address-error"
+              />
             </label>
-            <p class="up-modal-note">Datos de demostración: no se envían a ningún servidor.</p>
+            <datalist id="checkout-commune-options"></datalist>
+            <div id="checkout-saved-addresses" class="up-checkout-saved"></div>
+            <p id="checkout-address-error" class="up-field-error" role="alert"></p>
+            <div id="checkout-slots" class="up-checkout-slots" aria-live="polite"></div>
+            <p class="up-modal-note">
+              Franjas y sucursales de ejemplo: UP no confirma disponibilidad real. Los datos no se
+              envían a ningún servidor.
+            </p>
             <div class="up-checkout-actions">
               <button id="checkout-back-to-summary" type="button" class="up-btn-secondary">
                 Volver a resumen
@@ -960,26 +985,34 @@
             <fieldset class="up-checkout-options">
               <legend class="up-sr-only">Medio de pago</legend>
               <label class="up-checkout-option">
-                <input type="radio" name="payment-method" value="tarjeta" checked />
+                <input type="radio" name="payment-method" value="simulado" checked />
                 <span>
-                  <b>Tarjeta de débito o crédito</b>
-                  <small>Pago único; las boletas se reparten por supermercado.</small>
-                </span>
-              </label>
-              <label class="up-checkout-option">
-                <input type="radio" name="payment-method" value="wallet" />
-                <span>
-                  <b>Billetera digital</b>
-                  <small>Simulación de pago con proveedor externo.</small>
+                  <b>Pago simulado · sin tarjeta</b>
+                  <small>Modo prueba: UP no pide números de tarjeta, CVV ni contraseñas de pago.</small>
                 </span>
               </label>
             </fieldset>
-            <div class="up-checkout-total">
-              <span>Total a pagar</span>
-              <strong class="price" data-checkout-total>$0</strong>
+            <h4>Desglose antes de confirmar</h4>
+            <div id="checkout-cost-breakdown" class="up-breakdown" aria-live="polite"></div>
+            <div class="up-fee-help">
+              <button
+                id="checkout-fee-info"
+                type="button"
+                class="up-info-btn"
+                aria-expanded="false"
+                aria-controls="checkout-fee-help"
+                aria-label="Explicación del fee de UP"
+              >
+                ¿Fee?
+              </button>
+              <span id="checkout-fee-help" class="up-tooltip" role="tooltip" hidden>
+                El 1% se descuenta de la liquidación de cada supermercado y se informa por separado.
+                No se suma al total que pagas ni se cobra dos veces.
+              </span>
             </div>
             <p class="up-modal-note">
-              Pagarás <span data-checkout-total>$0</span>. UP retiene el 1% de intermediación.
+              Pagarás <span data-checkout-total>$0</span> en esta simulación. No se emiten boletas
+              reales ni se envía correo.
             </p>
             <div class="up-checkout-actions">
               <button id="checkout-back-to-delivery" type="button" class="up-btn-secondary">
@@ -998,8 +1031,9 @@
               <span>Código de orden</span>
               <strong id="order-code" class="price">UP-CL-84920</strong>
             </div>
-            <span class="up-chip up-chip--success">Boletas emitidas</span>
+            <span class="up-chip up-chip--success">Comprobante de prueba</span>
           </div>
+          <dl id="checkout-receipt-meta" class="up-receipt-meta"></dl>
           <div>
             <h3>Desglose por supermercado</h3>
             <div id="checkout-breakdown" class="up-breakdown"></div>
@@ -1016,11 +1050,16 @@
           </div>
           <p class="up-modal-note">
             El 99% del subtotal se reparte entre los supermercados y UP retiene el 1% de
-            intermediación. Recibirás las boletas de cada cadena en tu correo.
+            intermediación. Este comprobante es de demostración y no se envía a ningún correo.
           </p>
-          <button id="finish-order-btn" type="button" class="up-btn-secondary up-btn-block">
-            Volver al catálogo
-          </button>
+          <div class="up-receipt-actions">
+            <button id="print-receipt-btn" type="button" class="up-btn-secondary">
+              Imprimir resumen
+            </button>
+            <button id="finish-order-btn" type="button" class="up-btn-primary">
+              Volver al catálogo
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1157,6 +1196,7 @@
     <div id="toast" role="status" aria-live="polite" aria-atomic="true" class="up-toast up-toast-out">
       <span class="up-toast-dot" aria-hidden="true"></span>
       <span id="toast-message">Producto agregado al carrito</span>
+      <button type="button" id="toast-action" class="up-toast-action" hidden>Deshacer</button>
     </div>
 
     <script src="data/demo.js"></script>
