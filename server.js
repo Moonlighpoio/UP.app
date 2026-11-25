@@ -26,6 +26,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 const { readCatalogPayload } = require('./scripts/catalog-db.js');
 const {
   CHAIN_IDS,
@@ -686,6 +687,29 @@ function send(res, status, body, type) {
   res.end(body);
 }
 
+/** Estáticos comprimibles: gzip reduce el critical path sin cambiar el contenido. */
+function sendStatic(req, res, status, body, type) {
+  const compressible = /^(text\/|application\/(javascript|json|xml)|image\/svg\+xml)/.test(type);
+  const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+  if (!compressible || !acceptsGzip || body.length < 1024) {
+    return send(res, status, body, type);
+  }
+  const zipped = zlib.gzipSync(body);
+  res.writeHead(
+    status,
+    Object.assign(
+      {
+        'Content-Type': type,
+        'Content-Encoding': 'gzip',
+        Vary: 'Accept-Encoding',
+        'Cache-Control': 'no-store',
+      },
+      SECURITY_HEADERS
+    )
+  );
+  res.end(zipped);
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
@@ -740,7 +764,13 @@ const server = http.createServer(async (req, res) => {
 
   fs.readFile(filePath, (err, data) => {
     if (err) return send(res, 404, 'Not found', 'text/plain; charset=utf-8');
-    send(res, 200, data, MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream');
+    sendStatic(
+      req,
+      res,
+      200,
+      data,
+      MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream'
+    );
   });
 });
 

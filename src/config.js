@@ -50,6 +50,12 @@ export const STORES = {
 
 export const UP_FEE_RATE = 0.01;
 
+// U1 · Confianza en los datos. Un precio sin fecha o vencido no es "mejor precio".
+export const STALE_DAYS = 7;
+export const STALE_MS = STALE_DAYS * 24 * 60 * 60 * 1000;
+export const MAX_REPORTS_PER_HOUR = 3;
+export const REPORT_WINDOW_MS = 60 * 60 * 1000;
+
 // En GitHub Pages (y al abrir el archivo directamente) no existen los endpoints /api/*.
 // El guardia typeof permite que los módulos también se importen desde Node en los tests.
 export const STATIC_DEMO =

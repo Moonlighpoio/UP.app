@@ -11,6 +11,7 @@ import { applyDemoData } from './catalog.js';
 import { refreshPrices } from './api.js';
 import { initCart } from './cart.js';
 import { initCompare, openCompareModal, closeCompareModal } from './compare.js';
+import { initReportUI, openReportDialog } from './report-ui.js';
 import { finishCheckout, initCheckout, startCheckout } from './checkout.js';
 import {
   applyUrlFilters,
@@ -55,6 +56,7 @@ import { offersView } from './views/offers.js';
 import { bankBenefitsView } from './views/bank-benefits.js';
 import { storesPlaceholder } from './views/placeholder.js';
 import { notFoundView } from './views/not-found.js';
+import { dataHelpView } from './views/data-help.js';
 import { updateAuthLinks } from './views/shared.js';
 
 function renderAll() {
@@ -84,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   initUI({ onOpenCompare: openCompareModal });
   initCompare({ notify: showToast });
+  initReportUI({ notify: showToast });
   initCheckout();
 
   const priceHooks = { notify: showToast, renderAll, refreshActiveModal };
@@ -363,6 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshFilters();
   });
 
+  $('report-compare-price').addEventListener('click', () => {
+    openReportDialog(state.activeProductId || '');
+  });
   $('close-compare-modal').addEventListener('click', closeCompareModal);
   $('compare-modal').addEventListener('click', (e) => {
     if (e.target.id === 'compare-modal') closeCompareModal();
@@ -453,6 +459,12 @@ document.addEventListener('DOMContentLoaded', () => {
         'Beneficios bancarios de ejemplo en UP. Sin datos de tarjeta, vencimiento ni CVV.',
     },
     { path: '/tiendas', view: storesPlaceholder, title: 'Tiendas y mapa · UP' },
+    {
+      path: '/ayuda/datos',
+      view: dataHelpView,
+      title: 'Cómo obtenemos los precios · UP',
+      description: 'Fuentes, frecuencia y significado de las etiquetas de precios en UP.',
+    },
     { path: '/login', view: loginView, title: 'Ingresar · UP' },
     { path: '/registro', view: registerView, title: 'Crear cuenta · UP' },
     { path: '/cuenta', view: accountView, title: 'Mi cuenta · UP' },
@@ -484,6 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeFilterSheet();
       closeCompareModal();
       closeCartDrawer();
+      $('report-modal').classList.add('hidden');
     },
     onAfter: ({ path }) => {
       if (path === '/') syncFilterInputs();
@@ -512,6 +525,10 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCompareModal();
       closeCartDrawer();
       closeCheckoutModal();
+      if (!$('report-modal').classList.contains('hidden')) {
+        $('report-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+      }
       return;
     }
     trapDialogTab(e);

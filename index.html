@@ -136,7 +136,7 @@
       <div class="up-container up-hero-inner">
         <div class="up-hero-copy">
           <span class="up-eyebrow">DESPENSA CHILE · 5 SUPERMERCADOS</span>
-          <h1>Compara precios. Llena tu carrito. <span class="up-gold-word">Paga una sola vez.</span></h1>
+          <h1 tabindex="-1">Compara precios. Llena tu carrito. <span class="up-gold-word">Paga una sola vez.</span></h1>
           <p>
             Encuentra el mejor precio de cada producto, arma carritos por supermercado y revisa tu
             ahorro antes de pagar.
@@ -561,6 +561,7 @@
         </div>
         <div>
           <h2>Ayuda</h2>
+          <a href="#/ayuda/datos">Cómo obtenemos los precios</a>
           <a href="#como-funciona">Preguntas frecuentes</a>
           <a href="#catalogo">Buscar productos</a>
           <span>Atención: hola@up.cl</span>
@@ -607,6 +608,13 @@
             <span id="modal-product-category" class="up-chip">Bebidas</span>
           </div>
           <button
+            id="report-compare-price"
+            type="button"
+            class="up-btn-secondary up-compare-report"
+          >
+            Reportar precio incorrecto
+          </button>
+          <button
             id="close-compare-modal"
             type="button"
             aria-label="Cerrar comparador"
@@ -649,6 +657,52 @@
             Los enlaces usan la ficha oficial cuando existe; si no, una búsqueda exacta por SKU o
             GTIN.
           </p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="report-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="report-title"
+      aria-describedby="report-description"
+      class="hidden up-modal"
+    >
+      <div class="up-modal-card up-report-card">
+        <div class="up-modal-head">
+          <h2 id="report-title">Reportar precio incorrecto</h2>
+          <button id="close-report-modal" type="button" aria-label="Cerrar reporte" class="up-icon-btn">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="up-modal-body">
+          <p id="report-description" class="up-text-muted">
+            Producto: <strong id="report-product-name"></strong>. Tu reporte se guarda sólo en este
+            navegador y no envía datos personales.
+          </p>
+          <form id="report-form" novalidate>
+            <p class="up-field">
+              <label for="report-chain">Cadena afectada</label>
+              <select id="report-chain" name="chain" required></select>
+            </p>
+            <p class="up-field">
+              <label for="report-reason">Motivo</label>
+              <select id="report-reason" name="reason" required></select>
+            </p>
+            <p class="up-field">
+              <label for="report-comment">Comentario opcional</label>
+              <textarea id="report-comment" name="comment" rows="3" maxlength="500"></textarea>
+            </p>
+            <p id="report-form-error" class="up-field-error" role="alert" hidden></p>
+            <p id="report-limit-note" class="up-text-muted"></p>
+            <div class="up-report-actions">
+              <button id="cancel-report-btn" type="button" class="up-btn-secondary">Cancelar</button>
+              <button type="submit" class="up-btn-primary">Enviar reporte</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

@@ -3,8 +3,16 @@
  */
 import { $, esc, formatCLP, getProductSVG, safeAssetUrl, safeHttpUrl } from './utils.js';
 import { getProduct, setActiveProduct, addReindex } from './state.js';
-import { getProductStats, unitPriceFor } from './catalog.js';
-import { linkMarkup } from './ui.js';
+import {
+  effectiveSku,
+  getConfirmedProductStats,
+  getProductStats,
+  unitPriceFor,
+} from './catalog.js';
+import { freshnessFor, verifiedPriceLabel } from './freshness.js';
+import { loadState } from './storage.js';
+import { freshnessBadge, linkMarkup } from './ui.js';
+import { openReportDialog } from './report-ui.js';
 import { offerLink, isPurchaseBlocked, verifyLink } from './links.js';
 import { addToCart } from './cart.js';
 import { openDialog, closeDialog } from './a11y.js';
@@ -30,8 +38,11 @@ export function openCompareModal(productId) {
   $('modal-product-name').textContent = product.name;
   $('modal-product-desc').textContent =
     `${product.unit} — Comparativa ordenada de menor a mayor precio en 5 supermercados de Chile.`;
+  const overrides = loadState().overrides;
+  const confirmedBest =
+    getConfirmedProductStats(product, { overrides }).minPrice === stats.minPrice;
   $('modal-best-price-badge').textContent =
-    `MEJOR PRECIO: ${formatCLP(stats.minPrice)} (${stats.bestStore ? stats.bestStore.short : '—'})`;
+    `${confirmedBest ? 'MEJOR PRECIO' : 'MENOR PRECIO REFERENCIAL'}: ${formatCLP(stats.minPrice)} (${stats.bestStore ? stats.bestStore.short : '—'})`;
   $('modal-savings-badge').textContent = `AHORRO MÁXIMO: ${formatCLP(stats.maxSavings)}`;
 
   const listEl = $('modal-stores-list');
@@ -42,8 +53,10 @@ export function openCompareModal(productId) {
       const linkInfo = linkMarkup(product, entry.storeId);
       const link = offerLink(product, entry.storeId);
       const blocked = isPurchaseBlocked(product, entry.storeId, linkInfo.broken);
-      const pricing = (product.skus && product.skus[entry.storeId]) || {};
+      const pricing = effectiveSku(product, entry.storeId, overrides);
       const priceVerified = pricing.priceSource === 'pricto' && pricing.status === 'verified';
+      const fresh = freshnessFor(pricing);
+      const verifiedLabel = verifiedPriceLabel(pricing);
       const referential = !blocked && !link.canonical && !priceVerified;
       const retailerUrl = safeHttpUrl(pricing.priceRetailerUrl);
       const attribution = priceVerified
@@ -61,7 +74,7 @@ export function openCompareModal(productId) {
             <b>${esc(entry.store.name)}</b>
             ${
               isBest
-                ? '<span class="up-chip up-chip--success">✓ Mejor precio</span>'
+                ? `<span class="up-chip ${confirmedBest ? 'up-chip--success' : ''}">${confirmedBest ? '✓ Mejor precio' : 'Menor precio'}</span>`
                 : `<span class="up-diff">+${formatCLP(diff)}</span>`
             }
           </span>
@@ -73,6 +86,9 @@ export function openCompareModal(productId) {
                 : ''
           }
           ${attribution}
+          ${fresh.stale ? '<span class="up-fresh up-fresh--warning">Precio desactualizado</span>' : freshnessBadge(product, entry.storeId, { compact: true })}
+          ${verifiedLabel ? `<span class="up-verified-label">${esc(verifiedLabel)}</span>` : ''}
+          <button type="button" class="up-link-btn up-report-row" data-report-chain="${esc(entry.storeId)}">Reportar precio</button>
           ${linkInfo.html}
         </th>
         <td><strong class="price up-compare-price">${formatCLP(entry.price)}</strong></td>
@@ -91,6 +107,10 @@ export function openCompareModal(productId) {
       </tr>`;
     })
     .join('');
+
+  listEl.querySelectorAll('[data-report-chain]').forEach((btn) => {
+    btn.addEventListener('click', () => openReportDialog(productId, btn.dataset.reportChain));
+  });
 
   listEl.querySelectorAll('.add-to-cart-btn').forEach((btn) => {
     btn.addEventListener('click', () => {

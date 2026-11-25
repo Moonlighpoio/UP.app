@@ -6,6 +6,8 @@
  */
 import { createDemoOrders } from './demo-orders.js';
 import { bankBenefitIds } from './demo-content.js';
+import { REPORT_REASONS, REPORT_STATUSES } from './reports.js';
+import { ANALYTICS_EVENTS } from './analytics.js';
 
 export const STORAGE_KEY = 'up_state_v2';
 export const STATE_VERSION = 2;
@@ -23,6 +25,25 @@ function defaultState() {
     addresses: [],
     favoriteBenefits: [],
     profile: null,
+    reports: [],
+    analytics: [],
+    audit: [],
+    overrides: {},
+    flags: {},
+    settings: {
+      staleDays: 7,
+      outlierPct: 40,
+      maxReportsPerHour: 3,
+      syncLimit: 50,
+      noticeVersion: 1,
+    },
+    lists: [],
+    favorites: [],
+    alerts: [],
+    notifications: [],
+    preferences: null,
+    surveys: [],
+    jobs: [],
   };
 }
 
@@ -50,19 +71,25 @@ function sanitizeCart(value) {
 
 function sanitizeUsers(value) {
   if (!Array.isArray(value)) return [];
-  return value.filter((user) => {
-    if (!isObject(user) || typeof user.email !== 'string') return false;
-    const hash = user.passwordHash;
-    return (
-      typeof user.id === 'string' &&
-      typeof user.name === 'string' &&
-      isObject(hash) &&
-      typeof hash.salt === 'string' &&
-      typeof hash.hash === 'string' &&
-      Number.isInteger(hash.iterations) &&
-      hash.iterations > 0
-    );
-  });
+  return value
+    .filter((user) => {
+      if (!isObject(user) || typeof user.email !== 'string') return false;
+      const hash = user.passwordHash;
+      return (
+        typeof user.id === 'string' &&
+        typeof user.name === 'string' &&
+        isObject(hash) &&
+        typeof hash.salt === 'string' &&
+        typeof hash.hash === 'string' &&
+        Number.isInteger(hash.iterations) &&
+        hash.iterations > 0
+      );
+    })
+    .map((user) => ({
+      ...user,
+      role: user.role === 'admin' ? 'admin' : 'viewer',
+      active: user.active !== false,
+    }));
 }
 
 function sanitizeSession(value, users) {
@@ -121,6 +148,157 @@ function sanitizeFavoriteBenefits(value) {
   return [...new Set(value.filter((id) => typeof id === 'string' && known.has(id)))];
 }
 
+function sanitizeReports(value) {
+  if (!Array.isArray(value)) return [];
+  const reasons = new Set(REPORT_REASONS.map((item) => item.value));
+  const statuses = new Set(REPORT_STATUSES);
+  return value
+    .filter(
+      (item) =>
+        isObject(item) &&
+        typeof item.id === 'string' &&
+        typeof item.productId === 'string' &&
+        typeof item.chain === 'string' &&
+        reasons.has(item.reason) &&
+        statuses.has(item.status) &&
+        Number.isFinite(Date.parse(item.createdAt))
+    )
+    .slice(-500)
+    .map((item) => ({
+      ...item,
+      comment: String(item.comment || '').slice(0, 500),
+      userId: typeof item.userId === 'string' ? item.userId : null,
+      resolvedBy: typeof item.resolvedBy === 'string' ? item.resolvedBy : null,
+      resolvedAt: Number.isFinite(Date.parse(item.resolvedAt)) ? item.resolvedAt : null,
+    }));
+}
+
+function sanitizeEvents(value, allowed) {
+  if (!Array.isArray(value)) return [];
+  const names = new Set(allowed);
+  return value
+    .filter(
+      (item) => isObject(item) && names.has(item.event) && Number.isFinite(Date.parse(item.at))
+    )
+    .slice(-1000)
+    .map((item) => ({ ...item, props: isObject(item.props) ? item.props : {} }));
+}
+
+function sanitizeAudit(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (item) =>
+        isObject(item) && typeof item.action === 'string' && Number.isFinite(Date.parse(item.at))
+    )
+    .slice(-500);
+}
+
+function sanitizeOverrides(value) {
+  if (!isObject(value)) return {};
+  const out = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (isObject(item) && item.status === 'pending' && Number.isFinite(Date.parse(item.at))) {
+      out[key] = {
+        status: 'pending',
+        at: item.at,
+        reportId: typeof item.reportId === 'string' ? item.reportId : null,
+      };
+    }
+  }
+  return out;
+}
+
+function sanitizeFlags(value) {
+  if (!isObject(value)) return {};
+  const out = {};
+  for (const [key, enabled] of Object.entries(value)) {
+    if (/^[a-z0-9-]+$/.test(key)) out[key] = enabled === true;
+  }
+  return out;
+}
+
+function sanitizeSettings(value) {
+  const base = defaultState().settings;
+  if (!isObject(value)) return base;
+  const positive = (input, fallback, min, max) => {
+    const n = Number(input);
+    return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+  };
+  return {
+    ...base,
+    staleDays: positive(value.staleDays, base.staleDays, 1, 365),
+    outlierPct: positive(value.outlierPct, base.outlierPct, 5, 95),
+    maxReportsPerHour: Math.round(positive(value.maxReportsPerHour, base.maxReportsPerHour, 1, 20)),
+    syncLimit: Math.round(positive(value.syncLimit, base.syncLimit, 1, 500)),
+    noticeVersion: Math.round(positive(value.noticeVersion, base.noticeVersion, 1, 999)),
+  };
+}
+
+function sanitizeLists(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (list) => isObject(list) && typeof list.id === 'string' && typeof list.name === 'string'
+    )
+    .map((list) => ({
+      ...list,
+      name: list.name.slice(0, 60),
+      items: Array.isArray(list.items)
+        ? list.items.filter((item) => isObject(item) && typeof item.productId === 'string')
+        : [],
+    }));
+}
+
+function sanitizeFavorites(value) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((id) => typeof id === 'string'))].slice(0, 300);
+}
+
+function sanitizeAlerts(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (alert) =>
+        isObject(alert) &&
+        typeof alert.id === 'string' &&
+        typeof alert.productId === 'string' &&
+        typeof alert.chain === 'string' &&
+        Number.isFinite(alert.targetPrice)
+    )
+    .slice(-300);
+}
+
+function sanitizeNotifications(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(
+      (item) =>
+        isObject(item) && typeof item.id === 'string' && Number.isFinite(Date.parse(item.at))
+    )
+    .slice(-100);
+}
+
+function sanitizePreferences(value) {
+  if (!isObject(value)) return null;
+  return {
+    commune: typeof value.commune === 'string' ? value.commune.slice(0, 80) : '',
+    chains: Array.isArray(value.chains) ? value.chains.filter((id) => typeof id === 'string') : [],
+    delivery: value.delivery === 'retiro' ? 'retiro' : 'despacho',
+    onboarded: value.onboarded === true,
+  };
+}
+
+function sanitizeSurveys(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => isObject(item) && Number.isFinite(Date.parse(item.at))).slice(-200);
+}
+
+function sanitizeJobs(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => isObject(item) && typeof item.id === 'string').slice(-100);
+}
+
 function storage() {
   try {
     return globalThis.localStorage ?? null;
@@ -157,6 +335,19 @@ export function loadState() {
       addresses: sanitizeAddresses(parsed.addresses),
       favoriteBenefits: sanitizeFavoriteBenefits(parsed.favoriteBenefits),
       profile: isObject(parsed.profile) ? parsed.profile : null,
+      reports: sanitizeReports(parsed.reports),
+      analytics: sanitizeEvents(parsed.analytics, ANALYTICS_EVENTS),
+      audit: sanitizeAudit(parsed.audit),
+      overrides: sanitizeOverrides(parsed.overrides),
+      flags: sanitizeFlags(parsed.flags),
+      settings: sanitizeSettings(parsed.settings),
+      lists: sanitizeLists(parsed.lists),
+      favorites: sanitizeFavorites(parsed.favorites),
+      alerts: sanitizeAlerts(parsed.alerts),
+      notifications: sanitizeNotifications(parsed.notifications),
+      preferences: sanitizePreferences(parsed.preferences),
+      surveys: sanitizeSurveys(parsed.surveys),
+      jobs: sanitizeJobs(parsed.jobs),
     };
   } catch {
     try {
@@ -206,6 +397,14 @@ export function clearPersonalData() {
     state.addresses = [];
     state.favoriteBenefits = [];
     state.profile = null;
+    state.reports = (state.reports || []).map((report) => ({ ...report, userId: null }));
+    state.audit = (state.audit || []).map((entry) => ({ ...entry, who: 'anonimo' }));
+    state.lists = [];
+    state.favorites = [];
+    state.alerts = [];
+    state.notifications = [];
+    state.preferences = null;
+    state.surveys = [];
   });
 }
 

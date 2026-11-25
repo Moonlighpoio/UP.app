@@ -5,7 +5,14 @@
 import { $, esc, formatCLP, getProductSVG, safeAssetUrl } from './utils.js';
 import { STATIC_DEMO, STORES } from './config.js';
 import { state, getLinkVerification, hasReindex } from './state.js';
-import { getProductStats, unitPriceFor } from './catalog.js';
+import {
+  effectiveSku,
+  getConfirmedProductStats,
+  getProductStats,
+  unitPriceFor,
+} from './catalog.js';
+import { freshnessFor, isVerifiedFresh } from './freshness.js';
+import { loadState } from './storage.js';
 import { offerLink, reindexKey } from './links.js';
 import { addToCart, calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
 import { openDialog, closeDialog } from './a11y.js';
@@ -308,6 +315,23 @@ function quantityFor(productId) {
   return cardQuantities.get(productId) || 1;
 }
 
+/** Sello de frescura: nunca afirma "actualizado" si la oferta no está verificada. */
+export function freshnessBadge(product, storeId, { compact = false } = {}) {
+  if (!storeId) return '';
+  const sku = effectiveSku(product, storeId, loadState().overrides);
+  const fresh = freshnessFor(sku);
+  let tone = fresh.tone;
+  let text = fresh.label;
+  if (fresh.stale) {
+    tone = 'warning';
+    text = 'Precio desactualizado';
+  } else if (!isVerifiedFresh(sku)) {
+    tone = 'neutral';
+    text = 'Sin confirmar';
+  }
+  return `<span class="up-fresh up-fresh--${tone}">${esc(compact && text.startsWith('Actualizado') ? fresh.shortLabel : text)}</span>`;
+}
+
 function infoTip(label, text) {
   return `<span class="up-info" tabindex="0" role="img" aria-label="${esc(label)}: ${esc(text)}">ⓘ<span class="up-info-pop" role="tooltip">${esc(text)}</span></span>`;
 }
@@ -338,12 +362,21 @@ export function renderProducts() {
       const unit = unitPriceFor(product, shown.price);
       const image = safeAssetUrl(product.image);
       const qty = quantityFor(product.id);
+      const confirmedBest =
+        shown.best &&
+        getConfirmedProductStats(product, { overrides: loadState().overrides }).minPrice ===
+          shown.price;
       const badges = [
-        shown.best ? '<span class="up-badge up-badge--best">Mejor precio</span>' : '',
+        confirmedBest
+          ? '<span class="up-badge up-badge--best">Mejor precio</span>'
+          : shown.best
+            ? '<span class="up-badge up-badge--referential">Precio referencial</span>'
+            : '',
         hasOffer(product) ? '<span class="up-badge up-badge--offer">Oferta</span>' : '',
         hasConfirmedPrice(product)
           ? '<span class="up-badge up-badge--verified">Precio verificado</span>'
           : '',
+        freshnessBadge(product, shown.store?.id, { compact: true }),
       ].join('');
 
       return `
@@ -369,7 +402,11 @@ export function renderProducts() {
           <div class="up-card-price">
             <div>
               <span class="up-card-price-label">${
-                shown.best ? 'DESDE' : `PRECIO EN ${shown.store ? esc(shown.store.short) : '—'}`
+                confirmedBest
+                  ? 'DESDE'
+                  : shown.best
+                    ? 'MENOR PRECIO REFERENCIAL'
+                    : `PRECIO EN ${shown.store ? esc(shown.store.short) : '—'}`
               }</span>
               <strong class="price">${formatCLP(shown.price)}</strong>
             </div>

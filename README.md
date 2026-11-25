@@ -916,3 +916,26 @@ Además, en cada push a `main` se verifica: CI **success**, demo pública **200*
 - **Feed real:** seguir [§3.1](#31-api-oficial--convenio-recomendado) o [§3.2](#32-archivo-de-precios-reales); nunca commitear `data/live-prices.json`.
 - **Identidad visual:** cambiar los tokens en `:root` de `styles.css` y revalidar el contraste del acento amarillo.
 - **Deploy:** repetir los comandos de [§9](#9-calidad-y-ci) antes de dar por cerrada cualquier entrega.
+
+## 15. FASE U1 · Confianza en los datos
+
+El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto de la sección 14.3 sobre el tema claro quedó obsoleto y no debe aplicarse.
+
+### Sello de frescura y mejor precio
+
+- `src/freshness.js` deriva la fecha de captura de `priceCapturedAt || verifiedAt` sin tocar SQLite ni los artefactos derivados. Nunca inventa una fecha: sin fecha, la oferta se trata como **desactualizada**.
+- `STALE_DAYS = 7` en `src/config.js`. `freshnessFor()` produce «Actualizado hace 3 h», «Precio desactualizado» o «Sin confirmar»; `verifiedPriceLabel()` muestra «Precio verificado el DD/MM» en es-CL.
+- `getConfirmedProductStats()` y `hasVerifiedFreshPrice()` en `src/catalog.js` son los únicos que pueden reclamar «Mejor precio»: exigen `status === 'verified'` **y** fecha vigente. Las tarjetas, el detalle y el comparador muestran «Menor precio referencial» cuando no hay una oferta verificada y fresca. En la demo actual las 180 ofertas están `pending`, por lo que no se muestra ningún «Mejor precio».
+
+### Reportes de precio
+
+- `src/reports.js` crea reportes con `id, productId, chain, reason, comment, userId|null, createdAt, status (abierto|aceptado|rechazado), resolvedBy, resolvedAt`.
+- Motivos: precio distinto, enlace roto, producto no disponible y otro. El modal (`src/report-ui.js`) está en el detalle y en el comparador; enfoca el selector de motivo, permite Escape y se cierra al navegar.
+- Límite local: **3 reportes por usuario (o anónimo) por hora** (`MAX_REPORTS_PER_HOUR`, `REPORT_WINDOW_MS`). Al superarlo se muestra un error accesible; `moderateReport()` permite aceptar (marca la oferta como `pending` mediante `overrides`) o rechazar (exige motivo) y escribe en `audit`.
+- Todo se guarda en `up_state_v2`: claves `reports`, `analytics`, `audit` y `overrides`. No se envía nada a un servidor ni se guardan datos de tarjeta.
+
+### Página de ayuda y rendimiento
+
+- `#/ayuda/datos` explica fuentes, frecuencia, etiquetas (Verificado, Sin confirmar, Desactualizado, Ejemplo) y que los precios son referenciales. Está enlazada desde el pie y desde el detalle.
+- `server.js` comprime con gzip los estáticos texto (HTML/CSS/JS/JSON/SVG) cuando el cliente lo acepta; sin servidor, GitHub Pages ya comprime. Las fuentes usan `font-display: optional` para evitar un repintado tardío del LCP.
+- Verificación U1: 160 tests, 36/36 pares AA, 26/26 comprobaciones CDP y Lighthouse móvil aislado **97 Performance / 100 Accesibilidad** en `http://localhost:3100/`.

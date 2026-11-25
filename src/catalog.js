@@ -4,6 +4,8 @@
 import { CHAIN_IDS, STORES } from './config.js';
 import { categoriesFrom, setCatalog } from './state.js';
 import { norm } from './utils.js';
+import { isVerifiedFresh } from './freshness.js';
+import { overrideKey } from './reports.js';
 
 const UNIT_CANON = {
   kg: 'kg',
@@ -108,6 +110,48 @@ export function applyDemoData(data) {
   const products = mapDemoData(data);
   setCatalog(products, categoriesFrom(products));
   return products;
+}
+
+function skuFor(product, storeId, overrides) {
+  const sku = { ...(product.skus?.[storeId] || {}) };
+  if (overrides?.[overrideKey(product.id, storeId)]?.status === 'pending') sku.status = 'pending';
+  return sku;
+}
+
+/** SKU efectivo: aplica los cambios locales de moderación sin mutar el catálogo. */
+export function effectiveSku(product, storeId, overrides) {
+  return skuFor(product, storeId, overrides);
+}
+
+/** Sólo ofertas verificadas y frescas pueden reclamar "mejor precio" (U1). */
+export function getConfirmedProductStats(product, options = {}) {
+  const entries = Object.entries(product.prices || {})
+    .filter(([storeId, price]) => STORES[storeId] && Number.isFinite(price) && price > 0)
+    .filter(([storeId]) => isVerifiedFresh(skuFor(product, storeId, options.overrides), options))
+    .map(([storeId, price]) => ({
+      storeId,
+      price,
+      store: STORES[storeId],
+      sku: skuFor(product, storeId, options.overrides),
+    }))
+    .sort((a, b) => a.price - b.price);
+  if (!entries.length) {
+    return { sorted: [], minPrice: null, maxPrice: null, maxSavings: 0, bestStore: null };
+  }
+  return {
+    sorted: entries,
+    minPrice: entries[0].price,
+    maxPrice: entries[entries.length - 1].price,
+    maxSavings: entries[entries.length - 1].price - entries[0].price,
+    bestStore: entries[0].store,
+  };
+}
+
+export function hasVerifiedFreshPrice(product, options = {}) {
+  return Object.keys(product.prices || {}).some(
+    (storeId) =>
+      STORES[storeId] && isVerifiedFresh(skuFor(product, storeId, options.overrides), options)
+  );
 }
 
 export function getProductStats(product) {

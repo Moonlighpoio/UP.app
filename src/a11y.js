@@ -50,9 +50,10 @@ export function closeDialog(el) {
 /** Mantiene el foco dentro del diálogo visible (WCAG 2.1.2, sin trampa real: Escape siempre cierra). */
 export function trapDialogTab(event) {
   if (event.key !== 'Tab') return false;
-  const dialog = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]')).find(
-    (el) => !el.classList.contains('hidden')
-  );
+  // El diálogo activo es el último visible (el más reciente está por encima).
+  const dialog = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]'))
+    .filter((el) => !el.classList.contains('hidden'))
+    .at(-1);
   if (!dialog) return false;
 
   const items = visibleFocusables(dialog);

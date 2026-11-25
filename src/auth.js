@@ -171,6 +171,8 @@ export async function registerUser(state, input) {
     createdAt: now,
     termsAcceptedAt: now,
     isDemo: false,
+    role: 'viewer',
+    active: true,
   };
   state.users.push(user);
   state.session = createSession(user.id);

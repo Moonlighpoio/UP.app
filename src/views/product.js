@@ -1,7 +1,16 @@
 /** Ficha de producto (#/producto/:id), con descripción propia y precios por cadena. */
 import { esc, formatCLP, getProductSVG, safeAssetUrl, safeHttpUrl } from '../utils.js';
 import { getProduct, state } from '../state.js';
-import { getProductStats, unitPriceFor } from '../catalog.js';
+import {
+  effectiveSku,
+  getConfirmedProductStats,
+  getProductStats,
+  unitPriceFor,
+} from '../catalog.js';
+import { freshnessFor, verifiedPriceLabel } from '../freshness.js';
+import { freshnessBadge } from '../ui.js';
+import { loadState } from '../storage.js';
+import { openReportDialog } from '../report-ui.js';
 import { priceForDisplay } from '../filters.js';
 import { offerLink } from '../links.js';
 import { STATIC_DEMO } from '../config.js';
@@ -35,11 +44,14 @@ function relatedMarkup(product) {
 
 function priceRows(product) {
   const rows = getProductStats(product).sorted;
-  if (!rows.length) return '<tr><td colspan="3">No hay precios disponibles.</td></tr>';
+  const overrides = loadState().overrides;
+  if (!rows.length) return '<tr><td colspan="4">No hay precios disponibles.</td></tr>';
   return rows
     .map((entry) => {
-      const sku = product.skus?.[entry.storeId] || {};
+      const sku = effectiveSku(product, entry.storeId, overrides);
       const confirmed = sku.status === 'verified' && !STATIC_DEMO;
+      const fresh = freshnessFor(sku);
+      const verifiedLabel = verifiedPriceLabel(sku);
       return `
       <tr>
         <th scope="row">${esc(entry.store.name)}</th>
@@ -50,6 +62,10 @@ function priceRows(product) {
               ? `<a href="${esc(safeHttpUrl(offerLink(product, entry.storeId).url))}" target="_blank" rel="noopener noreferrer">Ver en tienda ↗</a>`
               : '<span class="up-text-muted">Sin enlace verificado</span>'
           }
+        </td>
+        <td>
+          ${fresh.stale ? '<span class="up-fresh up-fresh--warning">Precio desactualizado</span>' : `<span class="up-fresh up-fresh--${confirmed ? 'ok' : 'neutral'}">${esc(confirmed ? fresh.label : 'Sin confirmar')}</span>`}
+          ${verifiedLabel ? `<span class="up-verified-label">${esc(verifiedLabel)}</span>` : ''}
         </td>
       </tr>`;
     })
@@ -72,6 +88,11 @@ export const productView = {
     }
 
     const shown = priceForDisplay(product);
+    const overrides = loadState().overrides;
+    const confirmedStats = getConfirmedProductStats(product, { overrides });
+    const confirmedBest = shown.best && confirmedStats.minPrice === shown.price;
+    const shownSku = effectiveSku(product, shown.store?.id || '', overrides);
+    const verifiedLabel = verifiedPriceLabel(shownSku);
     const unit = unitPriceFor(product, shown.price);
     const image = safeAssetUrl(product.image);
     const link = offerLink(product, shown.store?.id || '');
@@ -109,11 +130,25 @@ export const productView = {
             <p class="up-detail-source">Origen: ${esc(product.descriptionSource || 'UP · texto propio (demo)')} · no reproduce fichas comerciales.</p>
 
             <div class="up-detail-price">
-              <span class="up-eyebrow">${shown.best ? 'MEJOR PRECIO REFERENCIAL' : 'PRECIO REFERENCIAL'}</span>
+              <span class="up-eyebrow">${
+                confirmedBest
+                  ? 'MEJOR PRECIO'
+                  : shown.best
+                    ? 'MENOR PRECIO REFERENCIAL'
+                    : 'PRECIO REFERENCIAL'
+              }</span>
               <strong class="price">${formatCLP(shown.price)}</strong>
               <span>${shown.store ? esc(shown.store.name) : 'Sin tienda disponible'}</span>
               ${unit ? `<span class="up-detail-unit">${formatCLP(unit.value)} ${esc(unit.label)} · estimado</span>` : ''}
+              <span class="up-detail-freshness">${freshnessBadge(product, shown.store?.id)}</span>
+              ${verifiedLabel ? `<span class="up-verified-label">${esc(verifiedLabel)}</span>` : ''}
             </div>
+            <p class="up-detail-report">
+              <button type="button" class="up-link-btn" data-report-price>
+                Reportar precio incorrecto
+              </button>
+              <a href="#/ayuda/datos">Cómo obtenemos los precios</a>
+            </p>
 
             <div class="up-detail-buy">
               <div class="up-qty" role="group" aria-label="Cantidad de ${esc(product.name)}">
@@ -139,7 +174,7 @@ export const productView = {
             <table class="up-data-table">
               <caption>Sólo se muestra un precio confirmado cuando su fuente está verificada.</caption>
               <thead>
-                <tr><th scope="col">Supermercado</th><th scope="col">Precio</th><th scope="col">Enlace</th></tr>
+                <tr><th scope="col">Supermercado</th><th scope="col">Precio</th><th scope="col">Enlace</th><th scope="col">Frescura</th></tr>
               </thead>
               <tbody>${priceRows(product)}</tbody>
             </table>
@@ -158,6 +193,11 @@ export const productView = {
       if (deltaBtn) {
         qty = Math.max(1, Math.min(99, qty + Number(deltaBtn.dataset.detailQty)));
         container.querySelector('[data-detail-qty-value]').textContent = qty;
+        return;
+      }
+      const reportBtn = event.target.closest('[data-report-price]');
+      if (reportBtn) {
+        openReportDialog(product.id, shown.store?.id || '');
         return;
       }
       const addBtn = event.target.closest('[data-detail-add]');
