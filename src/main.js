@@ -13,6 +13,7 @@ import {
   applyUrlFilters,
   clearFilter,
   freeShippingChainIds,
+  priceBounds,
   resetAllFilters,
   syncUrlFilters,
 } from './filters.js';
@@ -28,6 +29,8 @@ import {
   closeFilterSheet,
   renderCartUI,
   initUI,
+  resetProductPaging,
+  showMoreProducts,
   openCartDrawer,
   closeCartDrawer,
   closeCheckoutModal,
@@ -75,16 +78,20 @@ document.addEventListener('DOMContentLoaded', () => {
     $('sort-select').value = state.sortBy;
   }
 
+  function popoverPanel(trigger) {
+    return document.getElementById(trigger.getAttribute('aria-controls'));
+  }
+
   function closePopovers() {
     document.querySelectorAll('[data-popover-trigger]').forEach((trigger) => {
       trigger.setAttribute('aria-expanded', 'false');
-      const panel = document.getElementById(trigger.dataset.popoverTrigger);
+      const panel = popoverPanel(trigger);
       if (panel) panel.hidden = true;
     });
   }
 
   function togglePopover(trigger) {
-    const panel = document.getElementById(trigger.dataset.popoverTrigger);
+    const panel = popoverPanel(trigger);
     if (!panel) return;
     const shouldOpen = panel.hidden;
     closePopovers();
@@ -93,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function refreshFilters() {
+    resetProductPaging();
     renderCategories();
     renderChainFilter();
     renderProducts();
@@ -250,6 +258,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!e.target.closest('.up-search')) hideSuggestions();
   });
 
+  // Doble pulgar: el slider escribe exactamente el mismo estado que los campos numéricos.
+  document.querySelectorAll('[data-range-input]').forEach((input) => {
+    input.addEventListener('input', () => {
+      const bounds = priceBounds();
+      const value = Number(input.value);
+      if (input.dataset.rangeInput === 'min') {
+        state.minPrice = value <= bounds.min ? 0 : Math.min(value, state.maxPrice);
+      } else {
+        state.maxPrice = value >= bounds.max ? Infinity : Math.max(value, state.minPrice);
+      }
+      refreshFilters();
+    });
+  });
+
   document.querySelectorAll('[data-filter-input]').forEach((input) => {
     input.addEventListener('change', () => {
       const raw = input.value.trim();
@@ -283,6 +305,12 @@ document.addEventListener('DOMContentLoaded', () => {
     $('demo-banner').classList.add('hidden');
   });
 
+  // Sombra sutil del header al desplazarse (solo capa visual).
+  const siteHeader = document.querySelector('.up-site-header');
+  const syncHeaderShadow = () => siteHeader.classList.toggle('is-scrolled', window.scrollY > 4);
+  window.addEventListener('scroll', syncHeaderShadow, { passive: true });
+  syncHeaderShadow();
+
   $('sort-select').addEventListener('change', (e) => {
     state.sortBy = e.target.value;
     refreshFilters();
@@ -293,6 +321,8 @@ document.addEventListener('DOMContentLoaded', () => {
     syncFilterInputs();
     refreshFilters();
   });
+
+  $('load-more-btn').addEventListener('click', showMoreProducts);
 
   $('refresh-prices-btn').addEventListener('click', () => refreshPrices(false, priceHooks));
 

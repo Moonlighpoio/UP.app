@@ -3,20 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#F6F6F3" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#0B0B0C" />
+    <meta name="color-scheme" content="dark" />
     <title>UP — Comparador de Supermercados Chile | Pago Unificado</title>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23111111'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-size='30' font-weight='bold' text-anchor='middle' fill='%23ffffff'%3EUP%3C/text%3E%3C/svg%3E"
-    />
+    <link rel="icon" type="image/jpeg" sizes="any" href="assets/brand/up-logo.jpeg" />
 
     <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link
+      rel="preload"
+      href="assets/fonts/libre-caslon-text-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
 
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <a href="#catalogo" class="skip-link">Saltar al catálogo</a>
+
+    <div class="up-splash" id="up-splash" aria-hidden="true">
+      <img src="assets/brand/up-logo.jpeg" alt="UP" width="110" height="62" />
+    </div>
 
     <div class="up-announcement" id="demo-banner">
       <p>Compara 5 supermercados en un solo carrito · Precios referenciales de demostración</p>
@@ -26,7 +34,7 @@
         class="up-announcement-close"
         aria-label="Cerrar aviso de demostración"
       >
-        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
         </svg>
       </button>
@@ -34,7 +42,15 @@
 
     <header class="up-site-header">
       <div class="up-container up-header-main">
-        <a href="#top" class="up-logo" aria-label="UP, volver al inicio">UP</a>
+        <a href="#top" class="up-logo" aria-label="UP, volver al inicio">
+          <img
+            class="up-logo-img"
+            src="assets/brand/up-logo.jpeg"
+            alt="UP"
+            width="72"
+            height="40"
+          />
+        </a>
 
         <div class="up-search" role="search">
           <button
@@ -44,7 +60,7 @@
             aria-pressed="false"
             class="up-search-icon-btn"
           >
-            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <circle cx="9" cy="9" r="6" />
               <path d="M13.5 13.5L17.5 17.5" stroke-linecap="round" />
             </svg>
@@ -64,7 +80,7 @@
             class="up-search-clear hidden"
             aria-label="Limpiar búsqueda"
           >
-            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
             </svg>
           </button>
@@ -112,11 +128,17 @@
       <div class="up-container up-hero-inner">
         <div class="up-hero-copy">
           <span class="up-eyebrow">DESPENSA CHILE · 5 SUPERMERCADOS</span>
-          <h1>Compara precios. Llena tu carrito. Paga una sola vez.</h1>
+          <h1>Compara precios. Llena tu carrito. <span class="up-gold-word">Paga una sola vez.</span></h1>
           <p>
             Encuentra el mejor precio de cada producto, arma carritos por supermercado y revisa tu
             ahorro antes de pagar.
           </p>
+          <a href="#catalogo" class="up-btn-primary up-hero-cta">
+            Ver productos
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 10h11M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
         </div>
 
         <div class="up-hero-side">
@@ -178,20 +200,21 @@
 
     <section class="up-chains" aria-label="Supermercados disponibles">
       <div class="up-container up-chains-inner">
-        <h2>Compra en estas cadenas</h2>
+        <h2>Compra en <span class="up-gold-word">estas cadenas</span></h2>
         <div id="chain-strip" class="up-chain-list"></div>
       </div>
     </section>
 
     <main id="catalogo" class="up-container up-catalog">
       <div class="up-catalog-head">
-        <div>
+        <div class="up-catalog-heading">
           <span class="up-eyebrow">TU DESPENSA</span>
-          <h2>Productos y precios</h2>
+          <h2>Productos y <span class="up-gold-word">precios</span></h2>
           <p>El precio más bajo de cada producto, visible de un vistazo.</p>
+          <span id="results-count" aria-live="polite">0 productos</span>
         </div>
         <div class="up-catalog-tools">
-          <span id="results-count" aria-live="polite">0 productos</span>
+          <label for="sort-select">Ordenar</label>
           <select id="sort-select" aria-label="Ordenar resultados">
             <option value="default">Destacados</option>
             <option value="price-asc">Menor precio</option>
@@ -270,6 +293,28 @@
                   aria-label="Precio máximo"
                 />
               </label>
+              <div class="up-range" data-range-slider>
+                <div class="up-range-track" aria-hidden="true"><span data-range-fill></span></div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100000"
+                  step="100"
+                  value="0"
+                  data-range-input="min"
+                  aria-label="Deslizador de precio mínimo"
+                />
+                <input
+                  type="range"
+                  min="0"
+                  max="100000"
+                  step="100"
+                  value="100000"
+                  data-range-input="max"
+                  aria-label="Deslizador de precio máximo"
+                />
+              </div>
+              <p class="up-range-value" data-range-value></p>
               <p class="up-facet-note" data-count-for="price"></p>
             </div>
           </div>
@@ -283,6 +328,7 @@
           aria-pressed="false"
         >
           Solo ofertas
+          <span class="up-filter-count" data-count-for="offers"></span>
           <span class="up-filter-badge" data-active-count="offers"></span>
         </button>
 
@@ -294,6 +340,7 @@
           aria-pressed="false"
         >
           Despacho gratis
+          <span class="up-filter-count" data-count-for="shipping"></span>
           <span class="up-filter-badge" data-active-count="shipping"></span>
         </button>
 
@@ -359,6 +406,21 @@
 
       <div id="product-grid" class="up-product-grid"></div>
 
+      <div class="up-load-more">
+        <button
+          id="load-more-btn"
+          type="button"
+          class="up-btn-secondary"
+          aria-controls="product-grid"
+          hidden
+        >
+          <span data-load-more-label>Cargar más</span>
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+
       <div id="empty-state" class="hidden up-empty">
         <svg aria-hidden="true" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M18 22h28l4 28H14l4-28Z" stroke-linejoin="round" />
@@ -372,7 +434,8 @@
       </div>
     </main>
 
-    <section id="como-funciona" class="up-container up-how">
+    <section id="como-funciona" class="up-how">
+      <div class="up-container">
       <div class="up-section-head">
         <span class="up-eyebrow">CÓMO FUNCIONA</span>
         <h2>Compra con claridad</h2>
@@ -420,12 +483,21 @@
           </div>
         </div>
       </div>
+      </div>
     </section>
 
     <footer class="up-footer">
       <div class="up-container up-footer-grid">
         <div class="up-footer-brand">
-          <span class="up-logo up-logo--footer">UP</span>
+          <span class="up-logo up-logo--footer">
+            <img
+              class="up-logo-img up-logo-img--footer"
+              src="assets/brand/up-logo.jpeg"
+              alt="UP"
+              width="54"
+              height="30"
+            />
+          </span>
           <p>Compara, agrupa y paga tu despensa en un solo lugar.</p>
         </div>
         <div>
@@ -461,7 +533,7 @@
         </div>
         <button id="dock-open-cart-btn" type="button" class="up-btn-primary">
           Ver carrito
-          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M4 10h11M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </button>
@@ -487,7 +559,7 @@
             aria-label="Cerrar comparador"
             class="up-icon-btn"
           >
-            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
             </svg>
           </button>
@@ -542,7 +614,7 @@
             <p>Carritos separados por supermercado</p>
           </div>
           <button id="close-cart-btn" type="button" aria-label="Cerrar carrito" class="up-icon-btn">
-            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
             </svg>
           </button>
@@ -567,7 +639,7 @@
           </div>
           <button id="checkout-btn" type="button" class="up-btn-primary up-btn-block">
             Ir a pagar
-            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M4 10h11M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </button>
@@ -594,7 +666,7 @@
             aria-label="Cerrar comprobante"
             class="up-icon-btn"
           >
-            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
             </svg>
           </button>
@@ -748,21 +820,21 @@
             <p>Ajusta precio, cadena, plazo y disponibilidad.</p>
           </div>
           <button id="close-filter-sheet-btn" type="button" aria-label="Cerrar filtros" class="up-icon-btn">
-            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
             </svg>
           </button>
         </div>
 
         <div class="up-sheet-body">
-          <fieldset class="up-sheet-section">
-            <legend>Cadena</legend>
-            <div data-filter-options="chain-sheet"></div>
-          </fieldset>
+          <details class="up-sheet-section" open>
+            <summary>Cadena</summary>
+            <div class="up-sheet-section-body" data-filter-options="chain-sheet"></div>
+          </details>
 
-          <fieldset class="up-sheet-section">
-            <legend>Precio</legend>
-            <div data-filter-options="price-sheet">
+          <details class="up-sheet-section" open>
+            <summary>Precio</summary>
+            <div class="up-sheet-section-body" data-filter-options="price-sheet">
               <label class="up-price-field">
                 <span>Mínimo</span>
                 <input
@@ -785,41 +857,67 @@
                   aria-label="Precio máximo"
                 />
               </label>
+              <div class="up-range" data-range-slider>
+                <div class="up-range-track" aria-hidden="true"><span data-range-fill></span></div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100000"
+                  step="100"
+                  value="0"
+                  data-range-input="min"
+                  aria-label="Deslizador de precio mínimo"
+                />
+                <input
+                  type="range"
+                  min="0"
+                  max="100000"
+                  step="100"
+                  value="100000"
+                  data-range-input="max"
+                  aria-label="Deslizador de precio máximo"
+                />
+              </div>
+              <p class="up-range-value" data-range-value></p>
               <p class="up-facet-note" data-count-for="price"></p>
             </div>
-          </fieldset>
+          </details>
 
-          <fieldset class="up-sheet-section">
-            <legend>Promociones</legend>
-            <button
-              type="button"
-              class="up-sheet-toggle"
-              data-toggle-filter="offers"
-              aria-pressed="false"
-            >
-              Solo ofertas
-              <span class="up-facet-count" data-count-for="offers"></span>
-            </button>
-          </fieldset>
+          <details class="up-sheet-section">
+            <summary>Promociones</summary>
+            <div class="up-sheet-section-body">
+              <button
+                type="button"
+                class="up-sheet-toggle"
+                data-toggle-filter="offers"
+                aria-pressed="false"
+              >
+                Solo ofertas
+                <span class="up-facet-count" data-count-for="offers"></span>
+              </button>
+            </div>
+          </details>
 
-          <fieldset class="up-sheet-section">
-            <legend>Despacho y plazo</legend>
-            <button
-              type="button"
-              class="up-sheet-toggle"
-              data-toggle-filter="shipping"
-              aria-pressed="false"
-            >
-              Despacho gratis en carrito
-              <span class="up-facet-count" data-count-for="shipping"></span>
-            </button>
-            <div data-filter-options="delivery-sheet"></div>
-          </fieldset>
+          <details class="up-sheet-section">
+            <summary>Despacho y plazo</summary>
+            <div class="up-sheet-section-body">
+              <button
+                type="button"
+                class="up-sheet-toggle"
+                data-toggle-filter="shipping"
+                aria-pressed="false"
+              >
+                Despacho gratis en carrito
+                <span class="up-facet-count" data-count-for="shipping"></span>
+              </button>
+              <div data-filter-options="delivery-sheet"></div>
+            </div>
+          </details>
 
-          <fieldset class="up-sheet-section">
-            <legend>Disponibilidad del precio</legend>
-            <div data-filter-options="availability-sheet"></div>
-          </fieldset>
+          <details class="up-sheet-section">
+            <summary>Disponibilidad del precio</summary>
+            <div class="up-sheet-section-body" data-filter-options="availability-sheet"></div>
+          </details>
         </div>
 
         <div class="up-sheet-footer">

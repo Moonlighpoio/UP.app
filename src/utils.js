@@ -60,7 +60,7 @@ export function getProductSVG(iconType) {
       <path d="M20 22L26 12H38L44 22V54H20V22Z" stroke="currentColor"/>
       <line x1="20" y1="22" x2="44" y2="22" stroke="currentColor"/>
       <rect x="25" y="30" width="14" height="12" stroke="currentColor" stroke-dasharray="2 2"/>
-      <line x1="28" y1="12" x2="36" y2="12" stroke="currentColor" stroke-width="2.5"/>
+      <line x1="28" y1="12" x2="36" y2="12" stroke="currentColor" stroke-width="1.5"/>
     </svg>`,
     jar: `<svg aria-hidden="true" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
       <rect x="22" y="12" width="20" height="6" rx="1" stroke="currentColor"/>

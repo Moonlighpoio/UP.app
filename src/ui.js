@@ -25,10 +25,36 @@ import {
 
 const uiHooks = { onOpenCompare: () => {} };
 const cardQuantities = new Map();
+const PAGE_SIZE = 12;
+let visibleLimit = PAGE_SIZE;
 let toastTimer;
 
 export function initUI(nextHooks = {}) {
   uiHooks.onOpenCompare = nextHooks.onOpenCompare || uiHooks.onOpenCompare;
+}
+
+/** La paginación es solo presentación: las tarjetas siguen en el DOM. */
+export function resetProductPaging() {
+  visibleLimit = PAGE_SIZE;
+}
+
+export function showMoreProducts() {
+  visibleLimit += PAGE_SIZE;
+  updateProductVisibility();
+}
+
+function updateProductVisibility() {
+  const cards = Array.from(document.querySelectorAll('#product-grid .up-product-card'));
+  cards.forEach((card, index) => {
+    card.hidden = index >= visibleLimit;
+  });
+  const button = document.querySelector('#load-more-btn');
+  if (!button) return;
+  const remaining = Math.max(0, cards.length - visibleLimit);
+  button.hidden = remaining === 0;
+  button.setAttribute('aria-label', `Cargar ${remaining} productos más`);
+  const label = button.querySelector('[data-load-more-label]');
+  if (label) label.textContent = remaining ? `Cargar más (${remaining})` : 'Cargar más';
 }
 
 export function showToast(msg) {
@@ -63,7 +89,7 @@ const CATEGORY_ICONS = {
 
 function categoryIcon(category) {
   const paths = CATEGORY_ICONS[category] || CATEGORY_ICONS.TODOS;
-  return `<svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4">${paths}</svg>`;
+  return `<svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">${paths}</svg>`;
 }
 
 export function renderCategories() {
@@ -144,6 +170,35 @@ export function updateFreeShippingButton() {
   });
 }
 
+/** Mantiene los dos ranges, la barra de relleno y el texto de precio en sync. */
+export function syncPriceRange() {
+  const bounds = priceBounds();
+  const lo = state.minPrice > 0 ? state.minPrice : bounds.min;
+  const hi = Number.isFinite(state.maxPrice) ? state.maxPrice : bounds.max;
+
+  document.querySelectorAll('[data-range-input]').forEach((input) => {
+    input.min = String(bounds.min);
+    input.max = String(bounds.max);
+    input.step = '100';
+    if (document.activeElement !== input) {
+      input.value = String(input.dataset.rangeInput === 'min' ? lo : hi);
+    }
+  });
+
+  document.querySelectorAll('[data-range-slider]').forEach((slider) => {
+    const start = Math.min(lo, hi);
+    const end = Math.max(lo, hi);
+    const span = Math.max(1, bounds.max - bounds.min);
+    const fill = slider.querySelector('[data-range-fill]');
+    if (fill) {
+      fill.style.left = `${((start - bounds.min) / span) * 100}%`;
+      fill.style.width = `${((end - start) / span) * 100}%`;
+    }
+    const readout = slider.parentElement.querySelector('[data-range-value]');
+    if (readout) readout.textContent = `${formatCLP(start)} – ${formatCLP(end)}`;
+  });
+}
+
 export function renderFilterControls() {
   const counts = facetCounts();
   const bounds = priceBounds();
@@ -198,6 +253,7 @@ export function renderFilterControls() {
     button.classList.toggle('up-active', state.offersOnly);
   });
   updateFreeShippingButton();
+  syncPriceRange();
 
   const productWord = counts.all === 1 ? 'producto' : 'productos';
   document.querySelectorAll('[data-count-for="price"]').forEach((el) => {
@@ -262,12 +318,15 @@ export function renderProducts() {
   const countEl = $('results-count');
 
   const filtered = sortProducts(state.products.filter(matchesFilters));
+  const productWord = filtered.length === 1 ? 'producto' : 'productos';
 
-  countEl.textContent = `${filtered.length} PRODUCTO${filtered.length === 1 ? '' : 'S'}`;
+  countEl.textContent = `${filtered.length} ${productWord}`;
 
   if (!filtered.length) {
     grid.innerHTML = '';
     emptyState.classList.remove('hidden');
+    const loadMore = document.querySelector('#load-more-btn');
+    if (loadMore) loadMore.hidden = true;
     return;
   }
   emptyState.classList.add('hidden');
@@ -366,6 +425,8 @@ export function renderProducts() {
       </article>`;
     })
     .join('');
+
+  updateProductVisibility();
 
   // Delegación: 2 listeners para todas las tarjetas, sin importar cuántas haya.
   grid.onclick = (e) => {
