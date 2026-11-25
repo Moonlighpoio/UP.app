@@ -11,6 +11,8 @@
     />
     <title>UP — Comparador de Supermercados Chile | Pago Unificado</title>
     <link rel="icon" type="image/jpeg" sizes="any" href="assets/brand/up-logo.jpeg" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
 
     <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link
@@ -44,6 +46,11 @@
           <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
         </svg>
       </button>
+    </div>
+
+    <div id="offline-banner" class="up-offline-banner" role="status" aria-live="polite" hidden>
+      <p><strong>Sin conexión.</strong> Tu lista, favoritos y carritos guardados siguen en este navegador. Las acciones del servidor se reanudan al reconectar.</p>
+      <button type="button" id="pwa-install-btn" class="up-btn-secondary" hidden>Instalar UP</button>
     </div>
 
     <header class="up-site-header">
@@ -595,7 +602,7 @@
         <div>
           <h2>Ayuda</h2>
           <a href="#/ayuda/datos">Cómo obtenemos los precios</a>
-          <a href="#como-funciona">Preguntas frecuentes</a>
+          <a href="#/ayuda">Preguntas frecuentes</a>
           <a href="#catalogo">Buscar productos</a>
           <span>Atención: hola@up.cl</span>
         </div>
@@ -624,6 +631,101 @@
             <path d="M4 10h11M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </button>
+      </div>
+    </div>
+
+    <nav id="bottom-nav" class="up-bottom-nav" aria-label="Navegación principal móvil">
+      <a href="#/" data-nav="home" aria-current="page">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-8Z" stroke-linejoin="round" />
+        </svg>
+        <span>Inicio</span>
+      </a>
+      <a href="#/buscar" data-nav="search">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="10" cy="10" r="6" /><path d="M14.5 14.5L20 20" stroke-linecap="round" />
+        </svg>
+        <span>Buscar</span>
+      </a>
+      <a href="#/ofertas" data-nav="ofertas">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M5 5h14v5a2 2 0 0 0 0 4v5H5v-5a2 2 0 0 0 0-4V5Z" stroke-linejoin="round" />
+          <path d="M12 5v14" stroke-linecap="round" />
+        </svg>
+        <span>Ofertas</span>
+      </a>
+      <a href="#/lista" data-nav="lista">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M8 6h12M8 12h12M8 18h12" stroke-linecap="round" />
+          <path d="M4 6h.01M4 12h.01M4 18h.01" stroke-linecap="round" />
+        </svg>
+        <span>Lista</span>
+      </a>
+      <a href="#/cuenta" data-nav="cuenta">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke-linecap="round" />
+        </svg>
+        <span>Cuenta</span>
+      </a>
+    </nav>
+
+    <div
+      id="onboarding-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-title"
+      class="hidden up-modal"
+    >
+      <div class="up-modal-card up-onboarding-card">
+        <div class="up-modal-head">
+          <div>
+            <span class="up-eyebrow">PRIMERA VISITA · MODO PRUEBA</span>
+            <h2 id="onboarding-title" tabindex="-1">Paso 1 de 3 · Tu comuna</h2>
+            <p id="onboarding-progress" class="up-text-muted">Paso 1 de 3</p>
+          </div>
+          <button id="onboarding-close" type="button" class="up-icon-btn" aria-label="Cerrar asistente">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="up-modal-body">
+          <section data-onboarding-step="1">
+            <h3>¿En qué comuna compras?</h3>
+            <p>Opcional. La usamos para ordenar ejemplos de sucursales; no se envía a ningún servidor.</p>
+            <label for="onboarding-commune">Comuna de la Región Metropolitana</label>
+            <input id="onboarding-commune" type="text" list="onboarding-commune-options" autocomplete="address-level2" />
+            <datalist id="onboarding-commune-options"></datalist>
+          </section>
+          <section data-onboarding-step="2" hidden>
+            <h3>¿Qué cadenas te interesan?</h3>
+            <p>Puedes elegir varias. Ordenamos los resultados de esas cadenas cuando no aplicas otro filtro.</p>
+            <fieldset id="onboarding-chains" class="up-onboarding-chains">
+              <legend class="up-sr-only">Cadenas preferidas</legend>
+            </fieldset>
+          </section>
+          <section data-onboarding-step="3" hidden>
+            <h3>¿Despacho o retiro?</h3>
+            <p>Esta preferencia precarga el checkout simulado. Puedes cambiarla después.</p>
+            <fieldset class="up-checkout-options">
+              <legend class="up-sr-only">Tipo de entrega preferida</legend>
+              <label class="up-checkout-option">
+                <input type="radio" name="onboarding-delivery" value="despacho" checked />
+                <span><b>Despacho a domicilio</b><small>Con franjas simuladas por cadena.</small></span>
+              </label>
+              <label class="up-checkout-option">
+                <input type="radio" name="onboarding-delivery" value="retiro" />
+                <span><b>Retiro en tienda</b><small>Con sucursal de ejemplo etiquetada.</small></span>
+              </label>
+            </fieldset>
+          </section>
+        </div>
+        <div class="up-modal-actions">
+          <button id="onboarding-skip" type="button" class="up-btn-secondary">Omitir</button>
+          <button id="onboarding-back" type="button" class="up-btn-secondary" hidden>Atrás</button>
+          <button id="onboarding-next" type="button" class="up-btn-primary">Siguiente</button>
+          <button id="onboarding-finish" type="button" class="up-btn-primary" hidden>Guardar preferencias</button>
+        </div>
       </div>
     </div>
 
@@ -1034,6 +1136,15 @@
             <span class="up-chip up-chip--success">Comprobante de prueba</span>
           </div>
           <dl id="checkout-receipt-meta" class="up-receipt-meta"></dl>
+          <fieldset id="checkout-survey" class="up-survey">
+            <legend>¿Qué tan fácil fue comprar? (opcional, 1 clic)</legend>
+            <label><input type="radio" name="survey-rating" value="1" /><span>1</span></label>
+            <label><input type="radio" name="survey-rating" value="2" /><span>2</span></label>
+            <label><input type="radio" name="survey-rating" value="3" /><span>3</span></label>
+            <label><input type="radio" name="survey-rating" value="4" /><span>4</span></label>
+            <label><input type="radio" name="survey-rating" value="5" /><span>5</span></label>
+            <p id="checkout-survey-note" class="up-text-muted" aria-live="polite">Sólo se guarda localmente para el panel.</p>
+          </fieldset>
           <div>
             <h3>Desglose por supermercado</h3>
             <div id="checkout-breakdown" class="up-breakdown"></div>

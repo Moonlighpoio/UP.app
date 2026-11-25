@@ -346,7 +346,31 @@ function sanitizePreferences(value) {
 
 function sanitizeSurveys(value) {
   if (!Array.isArray(value)) return [];
-  return value.filter((item) => isObject(item) && Number.isFinite(Date.parse(item.at))).slice(-200);
+  const seen = new Set();
+  return value
+    .filter((item) => {
+      if (
+        !isObject(item) ||
+        typeof item.id !== 'string' ||
+        typeof item.orderId !== 'string' ||
+        !Number.isInteger(Number(item.rating)) ||
+        Number(item.rating) < 1 ||
+        Number(item.rating) > 5 ||
+        !Number.isFinite(Date.parse(item.at)) ||
+        seen.has(item.orderId)
+      )
+        return false;
+      seen.add(item.orderId);
+      return true;
+    })
+    .map((item) => ({
+      id: item.id,
+      orderId: item.orderId,
+      rating: Number(item.rating),
+      at: item.at,
+      isDemo: true,
+    }))
+    .slice(-200);
 }
 
 function sanitizeJobs(value) {

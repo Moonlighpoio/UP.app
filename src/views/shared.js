@@ -131,6 +131,8 @@ export function accountShell(active, body) {
         <div class="up-account-nav-foot">
           <span class="up-eyebrow">MODO PRUEBA</span>
           <p>Tus datos viven sólo en este navegador.</p>
+          <button type="button" class="up-link-btn" data-open-onboarding>Preferencias de inicio</button>
+          <a class="up-link-btn" href="#/ayuda">Ayuda y contacto</a>
         </div>
       </nav>
       <section class="up-account-content" aria-label="Contenido de la cuenta">${body}</section>

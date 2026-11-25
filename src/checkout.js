@@ -16,6 +16,7 @@ import {
 import { openDialog } from './a11y.js';
 import { loadState, saveCart, updateState } from './storage.js';
 import { trackEvent } from './analytics.js';
+import { submitSurvey } from './surveys.js';
 import {
   communeSuggestions,
   foldText,
@@ -289,7 +290,13 @@ export function startCheckout() {
 
   closeCartDrawer();
   delivery.slots = {};
-  document.querySelector('input[name="delivery-mode"][value="domicilio"]').checked = true;
+  const preferredDelivery = loadState().preferences?.delivery === 'retiro' ? 'retiro' : 'domicilio';
+  document.querySelector(`input[name="delivery-mode"][value="${preferredDelivery}"]`).checked =
+    true;
+  document.querySelectorAll('input[name="survey-rating"]').forEach((input) => {
+    input.checked = false;
+  });
+  $('checkout-survey-note').textContent = 'Sólo se guarda localmente para el panel.';
   $('checkout-address-error').textContent = '';
   renderCheckoutSummary();
   renderDeliveryOptions();
@@ -335,6 +342,17 @@ export function initCheckout() {
   $('finish-order-btn').addEventListener('click', finishCheckout);
   $('print-receipt-btn').addEventListener('click', () => globalThis.window?.print());
   $('checkout-fee-info').addEventListener('click', toggleFeeHelp);
+  document.querySelectorAll('input[name="survey-rating"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const code = $('order-code').textContent.trim();
+      const saved = updateState((state) =>
+        submitSurvey(state, { orderId: code, rating: Number(input.value) })
+      );
+      $('checkout-survey-note').textContent = saved
+        ? 'Gracias. Tu respuesta de prueba quedó guardada en este navegador.'
+        : 'Esta orden ya tiene una respuesta guardada.';
+    });
+  });
 
   document.querySelectorAll('input[name="delivery-mode"]').forEach((radio) => {
     radio.addEventListener('change', () => {

@@ -15,7 +15,7 @@
     "verify-links": "node scripts/verify-links.js",
     "sync": "node scripts/sync.js",
     "lint": "npm run lint:syntax && eslint .",
-    "lint:syntax": "node --check server.js && node --check data/demo.js && node --check data/product-images.js && for f in lib/*.js scripts/*.js src/*.js test/*.js; do node --check \"$f\"; done",
+    "lint:syntax": "node --check server.js && node --check sw.js && node --check data/demo.js && node --check data/product-images.js && for f in lib/*.js scripts/*.js src/*.js test/*.js; do node --check \"$f\"; done",
     "format": "prettier --write 'lib/**/*.js' 'scripts/**/*.js' 'src/**/*.js' 'test/**/*.js' eslint.config.js",
     "format:check": "prettier --check 'lib/**/*.js' 'scripts/**/*.js' 'src/**/*.js' 'test/**/*.js' eslint.config.js"
   },

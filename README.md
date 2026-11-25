@@ -1035,3 +1035,29 @@ El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto d
 - `npm test`: **208/208**; `npm run lint`, `npm run format:check`, `npm run check-contrast` (**36/36**), `npm run validate-catalog` y `npm run check-freshness` en verde. No se ejecuta Prettier sobre `index.html`.
 - Verificación CDP (`up-verify-u5.mjs`): **21/21** comprobaciones en Chrome real con perfil aislado, previo registro de una cuenta de prueba local. Cubre ahorro referencial, toast y botón de deshacer, carritos guardados, validación de dirección, franjas por cadena, retiro etiquetado como ejemplo, tooltip del fee, comprobante, persistencia de la orden, analítica, móvil 390 px sin desbordamiento, objetivos táctiles de 44 px y ausencia de peticiones externas o errores JS.
 - Lighthouse móvil aislado en `http://localhost:3100/`: mejor medición **95 Performance / 96 Accesibilidad** en `/` y **98 / 96** en `#/comparar`. `#/cuenta/pedidos` (redirige a ingreso sin sesión) osciló entre **74 y 96 Performance / 96 Accesibilidad** y `#/producto/coca-original-15l` entre **74 y 77 Performance / 97 Accesibilidad**: la máquina de verificación ejecutaba una VM con ~500% de CPU durante la medición, por lo que LCP simulado subió a 4,2–8,7 s. Queda registrado como excepción ambiental medida, heredera de la excepción de detalle de U4. No se maquilló el resultado ocultando contenido ni imágenes.
+
+## 20. FASE U6 · Móvil, PWA y primeras impresiones
+
+### Navegación y primeras impresiones
+
+- `#bottom-nav` agrega cinco destinos fijos en móvil (Inicio, Buscar, Ofertas, Lista, Cuenta) con iconos SVG propios, `aria-current="page"` sincronizado con el router, objetivos táctiles de 56 px y respeto a `safe-area-inset-bottom`. «Buscar» enfoca el buscador existente; el dock del carrito y la barra de comparación se desplazan para no tapar la navegación.
+- `src/onboarding.js` muestra un asistente de primera visita en 3 pasos: comuna de la RM, cadenas preferidas y despacho/retiro. Se puede omitir, se reabre desde «Preferencias de inicio» en Mi cuenta y no vuelve a aparecer después de completarse u omitirse. Todo se guarda en `up_state_v2.preferences`; `src/preferences.js` sanea comuna/cadenas y sólo usa las cadenas como **desempate** cuando no hay orden explícito. La analítica registra cantidad de cadenas y modo de entrega, **nunca la comuna**.
+- `#/ayuda` (`src/views/help.js`) contiene 8 preguntas de texto propio con buscador local que tolera tildes, contacto **simulado** y enlace a `#/ayuda/datos`. El correo mostrado es de ejemplo y no se envía nada.
+
+### PWA y uso sin conexión
+
+- `manifest.webmanifest` usa el tema negro/dorado, íconos 192/512 derivados del logo existente y atajos a lista, ofertas y ayuda. `sw.js` es del mismo origen, excluye `/api/*` de cualquier caché y sirve el app shell cacheado ante fallos de navegación; precarga sólo el mínimo y cachea el resto de módulos al navegar. El registro se difiere a `requestIdleCallback` para no competir con el LCP.
+- El aviso `#offline-banner` (`role="status"`) explica qué sigue disponible. Lista, favoritos, direcciones y carritos guardados siguen en `localStorage`. El botón «Instalar UP» sólo aparece si el navegador emite `beforeinstallprompt`; nunca se simula ni se piden permisos.
+- Tras una orden de demostración, `src/surveys.js` guarda una micro-encuesta de un clic (1–5) por orden en `surveys`, sin correos ni datos de pago. `sanitizeSurveys()` rechaza valores fuera de rango y respuestas duplicadas.
+
+### Límites
+
+- No hay geolocalización, disponibilidad real de sucursales, notificaciones push ni atención humana: el contacto y la instalación dependen del navegador y del modo prueba.
+- Para aprovechar el modo sin conexión hace falta que el service worker termine de instalarse y completar una navegación que cachee los módulos de la vista; los precios dinámicos nunca se cachean.
+- La micro-encuesta es referencial para el panel local; no se envía a ningún servidor.
+
+### Verificación
+
+- `npm test`: **223/223**; `npm run format`, `npm run lint` (ahora incluye `node --check sw.js`), `npm run check-contrast` (**36/36**), `npm run validate-catalog`, `npm run check-freshness` y `git diff --check` en verde. No se ejecutó Prettier sobre `index.html`.
+- Verificación CDP (`up-verify-u6.mjs`): **14/14** comprobaciones en Chrome real con perfil aislado y móvil 390 px. Cubre onboarding y su no repetición, analítica sin comuna, nav inferior activa, FAQ, service worker con precache local, persistencia offline de lista/favoritos, reapertura de preferencias, encuesta por orden, ausencia de desbordamiento y cero peticiones externas o errores JS.
+- Lighthouse móvil aislado: `/` **94 Performance / 96 Accesibilidad**, `#/ayuda` **99 / 96**, `#/lista` **97 / 96**. `#/producto/coca-original-15l` osciló entre **74 y 83 Performance / 97 Accesibilidad**: se mantiene la excepción ambiental documentada en U4/U5 (LCP de imagen bajo carga de VM, hasta 8,9 s simulados). No se ocultó contenido para mejorar las cifras. Al registrar el SW con precache completo, el home bajaba a 84; limitar el precache al app shell devolvió el score a 94 sin quitar soporte offline.

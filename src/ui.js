@@ -29,6 +29,7 @@ import {
 } from './cart.js';
 import { cartSavings } from './cart-savings.js';
 import { addSavedCart, findSavedCart, makeSavedCart, removeSavedCart } from './saved-carts.js';
+import { sortByPreferences } from './preferences.js';
 import { openDialog, closeDialog } from './a11y.js';
 import {
   activeFilterChips,
@@ -420,7 +421,9 @@ export function renderProducts() {
   const emptyState = $('empty-state');
   const countEl = $('results-count');
 
-  const filtered = sortProducts(state.products.filter(matchesFilters));
+  const sorted = sortProducts(state.products.filter(matchesFilters));
+  const filtered =
+    state.sortBy === 'default' ? sortByPreferences(sorted, loadState().preferences) : sorted;
   const productWord = filtered.length === 1 ? 'producto' : 'productos';
 
   countEl.textContent = `${filtered.length} ${productWord}`;

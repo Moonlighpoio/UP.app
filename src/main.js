@@ -24,6 +24,8 @@ import {
 } from './notifications-ui.js';
 import { evaluateAlerts } from './alerts.js';
 import { finishCheckout, initCheckout, startCheckout } from './checkout.js';
+import { initPWA } from './pwa.js';
+import { closeOnboarding, initOnboarding, isOnboardingOpen } from './onboarding.js';
 import {
   applyUrlFilters,
   clearFilter,
@@ -72,6 +74,7 @@ import { listView } from './views/list.js';
 import { compareView } from './views/compare.js';
 import { notFoundView } from './views/not-found.js';
 import { dataHelpView } from './views/data-help.js';
+import { helpView } from './views/help.js';
 import { updateAuthLinks } from './views/shared.js';
 
 function renderAll() {
@@ -86,6 +89,37 @@ function renderAll() {
 function isHomeHash() {
   const hash = (globalThis.location.hash || '').split('?')[0];
   return !hash || hash === '#/' || hash === '#';
+}
+
+/** El acceso «Buscar» de la nav inferior enfoca el buscador ya existente. */
+const searchFocusView = {
+  element: 'view-dynamic',
+  render(container) {
+    container.innerHTML = `
+      <section class="up-view-section up-container">
+        <span class="up-eyebrow">BUSCAR</span>
+        <h1 data-view-title tabindex="-1">Buscar productos</h1>
+        <p>Selecciona el campo de búsqueda para ver sugerencias y resultados.</p>
+      </section>`;
+    globalThis.setTimeout(() => {
+      if (globalThis.location.hash !== '#/buscar') return;
+      globalThis.location.hash = '#/';
+      globalThis.setTimeout(() => $('main-search-input')?.focus({ preventScroll: true }), 0);
+    }, 0);
+  },
+};
+
+function updateBottomNav(path) {
+  let active = 'home';
+  if (path === '/buscar') active = 'search';
+  else if (path === '/ofertas' || path === '/tarjetas') active = 'ofertas';
+  else if (path === '/lista' || path === '/comparar') active = 'lista';
+  else if (path.startsWith('/cuenta') || path === '/login' || path === '/registro')
+    active = 'cuenta';
+  document.querySelectorAll('#bottom-nav [data-nav]').forEach((link) => {
+    if (link.dataset.nav === active) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
 }
 
 /** En rutas profundas no renderizamos las 30 tarjetas del catálogo oculto. */
@@ -126,6 +160,8 @@ function initDeferredUI(onDetected) {
   initNotificationsUI();
   initScanner({ notify: showToast, onDetected });
   initCheckout();
+  initPWA();
+  initOnboarding();
 }
 
 function initApp() {
@@ -584,6 +620,13 @@ function initApp() {
       title: 'Comparar productos · UP',
       description: 'Compara hasta 3 productos por cadena, precio por unidad y formato.',
     },
+    { path: '/buscar', view: searchFocusView, title: 'Buscar productos · UP' },
+    {
+      path: '/ayuda',
+      view: helpView,
+      title: 'Ayuda y preguntas frecuentes · UP',
+      description: 'Preguntas frecuentes y contacto simulado de UP. No envía mensajes.',
+    },
     {
       path: '/ayuda/datos',
       view: dataHelpView,
@@ -618,6 +661,7 @@ function initApp() {
     getSession: () => sessionUser(loadState()),
     onBefore: ({ path }) => {
       if (path === '/' && !$('product-grid').children.length) renderProducts();
+      if (isOnboardingOpen()) closeOnboarding();
       closePopovers();
       hideSuggestions();
       closeFilterSheet();
@@ -631,6 +675,7 @@ function initApp() {
     onAfter: ({ path }) => {
       if (path === '/') syncFilterInputs();
       updateAuthLinks();
+      updateBottomNav(path);
     },
   });
 
@@ -668,6 +713,7 @@ function initApp() {
       closeScanner();
       closeListDialog();
       closeNotifications();
+      closeOnboarding();
       if (!$('report-modal').classList.contains('hidden')) {
         $('report-modal').classList.add('hidden');
         document.body.style.overflow = '';

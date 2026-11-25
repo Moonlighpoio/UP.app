@@ -14,6 +14,11 @@ export const ANALYTICS_EVENTS = Object.freeze([
   'alert_created',
   'list_created',
   'flag_changed',
+  'onboarding_complete',
+  'onboarding_skipped',
+  'survey_submit',
+  'pwa_install',
+  'offline_view',
 ]);
 
 const MAX_EVENTS = 1000;

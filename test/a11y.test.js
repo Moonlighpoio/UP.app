@@ -84,6 +84,22 @@ test('el checkout U5 no pide tarjeta y ofrece comprobante imprimible', () => {
   assert.match(css, /@media print/);
 });
 
+test('U6 conserva diálogos etiquetados, nav accesible y encuesta de un clic', () => {
+  assert.match(
+    html,
+    /id="onboarding-modal"[\s\S]{0,140}role="dialog"[\s\S]{0,80}aria-modal="true"/
+  );
+  assert.match(html, /aria-labelledby="onboarding-title"/);
+  assert.match(
+    html,
+    /id="bottom-nav" class="up-bottom-nav" aria-label="Navegación principal móvil"/
+  );
+  assert.match(html, /id="checkout-survey" class="up-survey"/);
+  assert.match(html, /id="checkout-survey-note"[^>]*aria-live="polite"/);
+  assert.match(css, /\.up-bottom-nav a\[aria-current='page'\]/);
+  assert.match(css, /min-height: 56px/);
+});
+
 test('el módulo a11y expone las primitivas sin ejecutar DOM al importarlo', () => {
   for (const fn of [visibleFocusables, openDialog, closeDialog, trapDialogTab]) {
     assert.equal(typeof fn, 'function');
