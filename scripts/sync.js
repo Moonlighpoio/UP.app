@@ -207,7 +207,9 @@ async function runSync({
 
   if (catalog) {
     const files = writeArtifacts(catalog);
-    stdout(`  ${written} ofertas verificadas · artefactos: ${files.catalogJson}, ${files.demoJs}`);
+    stdout(
+      `  ${written} ofertas verificadas · artefactos: ${files.catalogJson}, ${files.demoJs}, ${files.productImages}`
+    );
   }
   return { ok: true, dryRun: false, candidates, failures, snapshot, written };
 }

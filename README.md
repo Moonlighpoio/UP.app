@@ -981,3 +981,30 @@ El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto d
 - `npm test`: **177/177**; `npm run lint`, `npm run format:check`, `npm run check-contrast` (**36/36**), `npm run validate-catalog` y `npm run check-freshness` en verde.
 - Verificación CDP (`up-verify-u3.mjs`): **16/16** comprobaciones en Chrome real. Cubre entrada desde tarjeta, foco y guardado del modal, analítica, persistencia de cantidades/notas/comprado, múltiples listas, selección, comuna, recarga y ausencia de peticiones externas. Sin errores JS.
 - Lighthouse móvil aislado en `http://localhost:3100/`: **100 Performance / 100 Accesibilidad** (FCP 1,1 s, LCP 1,1 s, TBT 20 ms, CLS 0,012). En `#/lista`: **99 Performance / 100 Accesibilidad**.
+
+## 18. FASE U4 · Favoritos, comparación y alertas
+
+### Favoritos y centro de avisos
+
+- `src/favorites.js` guarda hasta 50 IDs en `up_state_v2.favorites` con `addFavorite()`, `removeFavorite()`, `toggleFavorite()` e `isFavorite()`. Cada tarjeta y el detalle tienen un botón `aria-pressed`; `#/cuenta/favoritos` funciona con sesión de prueba y lista los productos todavía presentes en el catálogo.
+- `src/alerts.js` crea alertas por producto y cadena con precio objetivo, sin correo ni envío externo. `evaluateAlerts()` dispara **sólo** ofertas `verified` y frescas, respeta `overrides` que marcan la oferta como `pending`, deduplica por `alertId + día` y escribe avisos en `up_state_v2.notifications`.
+- La campana del shell muestra el número de no leídos; el panel permite marcar todo como leído y borrar avisos. Todo se elimina con «Borrar mis datos» (`clearPersonalData()`). En la demo las 180 ofertas son `pending`, por lo que no se generan avisos reales: el Centro se verificó con un aviso local etiquetado como prueba y la lógica de disparo se cubre con fixtures sintéticos en `test/alerts.test.js`.
+
+### Comparar hasta 3 productos
+
+- `src/compare-picker.js` mantiene la selección **sólo en memoria** durante la navegación (máximo 3, con aviso accesible al intentar agregar un cuarto). La barra inferior permite ir a `#/comparar` o vaciar la selección.
+- `src/compare-products.js` y `#/comparar` construyen una matriz producto × cadena. Los valores sin confirmar se muestran como «Sin confirmar» con la etiqueta «Ejemplo» cuando corresponden al catálogo de demostración; nunca se presenta un precio referencial como Verificado ni se mezcla con «mejor precio».
+- `src/recommendations.js` deriva «También te puede interesar» de categoría y coincidencias del catálogo. Sin datos suficientes, muestra productos vecinos de la misma categoría sin afirmar preferencias personales.
+
+### Historial y compra repetida
+
+- `src/price-history.js` genera series deterministas de 30 y 90 días a partir de `product.priceHistory` cuando existe. Si no hay serie real, produce una curva estable etiquetada **«Ejemplo»**; el gráfico es SVG propio, con `role="img"` y título accesible.
+- «Comprar de nuevo» aparece en pedidos con `status === 'entregado'` y `isDemo: true`. Agrega los productos al carrito existente con `addToCart()`, por lo que respeta los carritos separados por cadena y el fee del 1% sólo se informa, nunca se cobra.
+- `data/product-images.js` es un artefacto derivado de `data/catalog.sqlite` (regenerado por `npm run export-catalog`) con `id → { name, category, image }`. Precarga la foto del detalle desde el `<head>` sin duplicar el catálogo ni inventar rutas. `scripts/catalog-db.js`, `scripts/build-catalog.js`, `scripts/export-catalog.js`, `scripts/migrate-catalog.js`, `scripts/sync.js` y `lint:syntax` lo incluyen como artefacto versionado.
+- Los módulos de UI no críticos se inicializan tras el primer paint (`requestIdleCallback`, con fallback) para no retrasar la ficha; el carrito, filtros y enrutamiento siguen disponibles de inmediato.
+
+### Verificación
+
+- `npm test`: **190/190**; `npm run lint`, `npm run format:check`, `npm run check-contrast` (**36/36**), `npm run validate-catalog` y `npm run check-freshness` en verde. No se ejecuta Prettier sobre `index.html`.
+- Verificación CDP (`up-verify-u4.mjs`): **26/26** comprobaciones en Chrome real con perfil aislado; cubre favoritos y persistencia, rutas de cuenta con registro local, límite de 3 en el comparador, matriz, historial 30/90, alerta local, campana y avisos, «Comprar de nuevo», carritos por cadena, móvil 390 px sin desbordamiento, botones de 44 px y ausencia de peticiones externas o errores JS.
+- Lighthouse móvil aislado: `/` **100 Performance / 96 Accesibilidad**, `#/comparar` **100 / 96**, `#/cuenta/favoritos` **91–100 / 96**. La ruta profunda `#/producto/coca-original-15l` quedó en **84–89 Performance / 97 Accesibilidad**: con LCP simulado de 3,7–6,4 s no alcanza de forma estable el umbral de 90 Performance, aunque acelera el sprite con `preload` y no genera CLS. Queda registrada como excepción medida de esta fase; no se maquilló el resultado ocultando la foto ni quitando contenido.

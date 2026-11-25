@@ -23,6 +23,7 @@ const {
   readCatalog,
   readCatalogPayload,
   renderDemoJs,
+  renderProductImagesJs,
   seedCatalog,
   toFrontPayload,
   validateCatalogObject,
@@ -210,6 +211,47 @@ test('export es versionado, estable y coincide con el artefacto generado', () =>
   } finally {
     first.close();
     second.close();
+  }
+});
+
+test('product-images.js precarga la foto del detalle desde el mapa generado', () => {
+  const db = seeded();
+  try {
+    const artifact = renderProductImagesJs(readCatalog(db));
+    assert.equal(
+      artifact,
+      fs.readFileSync(new URL('../data/product-images.js', import.meta.url), 'utf8')
+    );
+    const links = [];
+    const ctx = {
+      window: {},
+      location: { hash: '#/producto/coca-original-15l' },
+      document: {
+        head: { appendChild: (link) => links.push(link) },
+        createElement: () => ({
+          attrs: {},
+          setAttribute(key, value) {
+            this.attrs[key] = value;
+          },
+        }),
+      },
+    };
+    vm.runInNewContext(artifact, ctx, { timeout: 1000 });
+    assert.equal(
+      JSON.stringify(ctx.window.UP_PRODUCT_IMAGES['coca-original-15l']),
+      JSON.stringify({
+        name: 'Bebida Coca-Cola Original',
+        category: 'Bebidas y Licores',
+        image: 'assets/products/coca-original-1.5l.webp',
+      })
+    );
+    assert.equal(links.length, 1);
+    assert.equal(links[0].rel, 'preload');
+    assert.equal(links[0].as, 'image');
+    assert.equal(links[0].href, 'assets/products/coca-original-1.5l.webp');
+    assert.equal(links[0].attrs.fetchpriority, 'high');
+  } finally {
+    db.close();
   }
 });
 

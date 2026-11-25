@@ -15,7 +15,9 @@ try {
   const written = exportArtifacts(catalog);
   console.log('UP · Migraciones aplicadas: ' + applied.join(', '));
   console.log('  BD        : data/catalog.sqlite');
-  console.log('  artefactos: ' + written.catalogJson + ', ' + written.demoJs);
+  console.log(
+    '  artefactos: ' + [written.catalogJson, written.demoJs, written.productImages].join(', ')
+  );
 } finally {
   db.close();
 }

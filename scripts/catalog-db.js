@@ -69,6 +69,7 @@ const MIGRATIONS_DIR = path.join(ROOT, 'db', 'migrations');
 const LEGACY_FILE = path.join(ROOT, 'db', 'legacy', 'demo-2026-11-23.json');
 const CATALOG_JSON_FILE = path.join(ROOT, 'data', 'catalog.json');
 const DEMO_JS_FILE = path.join(ROOT, 'data', 'demo.js');
+const PRODUCT_IMAGES_FILE = path.join(ROOT, 'data', 'product-images.js');
 const LEGACY_SOURCE = 'db/legacy/demo-2026-11-23.json';
 const DB_SOURCE = 'data/catalog.sqlite';
 
@@ -639,6 +640,48 @@ function renderDemoJs(catalog) {
   );
 }
 
+/**
+ * Mapa id → imagen para precargar la foto del detalle desde el <head>.
+ * Es un artefacto derivado: mantiene el LCP del producto sin duplicar el
+ * catálogo completo ni inventar rutas a partir del nombre del producto.
+ */
+function renderProductImagesJs(catalog) {
+  const images = Object.fromEntries(
+    catalog.products.map((product) => [
+      product.id,
+      { name: product.name, category: product.category, image: product.image },
+    ])
+  );
+  const header = [
+    '/**',
+    ' * UP · ARTEFACTO GENERADO desde data/catalog.sqlite (FASE U4).',
+    ' * No editar a mano: npm run build-catalog o npm run export-catalog.',
+    ' * Mapa de imágenes para precargar el detalle de producto.',
+    ' */',
+  ].join('\n');
+  return `${header}
+window.UP_PRODUCT_IMAGES = Object.freeze(${JSON.stringify(images, null, 2)});
+(function () {
+  var match = /^#\\/producto\\/(.+)$/.exec(location.hash || '');
+  if (!match) return;
+  var id;
+  try {
+    id = decodeURIComponent(match[1].split('?')[0]);
+  } catch (error) {
+    return;
+  }
+  var product = window.UP_PRODUCT_IMAGES[id];
+  if (!product || !product.image) return;
+  var link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'image';
+  link.href = product.image;
+  link.setAttribute('fetchpriority', 'high');
+  document.head.appendChild(link);
+})();
+`;
+}
+
 /** Validación estructural del catálogo exportado (errores = bloqueantes). */
 function validateCatalogObject(catalog, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
   const errors = [];
@@ -876,9 +919,11 @@ function validateDb(db, { now = Date.now, ttlMs = FRESHNESS_TTL_MS } = {}) {
 function exportArtifacts(catalog) {
   fs.writeFileSync(CATALOG_JSON_FILE, JSON.stringify(catalog, null, 2) + '\n');
   fs.writeFileSync(DEMO_JS_FILE, renderDemoJs(catalog));
+  fs.writeFileSync(PRODUCT_IMAGES_FILE, renderProductImagesJs(catalog));
   return {
     catalogJson: path.relative(ROOT, CATALOG_JSON_FILE),
     demoJs: path.relative(ROOT, DEMO_JS_FILE),
+    productImages: path.relative(ROOT, PRODUCT_IMAGES_FILE),
   };
 }
 
@@ -928,6 +973,7 @@ module.exports = {
   readCatalog,
   readCatalogPayload,
   renderDemoJs,
+  renderProductImagesJs,
   seedCatalog,
   toFrontPayload,
   validateCatalogObject,

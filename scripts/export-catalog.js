@@ -14,6 +14,7 @@ try {
   console.log('UP · Artefactos exportados desde data/catalog.sqlite:');
   console.log('  ' + written.catalogJson);
   console.log('  ' + written.demoJs);
+  console.log('  ' + written.productImages);
 } finally {
   db.close();
 }

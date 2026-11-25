@@ -12,7 +12,9 @@ import {
   unitPriceFor,
 } from './catalog.js';
 import { freshnessFor, isVerifiedFresh } from './freshness.js';
-import { loadState } from './storage.js';
+import { loadState, updateState } from './storage.js';
+import { isFavorite, toggleFavorite } from './favorites.js';
+import { isInComparison, toggleProductInComparison } from './compare-picker.js';
 import { approximateMatch, didYouMean, highlightMatch } from './suggest.js';
 import { offerLink, reindexKey } from './links.js';
 import { addToCart, calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
@@ -495,12 +497,31 @@ export function renderProducts() {
             >
               Mi lista
             </button>
+            <button
+              type="button"
+              class="up-btn-secondary up-favorite-btn"
+              data-favorite="${esc(product.id)}"
+              aria-pressed="${isFavorite(loadState(), product.id)}"
+              aria-label="${isFavorite(loadState(), product.id) ? 'Quitar' : 'Agregar'} ${esc(product.name)} ${isFavorite(loadState(), product.id) ? 'de' : 'a'} favoritos"
+            >
+              ${isFavorite(loadState(), product.id) ? '♥ Favorito' : '♡ Favorito'}
+            </button>
           </div>
 
-          <button type="button" role="button" tabindex="0" aria-label="Comparar precios de ${esc(product.name)}" class="up-compare-btn" data-compare="${esc(product.id)}">
-            Comparar precios
-            <span aria-hidden="true">→</span>
-          </button>
+          <div class="up-card-compare-actions">
+            <button type="button" aria-label="Comparar precios de ${esc(product.name)}" class="up-compare-btn" data-compare="${esc(product.id)}">
+              Comparar precios
+              <span aria-hidden="true">→</span>
+            </button>
+            <button
+              type="button"
+              class="up-btn-secondary up-compare-select-btn"
+              data-compare-select="${esc(product.id)}"
+              aria-pressed="${isInComparison(product.id)}"
+            >
+              ${isInComparison(product.id) ? 'En comparación ✓' : 'Comparar hasta 3'}
+            </button>
+          </div>
         </div>
       </article>`;
     })
@@ -540,6 +561,25 @@ export function renderProducts() {
       e.stopPropagation();
       const id = listBtn.dataset.addToList;
       uiHooks.onAddToList(id, quantityFor(id));
+      return;
+    }
+
+    const favoriteBtn = e.target.closest('[data-favorite]');
+    if (favoriteBtn) {
+      e.stopPropagation();
+      const id = favoriteBtn.dataset.favorite;
+      const added = updateState((saved) => toggleFavorite(saved, id, state.products));
+      if (added !== null)
+        showToast(added ? 'Producto agregado a favoritos' : 'Producto quitado de favoritos');
+      renderProducts();
+      return;
+    }
+
+    const selectBtn = e.target.closest('[data-compare-select]');
+    if (selectBtn) {
+      e.stopPropagation();
+      toggleProductInComparison(selectBtn.dataset.compareSelect, showToast);
+      renderProducts();
       return;
     }
 

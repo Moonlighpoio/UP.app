@@ -16,6 +16,13 @@ import { initCart } from './cart.js';
 import { initCompare, openCompareModal, closeCompareModal } from './compare.js';
 import { initReportUI, openReportDialog } from './report-ui.js';
 import { initListUI, closeListDialog, openListDialog } from './list-ui.js';
+import { initComparePicker } from './compare-picker.js';
+import {
+  initNotificationsUI,
+  renderNotifications,
+  closeNotifications,
+} from './notifications-ui.js';
+import { evaluateAlerts } from './alerts.js';
 import { finishCheckout, initCheckout, startCheckout } from './checkout.js';
 import {
   applyUrlFilters,
@@ -54,6 +61,7 @@ import {
   orderDetailView,
   addressesView,
   benefitsView,
+  favoritesView,
   profileView,
 } from './views/account.js';
 import { checkoutView } from './views/checkout.js';
@@ -61,6 +69,7 @@ import { offersView } from './views/offers.js';
 import { bankBenefitsView } from './views/bank-benefits.js';
 import { storesPlaceholder } from './views/placeholder.js';
 import { listView } from './views/list.js';
+import { compareView } from './views/compare.js';
 import { notFoundView } from './views/not-found.js';
 import { dataHelpView } from './views/data-help.js';
 import { updateAuthLinks } from './views/shared.js';
@@ -74,15 +83,28 @@ function renderAll() {
   renderFilterControls();
 }
 
+function isHomeHash() {
+  const hash = (globalThis.location.hash || '').split('?')[0];
+  return !hash || hash === '#/' || hash === '#';
+}
+
+/** En rutas profundas no renderizamos las 30 tarjetas del catálogo oculto. */
+function renderForRoute() {
+  if (isHomeHash() || $('product-grid')?.children.length) {
+    renderAll();
+    return;
+  }
+  renderCartUI();
+  renderFilterControls();
+}
+
 function refreshActiveModal() {
   if (state.activeProductId && !$('compare-modal').classList.contains('hidden')) {
     openCompareModal(state.activeProductId);
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  state.cart = loadState().cart;
-
+function initDeferredUI(onDetected) {
   initCart({
     notify: showToast,
     render: () => {
@@ -94,20 +116,26 @@ document.addEventListener('DOMContentLoaded', () => {
   initCompare({ notify: showToast });
   initReportUI({ notify: showToast });
   initListUI({ notify: showToast });
-  initScanner({
-    notify: showToast,
-    onDetected: (value) => applySearchValue(value),
-  });
+  initComparePicker();
+  initNotificationsUI();
+  initScanner({ notify: showToast, onDetected });
   initCheckout();
+}
 
-  const priceHooks = { notify: showToast, renderAll, refreshActiveModal };
+function initApp() {
+  state.cart = loadState().cart;
+
+  const priceHooks = { notify: showToast, renderAll: renderForRoute, refreshActiveModal };
 
   const demo = window.UP_DEMO_DATA;
   if (demo) applyDemoData(demo);
   applyUrlFilters(window.location.search);
 
-  renderAll();
-  refreshPrices(true, priceHooks);
+  renderForRoute();
+  refreshPrices(true, priceHooks).then(() => {
+    const triggered = updateState((saved) => evaluateAlerts(saved, state.products));
+    if (triggered) renderNotifications();
+  });
 
   const searchInput = $('main-search-input');
   const clearSearchBtn = $('clear-search-btn');
@@ -545,6 +573,12 @@ document.addEventListener('DOMContentLoaded', () => {
       description: 'Lista de compra local y optimizador de precios verificados de UP.',
     },
     {
+      path: '/comparar',
+      view: compareView,
+      title: 'Comparar productos · UP',
+      description: 'Compara hasta 3 productos por cadena, precio por unidad y formato.',
+    },
+    {
       path: '/ayuda/datos',
       view: dataHelpView,
       title: 'Cómo obtenemos los precios · UP',
@@ -559,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
       view: orderDetailView,
       title: (params) => `Pedido ${params.id} · UP`,
     },
+    { path: '/cuenta/favoritos', view: favoritesView, title: 'Mis favoritos · UP' },
     { path: '/cuenta/direcciones', view: addressesView, title: 'Mis direcciones · UP' },
     { path: '/cuenta/beneficios', view: benefitsView, title: 'Beneficios favoritos · UP' },
     { path: '/cuenta/perfil', view: profileView, title: 'Mi perfil · UP' },
@@ -575,7 +610,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const router = createRouter({
     routes,
     getSession: () => sessionUser(loadState()),
-    onBefore: () => {
+    onBefore: ({ path }) => {
+      if (path === '/' && !$('product-grid').children.length) renderProducts();
       closePopovers();
       hideSuggestions();
       closeFilterSheet();
@@ -583,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCartDrawer();
       closeScanner();
       closeListDialog();
+      closeNotifications();
       $('report-modal').classList.add('hidden');
     },
     onAfter: ({ path }) => {
@@ -593,6 +630,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateAuthLinks();
   router.start();
+
+  requestAnimationFrame(() => {
+    if (globalThis.requestIdleCallback) {
+      globalThis.requestIdleCallback(() => initDeferredUI((value) => applySearchValue(value)), {
+        timeout: 1000,
+      });
+    } else {
+      setTimeout(() => initDeferredUI((value) => applySearchValue(value)), 0);
+    }
+  });
 
   document.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;
@@ -614,6 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCheckoutModal();
       closeScanner();
       closeListDialog();
+      closeNotifications();
       if (!$('report-modal').classList.contains('hidden')) {
         $('report-modal').classList.add('hidden');
         document.body.style.overflow = '';
@@ -622,4 +670,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     trapDialogTab(e);
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp, { once: true });
+} else {
+  initApp();
+}

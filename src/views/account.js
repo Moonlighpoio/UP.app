@@ -2,8 +2,12 @@
 import { esc } from '../utils.js';
 import { loadState, updateState, clearPersonalData } from '../storage.js';
 import { logoutUser, sessionUser, isSessionValid } from '../auth.js';
-import { getProduct } from '../state.js';
+import { getProduct, state as catalogState } from '../state.js';
+import { favoriteProducts, toggleFavorite } from '../favorites.js';
+import { addBuyAgainToCart, buyAgainProducts } from '../recommendations.js';
+import { addToCart } from '../cart.js';
 import { getProductStats } from '../catalog.js';
+import { priceForDisplay } from '../filters.js';
 import { showToast } from '../ui.js';
 import {
   accountNotice,
@@ -44,6 +48,75 @@ function estimatedSavings(orders) {
   );
 }
 
+function buyAgainMarkup(state) {
+  const items = buyAgainProducts(state.orders, catalogState.products);
+  if (!items.length) return '';
+  return `
+    <section class="up-account-panel up-buy-again" aria-labelledby="buy-again-title">
+      <span class="up-eyebrow">COMPRAR DE NUEVO</span>
+      <h2 id="buy-again-title">Tus productos más frecuentes</h2>
+      <p class="up-text-muted">Calculado sólo con pedidos entregados de demostración. ${demoBadge(true)}</p>
+      <ul class="up-buy-again-list">
+        ${items
+          .map(
+            (item) => `<li>
+          <span>
+            <a href="#/producto/${encodeURIComponent(item.productId)}">${esc(item.name)}</a>
+            <small>${item.times} pedidos · ${item.units} unidades · ${money(item.unitPrice)}</small>
+          </span>
+          <button type="button" class="up-btn-secondary" data-buy-again-product="${esc(item.productId)}">Agregar</button>
+        </li>`
+          )
+          .join('')}
+      </ul>
+      <button type="button" class="up-btn-primary" data-buy-again>Agregar todo al carrito</button>
+    </section>`;
+}
+
+function favoritesBody() {
+  const state = loadState();
+  const products = favoriteProducts(state, catalogState.products);
+  return `
+    <div class="up-section-head up-section-head--account">
+      <span class="up-eyebrow">FAVORITOS</span>
+      <h1>Mis favoritos</h1>
+      <p>${products.length} producto${products.length === 1 ? '' : 's'} guardado${products.length === 1 ? '' : 's'} en este navegador.</p>
+    </div>
+    ${accountNotice()}
+    ${
+      products.length
+        ? `<ul class="up-favorite-products">${products
+            .map((product) => {
+              const shown = priceForDisplay(product);
+              return `<li class="up-account-panel">
+            <a href="#/producto/${encodeURIComponent(product.id)}"><strong>${esc(product.name)}</strong></a>
+            <p>${esc(product.category)} · ${esc(product.unit)}</p>
+            <p class="price">${money(shown.price)} <span class="up-text-muted">${shown.best ? 'menor precio referencial' : 'precio referencial'}</span></p>
+            <button type="button" class="up-btn-secondary" data-favorite-remove="${esc(product.id)}">Quitar de favoritos</button>
+          </li>`;
+            })
+            .join('')}</ul>`
+        : `<div class="up-empty-inline">
+            <p>Aún no tienes favoritos. Toca el corazón en una tarjeta o en el detalle de un producto.</p>
+            <a class="up-btn-primary" href="#catalogo">Ver productos</a>
+          </div>`
+    }`;
+}
+
+function bindFavorites(container) {
+  container.querySelectorAll('[data-favorite-remove]').forEach((button) => {
+    button.onclick = () => {
+      updateState((saved) =>
+        toggleFavorite(saved, button.dataset.favoriteRemove, catalogState.products)
+      );
+      renderShell(container, 'favoritos', favoritesBody());
+      bindCommon(container);
+      bindFavorites(container);
+      showToast('Producto quitado de favoritos');
+    };
+  });
+}
+
 function renderShell(container, active, body) {
   container.innerHTML = accountShell(active, body);
 }
@@ -55,6 +128,22 @@ function bindCommon(container) {
       updateAuthLinks();
       showToast('Sesión de prueba cerrada');
       globalThis.location.hash = '#/';
+      return;
+    }
+    const buyAll = event.target.closest('[data-buy-again]');
+    if (buyAll) {
+      const items = buyAgainProducts(loadState().orders, catalogState.products);
+      const count = addBuyAgainToCart(items, addToCart);
+      showToast(`${count} productos frecuentes agregados al carrito · Modo prueba`);
+      return;
+    }
+    const buyOne = event.target.closest('[data-buy-again-product]');
+    if (buyOne) {
+      const items = buyAgainProducts(loadState().orders, catalogState.products).filter(
+        (item) => item.productId === buyOne.dataset.buyAgainProduct
+      );
+      const count = addBuyAgainToCart(items, addToCart);
+      showToast(count ? 'Producto agregado al carrito · Modo prueba' : 'Producto no disponible');
       return;
     }
     const clearToggle = event.target.closest('[data-clear-toggle]');
@@ -116,6 +205,7 @@ function summaryBody() {
         </ul>
       </section>
     </div>
+    ${buyAgainMarkup(state)}
     <section class="up-account-panel">
       <h2>Borrar mis datos de prueba</h2>
       <p>Elimina usuarios, sesión, direcciones y favoritos de este navegador. Los pedidos etiquetados "Ejemplo" se conservan.</p>
@@ -138,6 +228,7 @@ function ordersBody() {
       <p>${orders.length} pedido${orders.length === 1 ? '' : 's'} en este navegador, del más reciente al más antiguo.</p>
     </div>
     ${accountNotice()}
+    ${buyAgainMarkup(state)}
     ${
       orders.length
         ? `<ul class="up-order-list">${orders
@@ -471,6 +562,14 @@ export const orderDetailView = {
   destroy() {
     destroyTracking();
   },
+};
+
+export const favoritesView = {
+  element: 'view-dynamic',
+  render(container) {
+    mount(container, 'favoritos', favoritesBody(), bindFavorites);
+  },
+  destroy() {},
 };
 
 export const addressesView = {

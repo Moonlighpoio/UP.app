@@ -109,6 +109,7 @@ export function updateAuthLinks() {
 const ACCOUNT_SECTIONS = [
   ['resumen', 'Resumen', '#/cuenta'],
   ['pedidos', 'Pedidos', '#/cuenta/pedidos'],
+  ['favoritos', 'Favoritos', '#/cuenta/favoritos'],
   ['direcciones', 'Direcciones', '#/cuenta/direcciones'],
   ['beneficios', 'Tarjetas favoritas', '#/cuenta/beneficios'],
   ['perfil', 'Perfil', '#/cuenta/perfil'],

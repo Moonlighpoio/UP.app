@@ -13,7 +13,9 @@ try {
   console.log('UP · Catálogo reconstruido desde la instantánea heredada.');
   console.log('  schemaVersion : ' + catalog.schemaVersion);
   console.log('  BD            : data/catalog.sqlite');
-  console.log('  artefactos    : ' + written.catalogJson + ', ' + written.demoJs);
+  console.log(
+    '  artefactos    : ' + [written.catalogJson, written.demoJs, written.productImages].join(', ')
+  );
   const counts = catalog.meta.counts;
   console.log(
     `  productos ${counts.products} · ofertas ${counts.offers} · match_queue ${counts.matchQueue} · url_queue ${counts.urlQueue}`

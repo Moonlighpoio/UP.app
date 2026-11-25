@@ -65,7 +65,10 @@ test('el foco visible y reduced-motion están en styles.css', () => {
 });
 
 test('las tarjetas son enfocables y usan listeners delegados', () => {
-  assert.match(ui, /role="button" tabindex="0" aria-label="Comparar/);
+  assert.match(
+    ui,
+    /<button type="button" aria-label="Comparar precios de[^>]*class="up-compare-btn" data-compare=/
+  );
   assert.match(ui, /grid\.onclick = /);
   assert.match(ui, /grid\.onkeydown = /);
   assert.match(ui, /decoding="async"/);
