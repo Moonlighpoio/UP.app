@@ -73,6 +73,18 @@ test('el carrito se sanea y los datos personales se pueden borrar', () => {
     };
     state.favoriteBenefits = ['benef-abasto', 'benef-abasto', 'inexistente'];
     state.recentSearches = ['  leche  ', 'leche', 7, null, 'coca'];
+    state.lists = [
+      {
+        id: 'l1',
+        name: '  Semanal  ',
+        createdAt: new Date().toISOString(),
+        items: [
+          { productId: 'leche', qty: 0, notes: 5, purchased: 'sí' },
+          { productId: 'arroz', qty: 3, notes: 'sin sal', purchased: true },
+        ],
+      },
+    ];
+    state.activeListId = 'l1';
     saveState(state);
 
     const loaded = loadState();
@@ -81,6 +93,26 @@ test('el carrito se sanea y los datos personales se pueden borrar', () => {
     assert.deepEqual(Object.keys(loaded.tracking), ['UP-000123']);
     assert.deepEqual(loaded.favoriteBenefits, ['benef-abasto']);
     assert.deepEqual(loaded.recentSearches, ['leche', 'coca']);
+    assert.equal(loaded.lists[0].name, 'Semanal');
+    assert.equal(loaded.activeListId, 'l1');
+    assert.deepEqual(loaded.lists[0].items, [
+      {
+        id: null,
+        productId: 'leche',
+        qty: 1,
+        notes: '',
+        purchased: false,
+        addedAt: null,
+      },
+      {
+        id: null,
+        productId: 'arroz',
+        qty: 3,
+        notes: 'sin sal',
+        purchased: true,
+        addedAt: null,
+      },
+    ]);
 
     clearPersonalData();
     const clean = loadState();
@@ -90,6 +122,8 @@ test('el carrito se sanea y los datos personales se pueden borrar', () => {
     assert.deepEqual(clean.tracking, {});
     assert.deepEqual(clean.favoriteBenefits, []);
     assert.deepEqual(clean.recentSearches, []);
+    assert.deepEqual(clean.lists, []);
+    assert.equal(clean.activeListId, null);
     assert.equal(clean.orders.length, 3);
     assert.equal(
       clean.orders.every((order) => order.isDemo),

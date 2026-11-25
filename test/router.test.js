@@ -40,6 +40,7 @@ test('las rutas privadas redirigen al login conservando el destino', () => {
   assert.equal(requiresSession('/cuenta/pedidos/UP-000123'), true);
   assert.equal(requiresSession('/checkout'), true);
   assert.equal(requiresSession('/producto/arroz-1kg'), false);
+  assert.equal(requiresSession('/lista'), false);
   assert.equal(loginTarget('/checkout'), '#/login?next=%23%2Fcheckout');
 });
 

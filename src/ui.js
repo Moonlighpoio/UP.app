@@ -31,7 +31,7 @@ import {
   syncFreeShippingFilter,
 } from './filters.js';
 
-const uiHooks = { onOpenCompare: () => {} };
+const uiHooks = { onOpenCompare: () => {}, onAddToList: () => {} };
 const cardQuantities = new Map();
 const PAGE_SIZE = 12;
 let visibleLimit = PAGE_SIZE;
@@ -39,6 +39,7 @@ let toastTimer;
 
 export function initUI(nextHooks = {}) {
   uiHooks.onOpenCompare = nextHooks.onOpenCompare || uiHooks.onOpenCompare;
+  uiHooks.onAddToList = nextHooks.onAddToList || uiHooks.onAddToList;
 }
 
 /** La paginación es solo presentación: las tarjetas siguen en el DOM. */
@@ -486,6 +487,14 @@ export function renderProducts() {
             >
               Agregar
             </button>
+            <button
+              type="button"
+              class="up-btn-secondary up-add-list-btn"
+              data-add-to-list="${esc(product.id)}"
+              aria-label="Agregar ${esc(product.name)} a mi lista"
+            >
+              Mi lista
+            </button>
           </div>
 
           <button type="button" role="button" tabindex="0" aria-label="Comparar precios de ${esc(product.name)}" class="up-compare-btn" data-compare="${esc(product.id)}">
@@ -523,6 +532,14 @@ export function renderProducts() {
       const card = grid.querySelector(`[data-product-id="${id}"]`);
       const value = card && card.querySelector('[data-card-qty-value]');
       if (value) value.textContent = 1;
+      return;
+    }
+
+    const listBtn = e.target.closest('[data-add-to-list]');
+    if (listBtn) {
+      e.stopPropagation();
+      const id = listBtn.dataset.addToList;
+      uiHooks.onAddToList(id, quantityFor(id));
       return;
     }
 

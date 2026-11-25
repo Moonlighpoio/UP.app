@@ -39,6 +39,7 @@ function defaultState() {
     },
     recentSearches: [],
     lists: [],
+    activeListId: null,
     favorites: [],
     alerts: [],
     notifications: [],
@@ -251,11 +252,30 @@ function sanitizeLists(value) {
     .filter(
       (list) => isObject(list) && typeof list.id === 'string' && typeof list.name === 'string'
     )
+    .slice(0, 12)
     .map((list) => ({
       ...list,
-      name: list.name.slice(0, 60),
+      name: list.name.trim().slice(0, 60),
+      createdAt: Number.isFinite(Date.parse(list.createdAt))
+        ? new Date(list.createdAt).toISOString()
+        : null,
       items: Array.isArray(list.items)
-        ? list.items.filter((item) => isObject(item) && typeof item.productId === 'string')
+        ? list.items
+            .filter((item) => isObject(item) && typeof item.productId === 'string')
+            .slice(0, 100)
+            .map((item) => {
+              const qty = Number(item.qty);
+              return {
+                id: typeof item.id === 'string' ? item.id : null,
+                productId: item.productId,
+                qty: Number.isInteger(qty) && qty >= 1 && qty <= 99 ? qty : 1,
+                notes: typeof item.notes === 'string' ? item.notes.slice(0, 160) : '',
+                purchased: item.purchased === true,
+                addedAt: Number.isFinite(Date.parse(item.addedAt))
+                  ? new Date(item.addedAt).toISOString()
+                  : null,
+              };
+            })
         : [],
     }));
 }
@@ -353,6 +373,11 @@ export function loadState() {
       settings: sanitizeSettings(parsed.settings),
       recentSearches: sanitizeRecentSearches(parsed.recentSearches),
       lists: sanitizeLists(parsed.lists),
+      activeListId:
+        typeof parsed.activeListId === 'string' &&
+        sanitizeLists(parsed.lists).some((list) => list.id === parsed.activeListId)
+          ? parsed.activeListId
+          : null,
       favorites: sanitizeFavorites(parsed.favorites),
       alerts: sanitizeAlerts(parsed.alerts),
       notifications: sanitizeNotifications(parsed.notifications),
@@ -412,6 +437,7 @@ export function clearPersonalData() {
     state.recentSearches = [];
     state.audit = (state.audit || []).map((entry) => ({ ...entry, who: 'anonimo' }));
     state.lists = [];
+    state.activeListId = null;
     state.favorites = [];
     state.alerts = [];
     state.notifications = [];

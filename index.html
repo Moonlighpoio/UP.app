@@ -116,6 +116,7 @@
         <div class="up-header-actions">
           <a id="login-link" href="#/login" class="up-header-auth">Ingresar</a>
           <a id="account-link" href="#/cuenta" class="up-header-auth" hidden>Mi cuenta</a>
+          <a href="#/lista" class="up-header-auth up-header-list">Mi lista</a>
           <div class="up-location" title="Ubicación de demostración">
             <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M10 18s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" stroke-linejoin="round" />
@@ -751,6 +752,50 @@
             <div class="up-report-actions">
               <button id="cancel-report-btn" type="button" class="up-btn-secondary">Cancelar</button>
               <button type="submit" class="up-btn-primary">Enviar reporte</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="list-add-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="list-add-title"
+      aria-describedby="list-add-description"
+      class="hidden up-modal"
+    >
+      <div class="up-modal-card up-report-card">
+        <div class="up-modal-head">
+          <h2 id="list-add-title">Agregar a mi lista</h2>
+          <button id="close-list-add-modal" type="button" aria-label="Cerrar lista" class="up-icon-btn">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="up-modal-body">
+          <p id="list-add-description" class="up-text-muted">
+            Producto: <strong id="list-add-product-name"></strong>. Se guarda sólo en este navegador.
+          </p>
+          <form id="list-add-form" novalidate>
+            <p class="up-field">
+              <label for="list-add-list">Lista</label>
+              <select id="list-add-list" name="listId" required></select>
+            </p>
+            <p class="up-field">
+              <label for="list-add-qty">Cantidad</label>
+              <input id="list-add-qty" name="qty" type="number" min="1" max="99" value="1" required />
+            </p>
+            <p class="up-field">
+              <label for="list-add-notes">Nota (opcional)</label>
+              <input id="list-add-notes" name="notes" type="text" maxlength="160" placeholder="Ej.: sin azúcar" />
+            </p>
+            <p id="list-add-error" class="up-field-error" role="alert" hidden></p>
+            <div class="up-report-actions">
+              <button id="cancel-list-add-btn" type="button" class="up-btn-secondary">Cancelar</button>
+              <button type="submit" class="up-btn-primary">Agregar a lista</button>
             </div>
           </form>
         </div>

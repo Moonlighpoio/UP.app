@@ -12,13 +12,14 @@ test('hay enlace para saltar al catálogo y se revela al enfocarlo', () => {
   assert.match(css, /\.skip-link:focus\s*\{\s*top:\s*8px;/);
 });
 
-test('los cinco diálogos son role=dialog, aria-modal y tienen etiqueta', () => {
+test('los seis diálogos son role=dialog, aria-modal y tienen etiqueta', () => {
   for (const [id, label] of [
     ['compare-modal', 'modal-product-name'],
     ['cart-drawer-backdrop', 'cart-drawer-title'],
     ['checkout-modal', 'checkout-title'],
     ['report-modal', 'report-title'],
     ['scan-modal', 'scan-title'],
+    ['list-add-modal', 'list-add-title'],
   ]) {
     const tag = html.slice(html.indexOf(`id="${id}"`) - 6, html.indexOf(`id="${id}"`) + 240);
     assert.match(tag, /role="dialog"/, id);

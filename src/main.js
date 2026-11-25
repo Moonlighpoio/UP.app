@@ -15,6 +15,7 @@ import { refreshPrices } from './api.js';
 import { initCart } from './cart.js';
 import { initCompare, openCompareModal, closeCompareModal } from './compare.js';
 import { initReportUI, openReportDialog } from './report-ui.js';
+import { initListUI, closeListDialog, openListDialog } from './list-ui.js';
 import { finishCheckout, initCheckout, startCheckout } from './checkout.js';
 import {
   applyUrlFilters,
@@ -59,6 +60,7 @@ import { checkoutView } from './views/checkout.js';
 import { offersView } from './views/offers.js';
 import { bankBenefitsView } from './views/bank-benefits.js';
 import { storesPlaceholder } from './views/placeholder.js';
+import { listView } from './views/list.js';
 import { notFoundView } from './views/not-found.js';
 import { dataHelpView } from './views/data-help.js';
 import { updateAuthLinks } from './views/shared.js';
@@ -88,9 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
       saveCart(state.cart);
     },
   });
-  initUI({ onOpenCompare: openCompareModal });
+  initUI({ onOpenCompare: openCompareModal, onAddToList: openListDialog });
   initCompare({ notify: showToast });
   initReportUI({ notify: showToast });
+  initListUI({ notify: showToast });
   initScanner({
     notify: showToast,
     onDetected: (value) => applySearchValue(value),
@@ -536,6 +539,12 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     { path: '/tiendas', view: storesPlaceholder, title: 'Tiendas y mapa · UP' },
     {
+      path: '/lista',
+      view: listView,
+      title: 'Mi lista · UP',
+      description: 'Lista de compra local y optimizador de precios verificados de UP.',
+    },
+    {
       path: '/ayuda/datos',
       view: dataHelpView,
       title: 'Cómo obtenemos los precios · UP',
@@ -573,6 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCompareModal();
       closeCartDrawer();
       closeScanner();
+      closeListDialog();
       $('report-modal').classList.add('hidden');
     },
     onAfter: ({ path }) => {
@@ -603,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCartDrawer();
       closeCheckoutModal();
       closeScanner();
+      closeListDialog();
       if (!$('report-modal').classList.contains('hidden')) {
         $('report-modal').classList.add('hidden');
         document.body.style.overflow = '';

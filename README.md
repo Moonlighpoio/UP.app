@@ -959,3 +959,25 @@ El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto d
 
 - `up_state_v2` incorpora `recentSearches`, saneado a 8 textos de hasta 80 caracteres; `clearPersonalData()` lo elimina junto al resto de datos personales locales.
 - Verificación U2: 170 tests, 36/36 pares AA, 22/22 comprobaciones CDP y Lighthouse móvil aislado **94 Performance / 100 Accesibilidad** en `http://localhost:3100/`. Sin peticiones externas ni errores JS en el recorrido.
+
+## 17. FASE U3 · Mi lista y optimizador de compra
+
+### Lista persistente
+
+- `#/lista` es una ruta pública: funciona sin sesión y guarda todo en `up_state_v2` (`lists`, `activeListId`). `src/lists.js` contiene la lógica pura: varias listas nombradas, cantidades 1–99, notas de hasta 160 caracteres, marca de comprado, hasta 100 productos por lista y hasta 12 listas.
+- Cada tarjeta tiene el botón «Mi lista», que abre `src/list-ui.js` con foco en la cantidad. El modal crea una lista «Semanal» si aún no existe, permite elegir destino y registra `list_created` en analítica sin datos personales.
+- La vista permite crear, renombrar, seleccionar y borrar listas, marcar comprados, editar cantidades y notas, quitar productos y limpiar los comprados. El botón «Ver productos» y las plantillas «Semanal» y «Fiesta» cubren el estado vacío sin inventar productos.
+- `clearPersonalData()` elimina `lists` y `activeListId`. El saneado de `storage.js` descarta cantidades y notas inválidas al cargar.
+
+### Optimizador «¿Dónde me conviene comprar?»
+
+- `src/optimizer.js` usa **sólo** ofertas `verified` y frescas (`isVerifiedFresh()`), respeta `overrides` pendientes y calcula despacho/envío gratis con `calculateMoney()` de `money.js`. El fee del 1% se muestra como información, se descuenta de la liquidación y **nunca** se agrega al cobro del cliente.
+- Computa tres escenarios: mejor cadena única, mejor reparto entre dos cadenas y cadena más cercana. El tercero usa `UP_DEMO_DATA.stores`, filtra por la comuna guardada y muestra «Ejemplo»; sin comuna o sin sucursales queda explícitamente como «Sin datos».
+- Cada escenario explica su cálculo, muestra ahorro en $ y % contra la referencia, desglosa productos/despacho/fee y lista los productos sin precio confirmado en vez de asignarles un precio inventado.
+- «Pasar al carrito» usa `addToCart(productId, storeId, qty)` respetando los carritos por cadena; avisa cuántos productos se cargaron y cuántos quedaron sin precio confirmado. En la demo actual las 180 ofertas están `pending`, por lo que los tres escenarios aparecen deshabilitados y no muestran totales. Los cálculos numéricos se cubren con fixtures sintéticos verificados en `test/optimizer.test.js`.
+
+### Verificación
+
+- `npm test`: **177/177**; `npm run lint`, `npm run format:check`, `npm run check-contrast` (**36/36**), `npm run validate-catalog` y `npm run check-freshness` en verde.
+- Verificación CDP (`up-verify-u3.mjs`): **16/16** comprobaciones en Chrome real. Cubre entrada desde tarjeta, foco y guardado del modal, analítica, persistencia de cantidades/notas/comprado, múltiples listas, selección, comuna, recarga y ausencia de peticiones externas. Sin errores JS.
+- Lighthouse móvil aislado en `http://localhost:3100/`: **100 Performance / 100 Accesibilidad** (FCP 1,1 s, LCP 1,1 s, TBT 20 ms, CLS 0,012). En `#/lista`: **99 Performance / 100 Accesibilidad**.
