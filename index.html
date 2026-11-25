@@ -23,7 +23,7 @@
       crossorigin
     />
 
-    <script src="data/product-images.js"></script>
+    <script src="data/product-images.js" defer></script>
     <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -52,6 +52,17 @@
       <p><strong>Sin conexión.</strong> Tu lista, favoritos y carritos guardados siguen en este navegador. Las acciones del servidor se reanudan al reconectar.</p>
       <button type="button" id="pwa-install-btn" class="up-btn-secondary" hidden>Instalar UP</button>
     </div>
+
+    <aside id="privacy-banner" class="up-privacy-banner" aria-labelledby="privacy-title" hidden>
+      <div>
+        <strong id="privacy-title">Aviso de privacidad local</strong>
+        <p>Sólo en este navegador: listas, favoritos y eventos de uso. Sin correo ni datos de tarjeta.</p>
+      </div>
+      <div class="up-privacy-actions">
+        <button type="button" id="privacy-accept" class="up-btn-primary">Entendido</button>
+        <a id="privacy-details" class="up-link-btn" href="#/ayuda">Ver detalles</a>
+      </div>
+    </aside>
 
     <header class="up-site-header">
       <div class="up-container up-header-main">
@@ -609,6 +620,7 @@
         <div>
           <h2>Legal y datos</h2>
           <span>Precios referenciales de demostración.</span>
+          <button type="button" class="up-link-btn" data-open-privacy>Aviso de privacidad</button>
           <span>Licencia: Propietaria · todos los derechos reservados.</span>
           <span>Esto no es asesoría legal.</span>
         </div>
@@ -1310,8 +1322,8 @@
       <button type="button" id="toast-action" class="up-toast-action" hidden>Deshacer</button>
     </div>
 
-    <script src="data/demo.js"></script>
-    <script src="vendor/leaflet/leaflet.js"></script>
+    <script src="data/demo.js" defer></script>
+    <script src="vendor/leaflet/leaflet.js" defer></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>

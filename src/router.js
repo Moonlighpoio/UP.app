@@ -4,6 +4,8 @@
  * a esa ruta después de iniciar sesión, sin tocar el carrito.
  */
 
+import { errorMarkup } from './states.js';
+
 export function parseHash(hash = globalThis.location?.hash || '') {
   const raw = String(hash || '').replace(/^#/, '');
   // Anclas internas (#catalogo, #top) no son rutas: las deja el navegador.
@@ -154,7 +156,12 @@ export function createRouter({ routes, getSession, onBefore = () => {}, onAfter 
       'description',
       typeof route.description === 'function' ? route.description(params) : route.description
     );
-    route.view.render(el, ctx);
+    try {
+      route.view.render(el, ctx);
+    } catch {
+      el.innerHTML = errorMarkup({ id: 'view-retry' });
+      el.querySelector('[data-retry]')?.addEventListener('click', () => handle());
+    }
     focusView(el, route.focus !== false);
     onAfter(ctx);
     animateView(el);

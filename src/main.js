@@ -26,6 +26,9 @@ import { evaluateAlerts } from './alerts.js';
 import { finishCheckout, initCheckout, startCheckout } from './checkout.js';
 import { initPWA } from './pwa.js';
 import { closeOnboarding, initOnboarding, isOnboardingOpen } from './onboarding.js';
+import { initPrivacyNotice } from './privacy.js';
+import { recordStoreClick } from './analytics-ui.js';
+import { lazyView } from './lazy-view.js';
 import {
   applyUrlFilters,
   clearFilter,
@@ -73,7 +76,6 @@ import { storesPlaceholder } from './views/placeholder.js';
 import { listView } from './views/list.js';
 import { compareView } from './views/compare.js';
 import { notFoundView } from './views/not-found.js';
-import { dataHelpView } from './views/data-help.js';
 import { helpView } from './views/help.js';
 import { updateAuthLinks } from './views/shared.js';
 
@@ -162,6 +164,7 @@ function initDeferredUI(onDetected) {
   initCheckout();
   initPWA();
   initOnboarding();
+  initPrivacyNotice();
 }
 
 function initApp() {
@@ -364,6 +367,14 @@ function initApp() {
   });
 
   document.addEventListener('click', (e) => {
+    const storeLink = e.target.closest('[data-store-link]');
+    if (storeLink) {
+      recordStoreClick(
+        storeLink.dataset.productId || state.activeProductId,
+        storeLink.dataset.storeId
+      );
+    }
+
     const trigger = e.target.closest('[data-popover-trigger]');
     if (trigger) {
       togglePopover(trigger);
@@ -629,7 +640,9 @@ function initApp() {
     },
     {
       path: '/ayuda/datos',
-      view: dataHelpView,
+      view: lazyView(() => import('./views/data-help.js'), {
+        title: 'Cargando información de precios…',
+      }),
       title: 'Cómo obtenemos los precios · UP',
       description: 'Fuentes, frecuencia y significado de las etiquetas de precios en UP.',
     },

@@ -39,22 +39,29 @@ export function sourceNote(item) {
   return `<p class="up-source-note">Fuente: ${esc(source)} · estado ${esc(status)}${verified}${link} · sin verificación externa.</p>`;
 }
 
+const dateFormatter = new Intl.DateTimeFormat('es-CL', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+const dateTimeFormatter = new Intl.DateTimeFormat('es-CL', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 export function formatDate(iso) {
   const date = new Date(iso);
   if (!Number.isFinite(date.getTime())) return '—';
-  return date.toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
+  return dateFormatter.format(date);
 }
 
 export function formatDateTime(iso) {
   const date = new Date(iso);
   if (!Number.isFinite(date.getTime())) return '—';
-  return date.toLocaleString('es-CL', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return dateTimeFormatter.format(date);
 }
 
 export function money(amount) {

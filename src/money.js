@@ -81,6 +81,12 @@ export function calculateMoney({ lines, stores, feeRate = UP_FEE_RATE }) {
   };
 }
 
+const clpFormatter = new Intl.NumberFormat('es-CL', {
+  style: 'currency',
+  currency: 'CLP',
+  maximumFractionDigits: 0,
+});
+
 export function formatCLP(amount) {
-  return '$' + Math.round(amount).toLocaleString('es-CL');
+  return clpFormatter.format(Math.round(Number.isFinite(amount) ? amount : 0));
 }

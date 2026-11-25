@@ -218,6 +218,13 @@ export function bindTracking(container, order) {
     });
     times.forEach((time, index) => {
       time.textContent = stageTime(stored?.startedAt, starts[index]);
+      if (stored?.startedAt) {
+        time.dateTime = new Date(
+          stored.startedAt + (starts[index] / SIMULATION_SPEED) * 1000
+        ).toISOString();
+      } else {
+        time.removeAttribute('datetime');
+      }
     });
 
     const statusText = info.done

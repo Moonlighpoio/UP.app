@@ -1061,3 +1061,27 @@ El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto d
 - `npm test`: **223/223**; `npm run format`, `npm run lint` (ahora incluye `node --check sw.js`), `npm run check-contrast` (**36/36**), `npm run validate-catalog`, `npm run check-freshness` y `git diff --check` en verde. No se ejecutó Prettier sobre `index.html`.
 - Verificación CDP (`up-verify-u6.mjs`): **14/14** comprobaciones en Chrome real con perfil aislado y móvil 390 px. Cubre onboarding y su no repetición, analítica sin comuna, nav inferior activa, FAQ, service worker con precache local, persistencia offline de lista/favoritos, reapertura de preferencias, encuesta por orden, ausencia de desbordamiento y cero peticiones externas o errores JS.
 - Lighthouse móvil aislado: `/` **94 Performance / 96 Accesibilidad**, `#/ayuda` **99 / 96**, `#/lista` **97 / 96**. `#/producto/coca-original-15l` osciló entre **74 y 83 Performance / 97 Accesibilidad**: se mantiene la excepción ambiental documentada en U4/U5 (LCP de imagen bajo carga de VM, hasta 8,9 s simulados). No se ocultó contenido para mejorar las cifras. Al registrar el SW con precache completo, el home bajaba a 84; limitar el precache al app shell devolvió el score a 94 sin quitar soporte offline.
+
+## 21. FASE U7 · Calidad transversal de la experiencia
+
+### Estados, accesibilidad y analítica
+
+- `src/states.js` centraliza skeletons, estados vacíos y estados de error con el mismo lenguaje visual: `role="status"` / `aria-live="polite"` para carga y vacío, `role="alert"` / `aria-live="assertive"` para errores y un botón `Reintentar` siempre enfocable. `src/router.js` usa un boundary que sustituye una vista rota por ese estado; `src/api.js` ofrece reintento ante fallo de actualización de precios sin borrar los últimos valores mostrados.
+- Se conservan el foco visible, la navegación completa por teclado, `prefers-reduced-motion` y `lang="es-CL"`. `formatCLP` y las fechas usan `Intl` con locale es-CL; las etapas del seguimiento incluyen `<time datetime>`. Las imágenes WebP de tarjetas y comparador llevan `alt` descriptivo, `loading="lazy"` y `decoding="async"`.
+- `src/analytics-ui.js` emite `view_product` (una vez por sesión), `add_to_cart` y `click_store_link` (uno por producto y cadena). Junto a los emisores previos cubre los nueve eventos requeridos: `search`, `search_no_results`, `view_product`, `add_to_cart`, `click_store_link`, `report_price`, `checkout_start`, `checkout_complete` y `alert_created`. Todo se guarda en `up_state_v2.analytics` con fecha y sin correos, nombres, sesión ni datos de tarjeta.
+- El aviso de privacidad es una tarjeta flotante local, reabrible desde el pie, con aceptación versionada (`privacy.noticeVersion === 1`). `src/flags.js` inventaría 18 funcionalidades, sanea valores corruptos y registra `flag_changed` para el panel P2.
+
+### Rendimiento y carga diferida
+
+- `src/lazy-view.js` carga `#/ayuda/datos` bajo demanda, muestra skeleton accesible mientras llega el módulo, descarta navegaciones obsoletas y ofrece `Reintentar` si falla. Los artefactos `data/demo.js` y `data/product-images.js` ahora son `defer`, y Leaflet sigue local.
+- El aviso de privacidad se muestra como capa fija y compacta para no desplazar el H1 ni competir con el LCP; no hay JavaScript inline (CSP `script-src 'self'`).
+
+### Límites
+
+- La analítica sigue siendo local: no hay backend ni panel remoto. Los flags son inventario local listo para P2; no desactivan rutas por sí solos en esta fase.
+- Lighthouse móvil mostró alta varianza por carga de la VM (load 5–6): en corridas aisladas tempranas `/` **93 Performance / 96 Accesibilidad**, `#/ayuda` **91 / 96** y `#/lista` **97 / 96**; en repeticiones bajo carga los mismos rutas oscilaron entre **73 y 89 Performance** con LCP de 2,2 a 7,7 s, manteniendo Accesibilidad 96. Se documenta la misma excepción ambiental ya aplicada al detalle: `#/producto/coca-original-15l` **75–82 / 97** y `#/ayuda/datos` **76 / 97** (carga diferida). No se ocultó contenido ni se desactivó el aviso para mejorar las cifras.
+
+### Verificación
+
+- `npm test`: **234/234**; `npm run format`, `npm run lint` (con `node --check sw.js`), `npm run check-contrast` (**36/36**), `npm run validate-catalog`, `npm run check-freshness` y `git diff --check` en verde. No se ejecutó Prettier sobre `index.html`.
+- Verificación CDP (`up-verify-u7.mjs`): **15/15** comprobaciones en Chrome real con perfil aislado y móvil 390 px. Cubre aviso de privacidad sin datos personales, imágenes diferidas con alt, búsquedas con y sin resultados, atajo `/`, los cinco eventos nuevos sin PII, skeleton de vista diferida, error de red con `Reintentar`, reduced motion, sin desbordamiento y cero peticiones externas o errores JS.

@@ -21,6 +21,7 @@ import { offerLink } from '../links.js';
 import { STATIC_DEMO, STORES } from '../config.js';
 import { addToCart } from '../cart.js';
 import { showToast } from '../ui.js';
+import { recordProductView, recordStoreClick } from '../analytics-ui.js';
 
 let addedTimer = null;
 
@@ -64,7 +65,7 @@ function priceRows(product) {
         <td>
           ${
             confirmed && safeHttpUrl(offerLink(product, entry.storeId).url)
-              ? `<a href="${esc(safeHttpUrl(offerLink(product, entry.storeId).url))}" target="_blank" rel="noopener noreferrer">Ver en tienda ↗</a>`
+              ? `<a href="${esc(safeHttpUrl(offerLink(product, entry.storeId).url))}" data-store-link data-store-id="${esc(entry.storeId)}" target="_blank" rel="noopener noreferrer">Ver en tienda ↗</a>`
               : '<span class="up-text-muted">Sin enlace verificado</span>'
           }
         </td>
@@ -176,6 +177,7 @@ export const productView = {
       return;
     }
 
+    recordProductView(product.id);
     const shown = priceForDisplay(product);
     const overrides = loadState().overrides;
     const confirmedStats = getConfirmedProductStats(product, { overrides });
@@ -250,7 +252,7 @@ export const productView = {
               </button>
               ${
                 storeUrl
-                  ? `<a class="up-btn-secondary" href="${esc(storeUrl)}" target="_blank" rel="noopener noreferrer">Ver en tienda ↗</a>`
+                  ? `<a class="up-btn-secondary" href="${esc(storeUrl)}" data-store-link data-store-id="${esc(shown.store?.id || '')}" target="_blank" rel="noopener noreferrer">Ver en tienda ↗</a>`
                   : '<span class="up-text-muted">Sin enlace de tienda verificado</span>'
               }
               <button
@@ -298,6 +300,9 @@ export const productView = {
 
     let qty = 1;
     container.onclick = (event) => {
+      const storeLink = event.target.closest('[data-store-link]');
+      if (storeLink) recordStoreClick(product.id, storeLink.dataset.storeId);
+
       const deltaBtn = event.target.closest('[data-detail-qty]');
       if (deltaBtn) {
         qty = Math.max(1, Math.min(99, qty + Number(deltaBtn.dataset.detailQty)));

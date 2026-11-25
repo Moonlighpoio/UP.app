@@ -46,6 +46,7 @@ function defaultState() {
     savedCarts: [],
     preferences: null,
     surveys: [],
+    privacy: null,
     jobs: [],
   };
 }
@@ -378,6 +379,15 @@ function sanitizeJobs(value) {
   return value.filter((item) => isObject(item) && typeof item.id === 'string').slice(-100);
 }
 
+function sanitizePrivacy(value) {
+  if (!isObject(value) || value.noticeVersion !== 1) return null;
+  return {
+    noticeVersion: 1,
+    acceptedAt: Number.isFinite(Date.parse(value.acceptedAt)) ? value.acceptedAt : null,
+    analytics: value.analytics !== false,
+  };
+}
+
 function storage() {
   try {
     return globalThis.localStorage ?? null;
@@ -433,6 +443,7 @@ export function loadState() {
       savedCarts: sanitizeSavedCarts(parsed.savedCarts),
       preferences: sanitizePreferences(parsed.preferences),
       surveys: sanitizeSurveys(parsed.surveys),
+      privacy: sanitizePrivacy(parsed.privacy),
       jobs: sanitizeJobs(parsed.jobs),
     };
   } catch {

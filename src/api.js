@@ -7,6 +7,28 @@ import { CHAIN_IDS, STATIC_DEMO } from './config.js';
 import { state } from './state.js';
 import { applyDemoData } from './catalog.js';
 import { offerLink, verifyLink } from './links.js';
+import { errorMarkup } from './states.js';
+
+function showPriceError(hooks) {
+  let region = $('price-error-region');
+  if (!region) {
+    region = document.createElement('div');
+    region.id = 'price-error-region';
+    $('sync-timestamp')?.after(region);
+  }
+  region.innerHTML = errorMarkup({
+    id: 'price-retry',
+    title: 'No se pudieron actualizar los precios',
+    message: 'Se muestran los últimos precios disponibles. Puedes volver a intentarlo.',
+  });
+  region
+    .querySelector('[data-retry]')
+    ?.addEventListener('click', () => refreshPrices(false, hooks));
+}
+
+function clearPriceError() {
+  $('price-error-region')?.remove();
+}
 
 export async function refreshPrices(silent, hooks = {}) {
   const notify = hooks.notify || (() => {});
@@ -42,7 +64,9 @@ export async function refreshPrices(silent, hooks = {}) {
 
       if (!silent) notify('PRECIOS ACTUALIZADOS · VERIFICANDO ENLACES');
     }
+    clearPriceError();
   } catch {
+    if (!STATIC_DEMO) showPriceError(hooks);
     state.products.forEach((p) => {
       Object.keys(p.prices).forEach((storeId) => {
         const delta = Math.round(((Math.random() * 0.06 - 0.03) * p.prices[storeId]) / 10) * 10;

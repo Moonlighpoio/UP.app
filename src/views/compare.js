@@ -51,7 +51,7 @@ function render(container) {
                 (row) => `<tr>
               <th scope="row">
                 <span class="up-compare-product">
-                  ${safeAssetUrl(row.image) ? `<img src="${esc(safeAssetUrl(row.image))}" alt="" width="56" height="56" loading="lazy" />` : getProductSVG(row.icon)}
+                  ${safeAssetUrl(row.image) ? `<img src="${esc(safeAssetUrl(row.image))}" alt="Imagen de ${esc(row.name)}" width="56" height="56" loading="lazy" decoding="async" />` : getProductSVG(row.icon)}
                   <span><strong>${esc(row.name)}</strong><small>${esc(row.category)} · ${esc(row.format)}</small>${removeButton(row.id, row.name)}</span>
                 </span>
               </th>

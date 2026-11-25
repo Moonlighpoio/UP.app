@@ -100,6 +100,21 @@ test('U6 conserva diálogos etiquetados, nav accesible y encuesta de un clic', (
   assert.match(css, /min-height: 56px/);
 });
 
+test('U7 conserva foco visible, reduced motion, aviso de privacidad y estados accesibles', () => {
+  assert.match(css, /:focus-visible/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(html, /<html lang="es-CL">/);
+  assert.match(html, /id="privacy-banner"[\s\S]{0,120}aria-labelledby="privacy-title"/);
+  assert.match(html, /id="privacy-banner"[\s\S]{0,160}hidden/);
+  assert.match(css, /\.up-privacy-banner:not\(\[hidden\]\)/);
+  assert.match(html, /data-open-privacy/);
+  assert.match(html, /<script src="data\/demo\.js" defer>/);
+  assert.match(html, /<script src="data\/product-images\.js" defer>/);
+  assert.match(ui, /alt="Imagen de \$\{esc\(product\.name\)\}"/);
+  assert.match(css, /\.up-skeleton-card/);
+  assert.match(css, /\.up-state-error/);
+});
+
 test('el módulo a11y expone las primitivas sin ejecutar DOM al importarlo', () => {
   for (const fn of [visibleFocusables, openDialog, closeDialog, trapDialogTab]) {
     assert.equal(typeof fn, 'function');

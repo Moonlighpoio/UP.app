@@ -5,6 +5,7 @@
 import { STORES } from './config.js';
 import { state, getProduct } from './state.js';
 import { calculateMoney } from './money.js';
+import { recordAddToCart } from './analytics-ui.js';
 
 export const UNDO_MS = 5000;
 
@@ -71,6 +72,7 @@ export function addToCart(productId, storeId, qty = 1) {
   if (existing) existing.qty += qty;
   else state.cart.push({ key, productId, storeId, qty });
   const product = getProduct(productId);
+  recordAddToCart(productId, storeId, qty);
   hooks.notify(`+${qty} ${product.name} (${STORES[storeId].short})`);
   hooks.render();
 }

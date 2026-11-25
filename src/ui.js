@@ -501,7 +501,7 @@ export function renderProducts() {
           <span class="up-card-category">${highlightMatch(product.category, state.searchQuery)}</span>
           ${
             image
-              ? `<img src="${esc(image)}" alt="" width="240" height="240" loading="lazy" decoding="async" />`
+              ? `<img src="${esc(image)}" alt="Imagen de ${esc(product.name)}" width="240" height="240" loading="lazy" decoding="async" />`
               : getProductSVG(product.icon)
           }
         </a>
@@ -729,7 +729,7 @@ export function linkMarkup(product, chainId) {
     html: `
       ${
         link.url
-          ? `<a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer" class="up-store-link"><span>Ver en tienda</span><span aria-hidden="true">↗</span></a>
+          ? `<a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer" class="up-store-link" data-store-link data-store-id="${esc(chainId)}" data-product-id="${esc(product.id)}"><span>Ver en tienda</span><span aria-hidden="true">↗</span></a>
       <span class="up-store-token">${link.kind === 'ficha' ? 'Ficha' : 'SKU/GTIN'} ${esc(link.token || '—')}</span>`
           : ''
       }
