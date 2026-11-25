@@ -12,11 +12,13 @@ test('hay enlace para saltar al catálogo y se revela al enfocarlo', () => {
   assert.match(css, /\.skip-link:focus\s*\{\s*top:\s*8px;/);
 });
 
-test('los tres diálogos son role=dialog, aria-modal y tienen etiqueta', () => {
+test('los cinco diálogos son role=dialog, aria-modal y tienen etiqueta', () => {
   for (const [id, label] of [
     ['compare-modal', 'modal-product-name'],
     ['cart-drawer-backdrop', 'cart-drawer-title'],
     ['checkout-modal', 'checkout-title'],
+    ['report-modal', 'report-title'],
+    ['scan-modal', 'scan-title'],
   ]) {
     const tag = html.slice(html.indexOf(`id="${id}"`) - 6, html.indexOf(`id="${id}"`) + 240);
     assert.match(tag, /role="dialog"/, id);
@@ -27,6 +29,10 @@ test('los tres diálogos son role=dialog, aria-modal y tienen etiqueta', () => {
 
 test('controles y estados tienen nombre accesible', () => {
   assert.match(html, /id="main-search-input"[\s\S]{0,120}aria-label="Buscar productos/);
+  assert.match(html, /id="main-search-input"[\s\S]{0,220}role="combobox"/);
+  assert.match(html, /id="main-search-input"[\s\S]{0,260}aria-expanded="false"/);
+  assert.match(html, /id="search-suggestions"[\s\S]{0,80}role="listbox"/);
+  assert.match(html, /id="scan-btn"[\s\S]{0,160}aria-label="Escanear código de barras"/);
   assert.match(html, /id="sort-select" aria-label="Ordenar resultados"/);
   assert.match(html, /id="results-count" aria-live="polite"/);
   assert.match(html, /id="category-filters" role="group" aria-label="Filtrar por categoría"/);

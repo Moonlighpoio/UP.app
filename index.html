@@ -74,10 +74,25 @@
             id="main-search-input"
             type="search"
             aria-label="Buscar productos por nombre, categoría o presentación"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
             placeholder="Busca leche, arroz, detergente…"
             aria-controls="search-suggestions"
             autocomplete="off"
           />
+          <button
+            id="scan-btn"
+            type="button"
+            class="up-scan-btn"
+            aria-label="Escanear código de barras"
+            title="Escanear código de barras"
+            hidden
+          >
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 4v12M6 4v12M10 4v12M13 4v12M17 4v12" stroke-linecap="round" />
+            </svg>
+          </button>
           <kbd class="up-kbd" aria-hidden="true">/</kbd>
           <button
             id="clear-search-btn"
@@ -657,6 +672,41 @@
             Los enlaces usan la ficha oficial cuando existe; si no, una búsqueda exacta por SKU o
             GTIN.
           </p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="scan-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="scan-title"
+      aria-describedby="scan-status"
+      class="hidden up-modal"
+    >
+      <div class="up-modal-card up-report-card">
+        <div class="up-modal-head">
+          <h2 id="scan-title">Escanear código de barras</h2>
+          <button id="close-scan-modal" type="button" aria-label="Cerrar escáner" class="up-icon-btn">
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="up-modal-body">
+          <video id="scan-video" class="up-scan-video" playsinline muted aria-label="Vista de la cámara" hidden></video>
+          <p id="scan-status" class="up-text-muted" role="status" aria-live="polite"></p>
+          <form id="scan-form" novalidate>
+            <p class="up-field">
+              <label for="scan-gtin">GTIN EAN-13 manual</label>
+              <input id="scan-gtin" name="gtin" inputmode="numeric" maxlength="17" placeholder="7801610001622" autocomplete="off" />
+            </p>
+            <div class="up-report-actions">
+              <button id="cancel-scan-btn" type="button" class="up-btn-secondary">Cancelar</button>
+              <button type="submit" class="up-btn-primary">Buscar por GTIN</button>
+            </div>
+          </form>
+          <p class="up-text-muted">La cámara se usa sólo en este dispositivo; UP no sube ni guarda imágenes.</p>
         </div>
       </div>
     </div>

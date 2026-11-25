@@ -37,6 +37,7 @@ function defaultState() {
       syncLimit: 50,
       noticeVersion: 1,
     },
+    recentSearches: [],
     lists: [],
     favorites: [],
     alerts: [],
@@ -235,6 +236,15 @@ function sanitizeSettings(value) {
   };
 }
 
+function sanitizeRecentSearches(value) {
+  if (!Array.isArray(value)) return [];
+  return [
+    ...new Set(
+      value.filter((item) => typeof item === 'string').map((item) => item.trim().slice(0, 80))
+    ),
+  ].slice(0, 8);
+}
+
 function sanitizeLists(value) {
   if (!Array.isArray(value)) return [];
   return value
@@ -341,6 +351,7 @@ export function loadState() {
       overrides: sanitizeOverrides(parsed.overrides),
       flags: sanitizeFlags(parsed.flags),
       settings: sanitizeSettings(parsed.settings),
+      recentSearches: sanitizeRecentSearches(parsed.recentSearches),
       lists: sanitizeLists(parsed.lists),
       favorites: sanitizeFavorites(parsed.favorites),
       alerts: sanitizeAlerts(parsed.alerts),
@@ -398,6 +409,7 @@ export function clearPersonalData() {
     state.favoriteBenefits = [];
     state.profile = null;
     state.reports = (state.reports || []).map((report) => ({ ...report, userId: null }));
+    state.recentSearches = [];
     state.audit = (state.audit || []).map((entry) => ({ ...entry, who: 'anonimo' }));
     state.lists = [];
     state.favorites = [];

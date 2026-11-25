@@ -72,6 +72,7 @@ test('el carrito se sanea y los datos personales se pueden borrar', () => {
       real: { startedAt: Date.now(), isDemo: false },
     };
     state.favoriteBenefits = ['benef-abasto', 'benef-abasto', 'inexistente'];
+    state.recentSearches = ['  leche  ', 'leche', 7, null, 'coca'];
     saveState(state);
 
     const loaded = loadState();
@@ -79,6 +80,7 @@ test('el carrito se sanea y los datos personales se pueden borrar', () => {
     assert.equal(loaded.cart[0].qty, 2);
     assert.deepEqual(Object.keys(loaded.tracking), ['UP-000123']);
     assert.deepEqual(loaded.favoriteBenefits, ['benef-abasto']);
+    assert.deepEqual(loaded.recentSearches, ['leche', 'coca']);
 
     clearPersonalData();
     const clean = loadState();
@@ -87,6 +89,7 @@ test('el carrito se sanea y los datos personales se pueden borrar', () => {
     assert.equal(clean.addresses.length, 0);
     assert.deepEqual(clean.tracking, {});
     assert.deepEqual(clean.favoriteBenefits, []);
+    assert.deepEqual(clean.recentSearches, []);
     assert.equal(clean.orders.length, 3);
     assert.equal(
       clean.orders.every((order) => order.isDemo),

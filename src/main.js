@@ -2,9 +2,12 @@
  * UP · Punto de entrada del front-end.
  * Solo cablea módulos y eventos: la lógica vive en src/*.js.
  */
-import { $, esc, norm } from './utils.js';
+import { $, esc } from './utils.js';
 import { state, getProduct } from './state.js';
-import { loadState, saveCart } from './storage.js';
+import { loadState, saveCart, updateState } from './storage.js';
+import { didYouMean, suggestionsFor } from './suggest.js';
+import { clearRecentSearches, popularSearches, recentSearches, recordSearch } from './search.js';
+import { initScanner, closeScanner } from './scanner.js';
 import { sessionUser } from './auth.js';
 import { createRouter } from './router.js';
 import { applyDemoData } from './catalog.js';
@@ -17,6 +20,7 @@ import {
   applyUrlFilters,
   clearFilter,
   freeShippingChainIds,
+  matchesFilters,
   priceBounds,
   resetAllFilters,
   syncUrlFilters,
@@ -87,6 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initUI({ onOpenCompare: openCompareModal });
   initCompare({ notify: showToast });
   initReportUI({ notify: showToast });
+  initScanner({
+    notify: showToast,
+    onDetected: (value) => applySearchValue(value),
+  });
   initCheckout();
 
   const priceHooks = { notify: showToast, renderAll, refreshActiveModal };
@@ -131,6 +139,25 @@ document.addEventListener('DOMContentLoaded', () => {
     trigger.setAttribute('aria-expanded', String(shouldOpen));
   }
 
+  const resultCount = () => state.products.filter(matchesFilters).length;
+  let searchTimer = null;
+
+  function applySearchValue(value) {
+    searchInput.value = value;
+    state.searchQuery = value;
+    clearSearchBtn.classList.remove('hidden');
+    hideSuggestions();
+    refreshFilters();
+    recordCurrentSearch(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function recordCurrentSearch(force = false) {
+    const query = state.searchQuery.trim();
+    if (query.length < 2) return;
+    updateState((saved) => recordSearch(saved, query, resultCount(), { force }));
+  }
+
   function refreshFilters() {
     resetProductPaging();
     renderCategories();
@@ -147,50 +174,80 @@ document.addEventListener('DOMContentLoaded', () => {
     suggestions.innerHTML = '';
     suggestionItems = [];
     suggestionIndex = -1;
+    searchInput.setAttribute('aria-expanded', 'false');
+    searchInput.removeAttribute('aria-activedescendant');
   }
 
   function paintSuggestionState() {
-    Array.from(suggestions.children).forEach((li, index) => {
+    Array.from(suggestions.querySelectorAll('li[role="option"]')).forEach((li, index) => {
       const active = index === suggestionIndex;
       li.classList.toggle('up-active', active);
       li.setAttribute('aria-selected', String(active));
     });
+    const active = suggestions.querySelector('li[role="option"][aria-selected="true"]');
+    if (active) searchInput.setAttribute('aria-activedescendant', active.id);
+    else searchInput.removeAttribute('aria-activedescendant');
   }
 
   function showSuggestions() {
-    const query = norm(state.searchQuery.trim());
-    if (query.length < 2) return hideSuggestions();
-
-    suggestionItems = state.products
-      .filter((product) =>
-        norm(`${product.name} ${product.category} ${product.unit}`).includes(query)
-      )
-      .slice(0, 6);
-
-    if (!suggestionItems.length) return hideSuggestions();
-
+    const query = state.searchQuery.trim();
+    const saved = loadState();
+    suggestionItems = suggestionsFor(query, state.products, {
+      recent: recentSearches(saved),
+      popular: popularSearches(saved),
+    });
     suggestionIndex = -1;
-    suggestions.innerHTML = suggestionItems
+
+    let html = suggestionItems
       .map(
-        (product, index) => `
-        <li role="option" id="search-suggestion-${index}" data-product-id="${esc(product.id)}">
-          <span>${esc(product.name)}</span>
-          <small>${esc(product.category)}</small>
+        (item, index) => `
+        <li role="option" id="search-suggestion-${index}" data-suggestion-index="${index}">
+          <span><b>${esc(item.label)}</b>${item.type === 'producto' && item.meta ? ` <small>${esc(item.meta)}</small>` : ''}</span>
+          <small class="up-suggestion-type">${esc(
+            {
+              producto: 'Producto',
+              marca: 'Marca',
+              categoria: 'Categoría',
+              reciente: 'Reciente',
+              popular: 'Popular',
+            }[item.type] || item.type
+          )}</small>
         </li>`
       )
       .join('');
+
+    if (query.length >= 2 && !suggestionItems.length) {
+      const correction = didYouMean(query, state.products);
+      if (correction) {
+        suggestionItems = [{ type: 'correccion', label: correction, value: correction }];
+        html = `<li role="option" id="search-suggestion-0" data-suggestion-index="0">
+          <span>¿Quisiste decir <b>${esc(correction)}</b>?</span>
+          <small class="up-suggestion-type">Sugerencia</small>
+        </li>`;
+      }
+    }
+
+    if (query.length < 2 && !suggestionItems.length) return hideSuggestions();
+    if (!suggestionItems.length) return hideSuggestions();
+
+    html += `<li role="presentation" class="up-suggestion-actions">
+      <button type="button" data-clear-recent>Borrar búsquedas recientes</button>
+    </li>`;
+    suggestions.innerHTML = html;
     suggestions.hidden = false;
+    searchInput.setAttribute('aria-expanded', 'true');
     paintSuggestionState();
   }
 
   function chooseSuggestion(index) {
-    const product = suggestionItems[index];
-    if (!product) return;
-    searchInput.value = product.name;
-    state.searchQuery = product.name;
+    const item = suggestionItems[index];
+    if (!item) return;
+    searchInput.value = item.value;
+    state.searchQuery = item.value;
     hideSuggestions();
     clearSearchBtn.classList.remove('hidden');
     refreshFilters();
+    recordCurrentSearch(true);
   }
 
   searchInput.addEventListener('input', (e) => {
@@ -198,9 +255,15 @@ document.addEventListener('DOMContentLoaded', () => {
     clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
     showSuggestions();
     refreshFilters();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => recordCurrentSearch(), 600);
   });
 
   searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      hideSuggestions();
+      return;
+    }
     if (suggestions.hidden || !suggestionItems.length) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -210,18 +273,21 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       suggestionIndex = (suggestionIndex - 1 + suggestionItems.length) % suggestionItems.length;
       paintSuggestionState();
-    } else if (e.key === 'Enter' && suggestionIndex >= 0) {
+    } else if (e.key === 'Enter') {
       e.preventDefault();
-      chooseSuggestion(suggestionIndex);
-    } else if (e.key === 'Escape') {
-      hideSuggestions();
+      chooseSuggestion(suggestionIndex >= 0 ? suggestionIndex : 0);
     }
   });
 
   suggestions.addEventListener('click', (e) => {
-    const item = e.target.closest('li[data-product-id]');
-    if (!item) return;
-    chooseSuggestion(suggestionItems.findIndex((product) => product.id === item.dataset.productId));
+    if (e.target.closest('[data-clear-recent]')) {
+      e.stopPropagation();
+      updateState(clearRecentSearches);
+      showSuggestions();
+      return;
+    }
+    const item = e.target.closest('li[data-suggestion-index]');
+    if (item) chooseSuggestion(Number(item.dataset.suggestionIndex));
   });
 
   document.addEventListener('click', (e) => {
@@ -266,7 +332,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (e.target.closest('#clear-filters-btn') || e.target.closest('#clear-sheet-filters-btn')) {
+    const emptySuggestion = e.target.closest('[data-empty-suggestion]');
+    if (emptySuggestion) {
+      applySearchValue(emptySuggestion.dataset.emptySuggestion);
+      return;
+    }
+
+    if (
+      e.target.closest('#reset-filters-btn') ||
+      e.target.closest('#clear-filters-btn') ||
+      e.target.closest('#clear-sheet-filters-btn')
+    ) {
       resetAllFilters();
       syncFilterInputs();
       refreshFilters();
@@ -496,6 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeFilterSheet();
       closeCompareModal();
       closeCartDrawer();
+      closeScanner();
       $('report-modal').classList.add('hidden');
     },
     onAfter: ({ path }) => {
@@ -525,6 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeCompareModal();
       closeCartDrawer();
       closeCheckoutModal();
+      closeScanner();
       if (!$('report-modal').classList.contains('hidden')) {
         $('report-modal').classList.add('hidden');
         document.body.style.overflow = '';

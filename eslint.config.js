@@ -15,6 +15,8 @@ const browserGlobals = {
   AbortController: 'readonly',
   AbortSignal: 'readonly',
   requestAnimationFrame: 'readonly',
+  cancelAnimationFrame: 'readonly',
+  navigator: 'readonly',
 };
 
 const nodeGlobals = {

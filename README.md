@@ -939,3 +939,23 @@ El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto d
 - `#/ayuda/datos` explica fuentes, frecuencia, etiquetas (Verificado, Sin confirmar, Desactualizado, Ejemplo) y que los precios son referenciales. Está enlazada desde el pie y desde el detalle.
 - `server.js` comprime con gzip los estáticos texto (HTML/CSS/JS/JSON/SVG) cuando el cliente lo acepta; sin servidor, GitHub Pages ya comprime. Las fuentes usan `font-display: optional` para evitar un repintado tardío del LCP.
 - Verificación U1: 160 tests, 36/36 pares AA, 26/26 comprobaciones CDP y Lighthouse móvil aislado **97 Performance / 100 Accesibilidad** en `http://localhost:3100/`.
+
+## 16. FASE U2 · Búsqueda y descubrimiento
+
+### Combobox y búsqueda tolerante
+
+- `src/suggest.js` reúne helpers puros: `editDistance()` acotada, `approximateMatch()`, `suggestionsFor()`, `didYouMean()`, `highlightMatch()`, `isGtin13()` y `productForGtin()`. No hay dependencias ni datos inventados: las sugerencias salen del catálogo o de búsquedas hechas en este navegador.
+- El campo principal es `role="combobox"` con `aria-expanded`, `aria-autocomplete="list"` y `aria-controls="search-suggestions"`; la lista es `role="listbox"`. ↑/↓ mueven `aria-activedescendant`, Enter elige la opción y Escape la cierra.
+- `src/search.js` guarda hasta **8 búsquedas recientes** (`recentSearches`) y deriva las populares de eventos `search` locales. Un mismo término se registra como máximo cada 1,5 s; `recordSearch()` emite `search` y, si no hay resultados, `search_no_results` sin correos ni IDs.
+- `src/ui.js` resalta el término con `<mark>` escapando producto y query. El estado vacío ofrece «¿Quisiste decir…?», categorías relacionadas derivadas de productos cercanos y «Limpiar filtros». Las categorías se derivan de coincidencias aproximadas para que un typo también tenga salida útil.
+
+### Escáner opcional y GTIN manual
+
+- `src/scanner.js` usa `BarcodeDetector` **sólo si existe**. El botón sigue visible para el ingreso manual EAN-13; cuando no hay detector automático se oculta el `<video>` y se explica el fallback. La cámara se detiene al cerrar o navegar y UP no sube ni guarda imágenes.
+- El formulario valida los 13 dígitos y el dígito verificador antes de mapear el GTIN con `productForGtin()`. Un GTIN válido sin producto mapeado se busca como texto y se avisa que no hay mapeo, sin afirmar un producto inexistente.
+- En móvil se ocultan el icono de búsqueda y el atajo `/` para que el campo mantenga un área táctil suficiente (Lighthouse *target-size*).
+
+### Estado y verificación
+
+- `up_state_v2` incorpora `recentSearches`, saneado a 8 textos de hasta 80 caracteres; `clearPersonalData()` lo elimina junto al resto de datos personales locales.
+- Verificación U2: 170 tests, 36/36 pares AA, 22/22 comprobaciones CDP y Lighthouse móvil aislado **94 Performance / 100 Accesibilidad** en `http://localhost:3100/`. Sin peticiones externas ni errores JS en el recorrido.

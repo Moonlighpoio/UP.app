@@ -13,6 +13,7 @@ import {
 } from './catalog.js';
 import { freshnessFor, isVerifiedFresh } from './freshness.js';
 import { loadState } from './storage.js';
+import { approximateMatch, didYouMean, highlightMatch } from './suggest.js';
 import { offerLink, reindexKey } from './links.js';
 import { addToCart, calculateCartTotals, updateCartQty, removeFromCart } from './cart.js';
 import { openDialog, closeDialog } from './a11y.js';
@@ -349,6 +350,39 @@ export function renderProducts() {
   if (!filtered.length) {
     grid.innerHTML = '';
     emptyState.classList.remove('hidden');
+    const query = state.searchQuery.trim();
+    const correction = didYouMean(query, state.products);
+    // Con errores de tipeo, las categorías se derivan de productos cercanos:
+    // suggestionsFor() sólo devuelve coincidencias exactas de categoría.
+    const related = state.products.filter(
+      (product) =>
+        approximateMatch(query, product.name) ||
+        (correction && approximateMatch(correction, product.name))
+    );
+    const categories = [...new Set(related.map((product) => product.category))].slice(0, 4);
+    emptyState.innerHTML = `
+      <svg aria-hidden="true" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M18 22h28l4 28H14l4-28Z" stroke-linejoin="round" />
+        <path d="M24 22v-5a8 8 0 0 1 16 0v5" stroke-linecap="round" />
+      </svg>
+      <h3>No encontramos “${esc(query || 'ese producto')}”</h3>
+      <p>Prueba con otro término, quita filtros o explora una categoría relacionada.</p>
+      ${
+        correction
+          ? `<p class="up-empty-correction">¿Quisiste decir <button type="button" data-empty-suggestion="${esc(correction)}">${esc(correction)}</button>?</p>`
+          : ''
+      }
+      ${
+        categories.length
+          ? `<div class="up-empty-categories" role="group" aria-label="Categorías relacionadas">${categories
+              .map(
+                (category) =>
+                  `<button type="button" data-empty-suggestion="${esc(category)}">${esc(category)}</button>`
+              )
+              .join('')}</div>`
+          : ''
+      }
+      <button id="reset-filters-btn" type="button" class="up-btn-primary">Limpiar filtros</button>`;
     const loadMore = document.querySelector('#load-more-btn');
     if (loadMore) loadMore.hidden = true;
     return;
@@ -383,7 +417,7 @@ export function renderProducts() {
       <article data-product-id="${esc(product.id)}" class="up-product-card">
         <a class="up-card-media" href="#/producto/${encodeURIComponent(product.id)}" aria-label="Ver detalle de ${esc(product.name)} · (${esc(product.index)}) ${esc(product.category)}">
           <span class="up-card-index">(${esc(product.index)})</span>
-          <span class="up-card-category">${esc(product.category)}</span>
+          <span class="up-card-category">${highlightMatch(product.category, state.searchQuery)}</span>
           ${
             image
               ? `<img src="${esc(image)}" alt="" width="240" height="240" loading="lazy" decoding="async" />`
@@ -393,7 +427,7 @@ export function renderProducts() {
 
         <div class="up-card-body">
           <div class="up-card-badges">${badges}</div>
-          <h3 class="up-card-name"><a href="#/producto/${encodeURIComponent(product.id)}">${esc(product.name)}</a></h3>
+          <h3 class="up-card-name"><a href="#/producto/${encodeURIComponent(product.id)}">${highlightMatch(product.name, state.searchQuery)}</a></h3>
           <p class="up-card-unit">
             <span>${esc(product.unit)}</span>
             ${infoTip('Detalle técnico', 'Presentación y unidad usadas para calcular el precio por kg o litro.')}
