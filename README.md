@@ -1079,7 +1079,7 @@ El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto d
 ### Límites
 
 - La analítica sigue siendo local: no hay backend ni panel remoto. Los flags son inventario local listo para P2; no desactivan rutas por sí solos en esta fase.
-- Lighthouse móvil mostró alta varianza por carga de la VM (load 5–6): en corridas aisladas tempranas `/` **93 Performance / 96 Accesibilidad**, `#/ayuda` **91 / 96** y `#/lista` **97 / 96**; en repeticiones bajo carga los mismos rutas oscilaron entre **73 y 89 Performance** con LCP de 2,2 a 7,7 s, manteniendo Accesibilidad 96. Se documenta la misma excepción ambiental ya aplicada al detalle: `#/producto/coca-original-15l` **75–82 / 97** y `#/ayuda/datos` **76 / 97** (carga diferida). No se ocultó contenido ni se desactivó el aviso para mejorar las cifras.
+- Lighthouse móvil mostró alta varianza por carga de la VM (load 4–6): en corridas aisladas tempranas `/` **93 Performance / 96 Accesibilidad**, `#/ayuda` **91 / 96** y `#/lista` **97 / 96**; en repeticiones bajo carga las mismas rutas oscilaron entre **73 y 89 Performance** con LCP de 2,2 a 7,7 s (última corrida: `/` 83, `#/ayuda` 83, `#/lista` 90), manteniendo Accesibilidad 96. Se documenta la misma excepción ambiental ya aplicada al detalle: `#/producto/coca-original-15l` **74–82 / 97** y `#/ayuda/datos` **71–76 / 97** (carga diferida). No se ocultó contenido ni se desactivó el aviso para mejorar las cifras.
 
 ### Verificación
 
