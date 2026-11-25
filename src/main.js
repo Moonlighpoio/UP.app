@@ -3,7 +3,10 @@
  * Solo cablea módulos y eventos: la lógica vive en src/*.js.
  */
 import { $, esc, norm } from './utils.js';
-import { state } from './state.js';
+import { state, getProduct } from './state.js';
+import { loadState, saveCart } from './storage.js';
+import { sessionUser } from './auth.js';
+import { createRouter } from './router.js';
 import { applyDemoData } from './catalog.js';
 import { refreshPrices } from './api.js';
 import { initCart } from './cart.js';
@@ -35,6 +38,24 @@ import {
   closeCartDrawer,
   closeCheckoutModal,
 } from './ui.js';
+import { homeView } from './views/home.js';
+import { productView } from './views/product.js';
+import { loginView } from './views/login.js';
+import { registerView } from './views/register.js';
+import {
+  accountView,
+  ordersView,
+  orderDetailView,
+  addressesView,
+  benefitsView,
+  profileView,
+} from './views/account.js';
+import { checkoutView } from './views/checkout.js';
+import { offersView } from './views/offers.js';
+import { bankBenefitsView } from './views/bank-benefits.js';
+import { storesPlaceholder } from './views/placeholder.js';
+import { notFoundView } from './views/not-found.js';
+import { updateAuthLinks } from './views/shared.js';
 
 function renderAll() {
   renderCategories();
@@ -52,7 +73,15 @@ function refreshActiveModal() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  initCart({ notify: showToast, render: renderCartUI });
+  state.cart = loadState().cart;
+
+  initCart({
+    notify: showToast,
+    render: () => {
+      renderCartUI();
+      saveCart(state.cart);
+    },
+  });
   initUI({ onOpenCompare: openCompareModal });
   initCompare({ notify: showToast });
   initCheckout();
@@ -347,7 +376,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.id === 'cart-drawer-backdrop') closeCartDrawer();
   });
 
-  $('checkout-btn').addEventListener('click', startCheckout);
+  $('checkout-btn').addEventListener('click', () => {
+    if (!sessionUser(loadState())) {
+      closeCartDrawer();
+      showToast('Ingresa o regístrate para continuar con el pago');
+      const target = '#/login?next=' + encodeURIComponent('#/checkout');
+      if (router) router.navigate(target);
+      else window.location.hash = target;
+      return;
+    }
+    if (router) router.navigate('#/checkout');
+    else startCheckout();
+  });
   $('close-checkout-modal').addEventListener('click', closeCheckoutModal);
   $('finish-order-btn').addEventListener('click', finishCheckout);
 
@@ -370,6 +410,89 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  const routes = [
+    {
+      path: '/',
+      view: homeView,
+      element: 'view-home',
+      title: 'UP — Comparador de Supermercados Chile | Pago Unificado',
+      description:
+        'Compara precios de supermercados en Chile, arma carritos por cadena y paga en un solo lugar.',
+    },
+    {
+      path: '/producto/:id',
+      view: productView,
+      title: (params) => {
+        const product = getProduct(params.id);
+        return product ? `${product.name} · UP` : 'Producto no encontrado · UP';
+      },
+      description: (params) => {
+        const product = getProduct(params.id);
+        return product
+          ? product.description || 'Ficha de producto de UP.'
+          : 'Producto no encontrado.';
+      },
+    },
+    {
+      path: '/ofertas',
+      view: offersView,
+      preserve: true,
+      seal: 'seal-ofertas',
+      title: 'Ofertas y eventos · UP',
+      description:
+        'Ofertas y eventos de ejemplo en UP, con procedencia declarada. No son ofertas comerciales reales.',
+    },
+    {
+      path: '/tarjetas',
+      view: bankBenefitsView,
+      preserve: true,
+      seal: 'seal-tarjetas',
+      title: 'Beneficios bancarios · UP',
+      description:
+        'Beneficios bancarios de ejemplo en UP. Sin datos de tarjeta, vencimiento ni CVV.',
+    },
+    { path: '/tiendas', view: storesPlaceholder, title: 'Tiendas y mapa · UP' },
+    { path: '/login', view: loginView, title: 'Ingresar · UP' },
+    { path: '/registro', view: registerView, title: 'Crear cuenta · UP' },
+    { path: '/cuenta', view: accountView, title: 'Mi cuenta · UP' },
+    { path: '/cuenta/pedidos', view: ordersView, title: 'Mis pedidos · UP' },
+    {
+      path: '/cuenta/pedidos/:id',
+      view: orderDetailView,
+      title: (params) => `Pedido ${params.id} · UP`,
+    },
+    { path: '/cuenta/direcciones', view: addressesView, title: 'Mis direcciones · UP' },
+    { path: '/cuenta/beneficios', view: benefitsView, title: 'Beneficios favoritos · UP' },
+    { path: '/cuenta/perfil', view: profileView, title: 'Mi perfil · UP' },
+    {
+      path: '/checkout',
+      view: checkoutView,
+      focus: false,
+      title: 'Pago simulado · UP',
+      description: 'Pago simulado de UP. No se solicitan datos de tarjeta.',
+    },
+    { path: '*', view: notFoundView, title: 'Página no encontrada · UP' },
+  ];
+
+  const router = createRouter({
+    routes,
+    getSession: () => sessionUser(loadState()),
+    onBefore: () => {
+      closePopovers();
+      hideSuggestions();
+      closeFilterSheet();
+      closeCompareModal();
+      closeCartDrawer();
+    },
+    onAfter: ({ path }) => {
+      if (path === '/') syncFilterInputs();
+      updateAuthLinks();
+    },
+  });
+
+  updateAuthLinks();
+  router.start();
 
   document.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;

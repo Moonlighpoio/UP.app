@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0B0B0C" />
     <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="Compara precios de supermercados en Chile, arma carritos por cadena y paga en un solo lugar."
+    />
     <title>UP — Comparador de Supermercados Chile | Pago Unificado</title>
     <link rel="icon" type="image/jpeg" sizes="any" href="assets/brand/up-logo.jpeg" />
 
@@ -17,6 +21,7 @@
       crossorigin
     />
 
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -94,6 +99,8 @@
         </div>
 
         <div class="up-header-actions">
+          <a id="login-link" href="#/login" class="up-header-auth">Ingresar</a>
+          <a id="account-link" href="#/cuenta" class="up-header-auth" hidden>Mi cuenta</a>
           <div class="up-location" title="Ubicación de demostración">
             <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M10 18s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" stroke-linejoin="round" />
@@ -124,6 +131,7 @@
       </nav>
     </header>
 
+    <div id="view-home" data-view>
     <section id="top" class="up-hero">
       <div class="up-container up-hero-inner">
         <div class="up-hero-copy">
@@ -485,6 +493,49 @@
       </div>
       </div>
     </section>
+    </div>
+
+    <main id="view-dynamic" data-view hidden>
+      <section id="seal-ofertas" data-view-seal class="up-view-section up-container" hidden>
+        <div class="up-section-head">
+          <span class="up-eyebrow">OFERTAS Y EVENTOS · EJEMPLO</span>
+          <h1 data-view-title tabindex="-1">Ofertas y eventos</h1>
+          <p>
+            Contenido ilustrativo para mostrar cómo UP presentaría campañas con su fuente. Nada de lo
+            que ves aquí es una oferta real ni modifica precios, carritos ni pagos.
+          </p>
+        </div>
+        <div data-seal-slot></div>
+      </section>
+      <section id="seal-tarjetas" data-view-seal class="up-view-section up-container" hidden>
+        <div class="up-section-head">
+          <span class="up-eyebrow">BENEFICIOS BANCARIOS · EJEMPLO</span>
+          <h1 data-view-title tabindex="-1">Beneficios bancarios</h1>
+          <p>
+            Información ficticia para demostrar cómo UP mostraría beneficios verificados. UP nunca
+            pide número de tarjeta, fecha de vencimiento ni CVV.
+          </p>
+        </div>
+        <div data-seal-slot></div>
+      </section>
+    </main>
+
+    <script>
+      /* UP · FASE C: elige el shell ya presente en el HTML para mejorar el LCP.
+         El router preserva esos nodos y sólo completa el contenido. */
+      (function () {
+        var hash = (location.hash || '').split('?')[0];
+        var id = hash === '#/ofertas' ? 'seal-ofertas' : hash === '#/tarjetas' ? 'seal-tarjetas' : null;
+        if (!id) return;
+        var dynamic = document.getElementById('view-dynamic');
+        var home = document.getElementById('view-home');
+        var shell = document.getElementById(id);
+        if (!dynamic || !home || !shell) return;
+        shell.hidden = false;
+        dynamic.hidden = false;
+        home.hidden = true;
+      })();
+    </script>
 
     <footer class="up-footer">
       <div class="up-container up-footer-grid">
@@ -501,19 +552,21 @@
           <p>Compara, agrupa y paga tu despensa en un solo lugar.</p>
         </div>
         <div>
-          <h3>UP</h3>
+          <h2>UP</h2>
           <a href="#catalogo">Catálogo</a>
+          <a href="#/ofertas">Ofertas y eventos</a>
+          <a href="#/tarjetas">Beneficios bancarios</a>
           <a href="#como-funciona">Cómo funciona</a>
           <button type="button" id="footer-cart-link">Ver carrito</button>
         </div>
         <div>
-          <h3>Ayuda</h3>
+          <h2>Ayuda</h2>
           <a href="#como-funciona">Preguntas frecuentes</a>
           <a href="#catalogo">Buscar productos</a>
           <span>Atención: hola@up.cl</span>
         </div>
         <div>
-          <h3>Legal y datos</h3>
+          <h2>Legal y datos</h2>
           <span>Precios referenciales de demostración.</span>
           <span>Licencia: Propietaria · todos los derechos reservados.</span>
           <span>Esto no es asesoría legal.</span>
@@ -935,6 +988,7 @@
     </div>
 
     <script src="data/demo.js"></script>
+    <script src="vendor/leaflet/leaflet.js"></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>

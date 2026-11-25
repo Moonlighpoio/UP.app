@@ -147,6 +147,7 @@ window.UP_DEMO_DATA = {
       "name": "Bebida Coca-Cola Original",
       "detail": "Botella desechable 1,5 L",
       "description": "Bebida Coca-Cola Original (1,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/coca-original-1.5l.webp",
       "skus": {
         "lider": {
@@ -222,6 +223,7 @@ window.UP_DEMO_DATA = {
       "name": "Bebida Coca-Cola Zero",
       "detail": "Botella desechable 1,5 L",
       "description": "Bebida Coca-Cola Zero (1,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/coca-zero-1.5l.webp",
       "skus": {
         "lider": {
@@ -296,6 +298,7 @@ window.UP_DEMO_DATA = {
       "name": "Leche Colun Entera",
       "detail": "Caja 1 L · UHT natural",
       "description": "Leche Colun Entera (1 L). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/leche-entera-1l.webp",
       "skus": {
         "lider": {
@@ -368,6 +371,7 @@ window.UP_DEMO_DATA = {
       "name": "Huevos Cintazul Grandes Blancos",
       "detail": "Bandeja 12 unidades",
       "description": "Huevos Cintazul Grandes Blancos (12 un). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/huevos-docena.webp",
       "skus": {
         "lider": {
@@ -442,6 +446,7 @@ window.UP_DEMO_DATA = {
       "name": "Arroz Banquete Grado 1 Premium",
       "detail": "Grano largo y ancho · 1 kg",
       "description": "Arroz Banquete Grado 1 Premium (1 kg). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/arroz-1kg.webp",
       "skus": {
         "lider": {
@@ -514,6 +519,7 @@ window.UP_DEMO_DATA = {
       "name": "Pan Molde Vollkorn Centeno con Linaza",
       "detail": "Bolsa 500 g",
       "description": "Pan Molde Vollkorn Centeno con Linaza (500 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/pan-molde-500g.webp",
       "skus": {
         "lider": {
@@ -586,6 +592,7 @@ window.UP_DEMO_DATA = {
       "name": "Aceite de Maravilla Chef",
       "detail": "Botella 1 L",
       "description": "Aceite de Maravilla Chef (1 L). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/aceite-1l.webp",
       "skus": {
         "lider": {
@@ -658,6 +665,7 @@ window.UP_DEMO_DATA = {
       "name": "Café Molido Gold Premier Forte",
       "detail": "Paquete 230 g · 70% arábica",
       "description": "Café Molido Gold Premier Forte (230 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/cafe-250g.webp",
       "skus": {
         "lider": {
@@ -732,6 +740,7 @@ window.UP_DEMO_DATA = {
       "name": "Palta Hass Extra Chilena (2 un. Aprox)",
       "detail": "2 unidades aprox.",
       "description": "Palta Hass Extra Chilena (2 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/palta-hass-jumbo-granel.webp",
       "skus": {
         "lider": {
@@ -806,6 +815,7 @@ window.UP_DEMO_DATA = {
       "name": "Pechuga Deshuesada de Pollo 850 g",
       "detail": "Bandeja 850 g aprox.",
       "description": "Pechuga Deshuesada de Pollo 850 g (1 kg). Corte cárnico: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/pechuga-deshuesada-de-pollo-super-pollo-1-kg-aprox-bandeja.webp",
       "skus": {
         "lider": {
@@ -878,6 +888,7 @@ window.UP_DEMO_DATA = {
       "name": "Mantequilla Colun con Sal 250 g",
       "detail": "Barra 250 g",
       "description": "Mantequilla Colun con Sal 250 g (250 g). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/mantequilla-con-sal-colun-250-g.webp",
       "skus": {
         "lider": {
@@ -950,6 +961,7 @@ window.UP_DEMO_DATA = {
       "name": "Limón Malla 1 kg",
       "detail": "Malla 1 kg",
       "description": "Limón Malla 1 kg (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/limon-jumbo-malla-1-kg.webp",
       "skus": {
         "lider": {
@@ -1022,6 +1034,7 @@ window.UP_DEMO_DATA = {
       "name": "Toalla de Papel Nova Ultra Doble Hoja 26 m 2 un.",
       "detail": "Doble hoja · 26 m · 2 un.",
       "description": "Toalla de Papel Nova Ultra Doble Hoja 26 m 2 un. (2 rollos). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/toalla-papel-nova-ultra-dh-26mt-2un-1939056.webp",
       "skus": {
         "lider": {
@@ -1096,6 +1109,7 @@ window.UP_DEMO_DATA = {
       "name": "Leche Surlat Descremada Sin Lactosa 1 L",
       "detail": "Caja 1 L · sin lactosa",
       "description": "Leche Surlat Descremada Sin Lactosa 1 L (1 L). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/leche-descremada-surlat-caja-1-l-sin-lactosa.webp",
       "skus": {
         "lider": {
@@ -1168,6 +1182,7 @@ window.UP_DEMO_DATA = {
       "name": "Agua Benedictino Sin Gas Bidón 6.5 L",
       "detail": "Bidón 6,5 L · sin gas",
       "description": "Agua Benedictino Sin Gas Bidón 6.5 L (6,5 L). Bebida: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/agua-purificada-sin-gas-benedictino-6-5-l.webp",
       "skus": {
         "lider": {
@@ -1240,6 +1255,7 @@ window.UP_DEMO_DATA = {
       "name": "Tomate Larga Vida Granel (1 a 2 un. Aprox)",
       "detail": "Granel · 1 a 2 un. aprox.",
       "description": "Tomate Larga Vida Granel (1 a 2 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/tomate-larga-vida-granel.webp",
       "skus": {
         "lider": {
@@ -1312,6 +1328,7 @@ window.UP_DEMO_DATA = {
       "name": "Papa Malla 2 kg",
       "detail": "Malla 2 kg",
       "description": "Papa Malla 2 kg (2 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/papas-jumbo-malla-2-kg.webp",
       "skus": {
         "lider": {
@@ -1384,6 +1401,7 @@ window.UP_DEMO_DATA = {
       "name": "Atún Lomitos en Agua 91 g drenado, 140 g neto",
       "detail": "Lomitos en agua · 91 g drenado",
       "description": "Atún Lomitos en Agua 91 g drenado, 140 g neto (140 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/atun-cuisine-and-co-lomitos-en-agua-91-g-drenado-140-g-neto-.webp",
       "skus": {
         "lider": {
@@ -1456,6 +1474,7 @@ window.UP_DEMO_DATA = {
       "name": "Zanahoria Bolsa 1 kg",
       "detail": "Bolsa 1 kg",
       "description": "Zanahoria Bolsa 1 kg (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/zanahoria-jumbo-1-kg.webp",
       "skus": {
         "lider": {
@@ -1528,6 +1547,7 @@ window.UP_DEMO_DATA = {
       "name": "Yogurt Griego Danone Oikos Natural Sin Endulzar 150 g",
       "detail": "Yogurt griego natural · 150 g",
       "description": "Yogurt Griego Danone Oikos Natural Sin Endulzar 150 g (150 g). Producto lácteo o fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/yoghurt-natural-danone-150-g.webp",
       "skus": {
         "lider": {
@@ -1600,6 +1620,7 @@ window.UP_DEMO_DATA = {
       "name": "Azúcar Blanca Iansa 1 kg",
       "detail": "Saco 1 kg",
       "description": "Azúcar Blanca Iansa 1 kg (1 kg). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/azucar-blanca-granulada-iansa-1-kg.webp",
       "skus": {
         "lider": {
@@ -1672,6 +1693,7 @@ window.UP_DEMO_DATA = {
       "name": "Papel Higiénico Elite Ultra Suave Doble Hoja 50 m 18 un.",
       "detail": "18 rollos · 50 m c/u",
       "description": "Papel Higiénico Elite Ultra Suave Doble Hoja 50 m 18 un. (18 rollos). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/papel-higienico-elite-ultra-doble-hoja-18-rollos-50-m-c-u.webp",
       "skus": {
         "lider": {
@@ -1746,6 +1768,7 @@ window.UP_DEMO_DATA = {
       "name": "Spaghetti N°5 Talliani Al Huevo 400 g",
       "detail": "Bolsa 400 g · al huevo",
       "description": "Spaghetti N°5 Talliani Al Huevo 400 g (400 g). Producto de despensa: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/spaghetti-talliani-400g.webp",
       "skus": {
         "lider": {
@@ -1818,6 +1841,7 @@ window.UP_DEMO_DATA = {
       "name": "Bolsa de Basura Virutex Bio Mediana 70 x 90 cm 10 un.",
       "detail": "70 x 90 cm · 10 un.",
       "description": "Bolsa de Basura Virutex Bio Mediana 70 x 90 cm 10 un. (10 un). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/bolsas-de-basura-mediana-virutex-70x90-cm-10-unid-bio-rollo.webp",
       "skus": {
         "lider": {
@@ -1890,6 +1914,7 @@ window.UP_DEMO_DATA = {
       "name": "Carne Molida Vacuno 10% Grasa 500 g",
       "detail": "Vacuno 10% grasa · 500 g",
       "description": "Carne Molida Vacuno 10% Grasa 500 g (500 g). Corte cárnico: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/carne-molida-vacuno-10-500g-prodj-1995701.webp",
       "skus": {
         "lider": {
@@ -1962,6 +1987,7 @@ window.UP_DEMO_DATA = {
       "name": "Manzana Fuji Importada Granel (2 a 3 un. Aprox)",
       "detail": "Importada · 2 a 3 un. aprox.",
       "description": "Manzana Fuji Importada Granel (2 a 3 un. Aprox) (1 kg). Producto fresco: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/manzana-fuji-granel-2.webp",
       "skus": {
         "lider": {
@@ -2034,6 +2060,7 @@ window.UP_DEMO_DATA = {
       "name": "Limpiador Crema Cif Original 500 ml",
       "detail": "Crema limpiadora · 500 ml",
       "description": "Limpiador Crema Cif Original 500 ml (500 ml). Artículo de aseo: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/cif-cr-bio-multiuso-original-bot-750-g-1956146.webp",
       "skus": {
         "lider": {
@@ -2106,6 +2133,7 @@ window.UP_DEMO_DATA = {
       "name": "Choclo Tierno La Crianza 400 g",
       "detail": "Bolsa 400 g · tierno",
       "description": "Choclo Tierno La Crianza 400 g (400 g). Producto congelado: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/choclo-la-crianza-bolsa-400-g-premium-tiernos-congelado-2.webp",
       "skus": {
         "lider": {
@@ -2178,6 +2206,7 @@ window.UP_DEMO_DATA = {
       "name": "Alimento Perro Adulto Dog Chow Carne y Pollo 8 kg",
       "detail": "Perro adulto · 8 kg",
       "description": "Alimento Perro Adulto Dog Chow Carne y Pollo 8 kg (8 kg). Alimento para mascotas: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/alimento-perro-adulto-dog-chow-carne-y-pollo-8-kg-1925888.webp",
       "skus": {
         "lider": {
@@ -2252,6 +2281,7 @@ window.UP_DEMO_DATA = {
       "name": "Serum Dove Derma Care Anti-Caída 50 ml",
       "detail": "Sérum anti-caída · 50 ml",
       "description": "Serum Dove Derma Care Anti-Caída 50 ml (50 ml). Artículo de cuidado personal: registro de demostración creado por UP para comparar precios; no reproduce textos de fichas comerciales.",
+      "descriptionSource": "UP · texto propio (demo)",
       "image": "assets/products/serum-dove-2088443.webp",
       "skus": {
         "lider": {

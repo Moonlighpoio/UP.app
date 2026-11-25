@@ -92,6 +92,7 @@ export function mapDemoData(data) {
     unit: p.detail,
     unitPricing: unitInfo(p.detail),
     description: p.description || '',
+    descriptionSource: p.descriptionSource || 'UP · texto propio (demo)',
     image: p.image || null,
     icon: iconFor(p.category),
     skus: p.skus || {},

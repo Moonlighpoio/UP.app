@@ -52,7 +52,7 @@ function updateProductVisibility() {
   if (!button) return;
   const remaining = Math.max(0, cards.length - visibleLimit);
   button.hidden = remaining === 0;
-  button.setAttribute('aria-label', `Cargar ${remaining} productos más`);
+  button.setAttribute('aria-label', remaining ? `Cargar más (${remaining})` : 'Cargar más');
   const label = button.querySelector('[data-load-more-label]');
   if (label) label.textContent = remaining ? `Cargar más (${remaining})` : 'Cargar más';
 }
@@ -348,19 +348,19 @@ export function renderProducts() {
 
       return `
       <article data-product-id="${esc(product.id)}" class="up-product-card">
-        <div class="up-card-media">
+        <a class="up-card-media" href="#/producto/${encodeURIComponent(product.id)}" aria-label="Ver detalle de ${esc(product.name)} · (${esc(product.index)}) ${esc(product.category)}">
           <span class="up-card-index">(${esc(product.index)})</span>
           <span class="up-card-category">${esc(product.category)}</span>
           ${
             image
-              ? `<img src="${esc(image)}" alt="${esc(product.name)}" width="240" height="240" loading="lazy" decoding="async" />`
+              ? `<img src="${esc(image)}" alt="" width="240" height="240" loading="lazy" decoding="async" />`
               : getProductSVG(product.icon)
           }
-        </div>
+        </a>
 
         <div class="up-card-body">
           <div class="up-card-badges">${badges}</div>
-          <h3 class="up-card-name">${esc(product.name)}</h3>
+          <h3 class="up-card-name"><a href="#/producto/${encodeURIComponent(product.id)}">${esc(product.name)}</a></h3>
           <p class="up-card-unit">
             <span>${esc(product.unit)}</span>
             ${infoTip('Detalle técnico', 'Presentación y unidad usadas para calcular el precio por kg o litro.')}
@@ -461,16 +461,16 @@ export function renderProducts() {
       return;
     }
 
-    const card = e.target.closest('.up-product-card');
-    if (card) uiHooks.onOpenCompare(card.dataset.productId);
+    // La imagen y el nombre son enlaces al detalle; el botón "Comparar
+    // precios" conserva el modal existente.
   };
   grid.onkeydown = (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    if (e.target.closest('button')) return;
+    if (e.target.closest('button, a')) return;
     const card = e.target.closest('.up-product-card');
     if (!card) return;
     e.preventDefault();
-    uiHooks.onOpenCompare(card.dataset.productId);
+    window.location.hash = `#/producto/${encodeURIComponent(card.dataset.productId)}`;
   };
 }
 

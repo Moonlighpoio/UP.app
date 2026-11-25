@@ -61,6 +61,8 @@ const DATA_POLICY =
 const NOTE =
   'Datos de demostración creados por UP. FOTOS REFERENCIALES; precios referenciales, ' +
   'no oferta comercial. Ninguna oferta heredada está verificada.';
+// Descripción neutra y propia: no reproduce textos de fichas de supermercados.
+const DESCRIPTION_SOURCE = 'UP · texto propio (demo)';
 
 const DB_FILE = path.join(ROOT, 'data', 'catalog.sqlite');
 const MIGRATIONS_DIR = path.join(ROOT, 'db', 'migrations');
@@ -297,11 +299,11 @@ function seedCatalog(db, legacy = loadLegacy()) {
   const putMeta = db.prepare('INSERT INTO meta (key, value) VALUES (?, ?)');
   const putProduct = db.prepare(`
     INSERT INTO products (
-      id, name, detail, description, image, category, emoji, unit_label, unit_amount,
-      unit_name, gtin, identifier_kind, identifier_value, promos_json, sort_index,
+      id, name, detail, description, description_source, image, category, emoji, unit_label,
+      unit_amount, unit_name, gtin, identifier_kind, identifier_value, promos_json, sort_index,
       created_at, updated_at
     ) VALUES (
-      @id, @name, @detail, @description, @image, @category, @emoji, @unit_label,
+      @id, @name, @detail, @description, @description_source, @image, @category, @emoji, @unit_label,
       @unit_amount, @unit_name, @gtin, @identifier_kind, @identifier_value, @promos_json,
       @sort_index, @created_at, @updated_at
     )
@@ -345,6 +347,7 @@ function seedCatalog(db, legacy = loadLegacy()) {
         name: product.name,
         detail: product.detail,
         description: product.description,
+        description_source: DESCRIPTION_SOURCE,
         image: product.image,
         category: product.category,
         emoji: product.emoji,
@@ -499,6 +502,7 @@ function readCatalog(db) {
     name: row.name,
     detail: row.detail,
     description: row.description,
+    descriptionSource: row.description_source || DESCRIPTION_SOURCE,
     image: row.image,
     category: row.category,
     emoji: row.emoji,
@@ -596,6 +600,7 @@ function toFrontPayload(catalog) {
       name: product.name,
       detail: product.detail,
       description: product.description,
+      descriptionSource: product.descriptionSource || DESCRIPTION_SOURCE,
       image: product.image,
       skus,
       category: product.category,
@@ -661,6 +666,12 @@ function validateCatalogObject(catalog, { now = Date.now, ttlMs = FRESHNESS_TTL_
   for (const product of catalog.products) {
     if (!product.id || ids.has(product.id)) errors.push(`id duplicado/vacío: ${product.id}`);
     ids.add(product.id);
+    if (typeof product.description !== 'string' || !product.description.trim()) {
+      errors.push(`${product.id}: descripción vacía`);
+    }
+    if (typeof product.descriptionSource !== 'string' || !product.descriptionSource.trim()) {
+      errors.push(`${product.id}: descriptionSource vacío`);
+    }
     if (
       typeof product.unitAmount !== 'number' ||
       !Number.isFinite(product.unitAmount) ||

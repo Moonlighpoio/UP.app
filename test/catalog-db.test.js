@@ -44,7 +44,7 @@ test('EAN-13: dígito verificador y rechazo de PLU de 8 dígitos', () => {
   assert.equal(isPlu('7801610001622'), false);
 });
 
-test('migraciones crean tablas, índices, triggers y registran 001 a 005', () => {
+test('migraciones crean tablas, índices, triggers y registran 001 a 006', () => {
   const db = seeded();
   try {
     const { errors } = validateDb(db);
@@ -70,7 +70,7 @@ test('migraciones crean tablas, índices, triggers y registran 001 a 005', () =>
     ]) {
       assert.ok(objects.includes(name), name);
     }
-    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get().n, 5);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get().n, 6);
     const offerColumns = db
       .prepare('PRAGMA table_info(offers)')
       .all()
