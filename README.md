@@ -1085,3 +1085,35 @@ El tema vigente es **negro + blanco + dorado** con tokens en `:root`; el texto d
 
 - `npm test`: **234/234**; `npm run format`, `npm run lint` (con `node --check sw.js`), `npm run check-contrast` (**36/36**), `npm run validate-catalog`, `npm run check-freshness` y `git diff --check` en verde. No se ejecutó Prettier sobre `index.html`.
 - Verificación CDP (`up-verify-u7.mjs`): **15/15** comprobaciones en Chrome real con perfil aislado y móvil 390 px. Cubre aviso de privacidad sin datos personales, imágenes diferidas con alt, búsquedas con y sin resultados, atajo `/`, los cinco eventos nuevos sin PII, skeleton de vista diferida, error de red con `Reintentar`, reduced motion, sin desbordamiento y cero peticiones externas o errores JS.
+
+## 22. FASE P1 · Acceso, roles y estructura del panel administrador
+
+### Cuentas demo y roles
+
+- `#/login` publica dos cuentas públicas de prueba, sembradas de forma idempotente en `up_state_v2.users` por `src/demo-accounts.js` con una sola promesa compartida (evita duplicados entre `initApp` y la vista de login): `admin-demo@ejemplo.cl` y `viewer-demo@ejemplo.cl`, ambas con la contraseña pública `ClaveDePrueba123!`.
+- Las contraseñas siguen derivándose con PBKDF2-SHA256 de 150 000 iteraciones y sal de 16 bytes; nunca se guarda texto plano. `src/auth.js` expone `isAdminUser`/`canWrite`: `admin` puede escribir y `viewer` sólo lee.
+- **Esto NO es seguro**: las credenciales son públicas y viven en el navegador. El interruptor «Modo tester» del panel cambia el rol de la cuenta local y está explícitamente etiquetado como no seguro; cada cambio queda en la auditoría (`role_changed`).
+- La cabecera muestra un enlace «Panel» cuando hay sesión. Las rutas `#/admin*` exigen sesión y redirigen a `#/login?next=…`; `#/admin/config` exige rol `admin` y redirige a `#/admin?denied=1` con aviso de sólo lectura.
+
+### Estructura del panel
+
+- `src/admin.js` define nueve secciones (resumen, funciones, catálogo, datos, reportes, alertas, pedidos, configuración y auditoría) con shell propio: logo, usuario, «Salir del panel», migas de pan, navegación lateral fija en escritorio y desplegable con `aria-expanded` en móvil.
+- `src/admin-search.js` agrega buscador global con Ctrl/⌘+K: crea el diálogo bajo demanda, usa `role="combobox"`, `aria-expanded` y `aria-activedescendant`, filtra sin acentos y Enter navega a la sección elegida.
+- `#/admin/auditoria` muestra entradas de `up_state_v2.audit` con fecha, acción, entidad y autor, y permite exportarlas a JSON. La exportación nunca incluye `passwordHash` ni la contraseña de prueba.
+- `src/flags.js` y `src/reports.js` registran sus escrituras en la auditoría; la siembra de cuentas y los cambios de rol también quedan trazados.
+
+### API administrativa del servidor
+
+- `server.js` protege `/api/admin` y `/api/admin/*` con un guard anticipado: exige `ADMIN_TOKEN` del entorno (nunca del HTML/JS estático), lo compara en tiempo constante sobre hashes SHA-256 y acepta `x-admin-token` o `Authorization: Bearer …`.
+- Sin token configurado o token inválido responde `401` uniforme (`No autorizado`); con token responde `GET /api/admin/status` y `GET /api/admin/health`. Las rutas administrativas desconocidas responden `404` uniforme para no revelar superficie.
+- Hay rate limit por IP de 20 peticiones por minuto con `429` y cabecera `Retry-After`. Ni el token ni su hash se devuelven en ninguna respuesta.
+
+### Producción
+
+- Antes de exponer un panel real se requiere autenticación de servidor con sesiones y bcrypt/argon2, HTTPS, 2FA, autorización por rol en backend y auditoría inmutable. El modo tester y las cuentas públicas son sólo demostración local.
+
+### Verificación
+
+- `npm test`: **252/252**; `npm run format`, `npm run lint`, `npm run check-contrast` (**36/36**), `npm run validate-catalog`, `npm run check-freshness` y `git diff --check` en verde. No se ejecutó Prettier sobre `index.html`.
+- Verificación CDP (`up-verify-p1.mjs`): **24/24** comprobaciones en Chrome real con perfil aislado y móvil 390 px. Cubre login admin/viewer, guard de sesión y de rol, denegación de `#/admin/config`, siembra concurrente de cuentas, interruptor «Modo tester» con auditoría, Ctrl/⌘+K, exportación JSON sin secretos, menú móvil, sin desbordamiento, API admin con y sin token (incluido servidor sin `ADMIN_TOKEN`) y cero peticiones externas o errores JS.
+- Lighthouse móvil sobre rutas `#/admin`, `#/admin/auditoria`, `#/admin/config` y `#/admin/funciones`: **100 Performance / 96–97 Accesibilidad** en corridas con sesión sembrada y **90–100 / 96** cuando el guard redirigía a `#/login?next=…`. La máxima máquina de verificación estaba bajo carga de VM (load ≈18), por lo que se registran **90 / 96** como peor caso medido, por encima de los umbrales. No se ocultó contenido ni se desactivó el aviso para mejorar las cifras.

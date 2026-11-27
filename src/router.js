@@ -43,7 +43,11 @@ export function matchRoute(routes, path) {
 }
 
 export function requiresSession(path) {
-  return path.startsWith('/cuenta') || path === '/checkout';
+  return path.startsWith('/cuenta') || path === '/checkout' || path.startsWith('/admin');
+}
+
+export function isAdminPath(path) {
+  return path.startsWith('/admin');
 }
 
 export function loginTarget(pathWithQuery) {
@@ -57,7 +61,13 @@ export function viewTransitionAllowed(reducedMotion, firstRender) {
   return !reducedMotion && !firstRender;
 }
 
-export function createRouter({ routes, getSession, onBefore = () => {}, onAfter = () => {} }) {
+export function createRouter({
+  routes,
+  getSession,
+  getRole = () => null,
+  onBefore = () => {},
+  onAfter = () => {},
+}) {
   let current = null;
   let started = false;
   let hasRendered = false;
@@ -116,6 +126,13 @@ export function createRouter({ routes, getSession, onBefore = () => {}, onAfter 
       const target = loginTarget(pathWithQuery);
       if (globalThis.location.hash !== target) {
         globalThis.history.replaceState(null, '', target);
+      }
+      return handle();
+    }
+
+    if (route.adminOnly && getRole() !== 'admin') {
+      if (globalThis.location.hash !== '#/admin?denied=1') {
+        globalThis.history.replaceState(null, '', '#/admin?denied=1');
       }
       return handle();
     }

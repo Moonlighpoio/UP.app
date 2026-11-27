@@ -9,6 +9,7 @@ import { didYouMean, suggestionsFor } from './suggest.js';
 import { clearRecentSearches, popularSearches, recentSearches, recordSearch } from './search.js';
 import { initScanner, closeScanner } from './scanner.js';
 import { sessionUser } from './auth.js';
+import { ensureDemoAccounts } from './demo-accounts.js';
 import { createRouter } from './router.js';
 import { applyDemoData } from './catalog.js';
 import { refreshPrices } from './api.js';
@@ -72,6 +73,7 @@ import {
 import { checkoutView } from './views/checkout.js';
 import { offersView } from './views/offers.js';
 import { bankBenefitsView } from './views/bank-benefits.js';
+import { adminView } from './views/admin.js';
 import { storesPlaceholder } from './views/placeholder.js';
 import { listView } from './views/list.js';
 import { compareView } from './views/compare.js';
@@ -116,7 +118,12 @@ function updateBottomNav(path) {
   if (path === '/buscar') active = 'search';
   else if (path === '/ofertas' || path === '/tarjetas') active = 'ofertas';
   else if (path === '/lista' || path === '/comparar') active = 'lista';
-  else if (path.startsWith('/cuenta') || path === '/login' || path === '/registro')
+  else if (
+    path.startsWith('/cuenta') ||
+    path.startsWith('/admin') ||
+    path === '/login' ||
+    path === '/registro'
+  )
     active = 'cuenta';
   document.querySelectorAll('#bottom-nav [data-nav]').forEach((link) => {
     if (link.dataset.nav === active) link.setAttribute('aria-current', 'page');
@@ -169,6 +176,8 @@ function initDeferredUI(onDetected) {
 
 function initApp() {
   state.cart = loadState().cart;
+  // Siembra idempotente de las cuentas públicas de prueba (FASE P1).
+  void ensureDemoAccounts();
 
   const priceHooks = { notify: showToast, renderAll: renderForRoute, refreshActiveModal };
 
@@ -666,12 +675,27 @@ function initApp() {
       title: 'Pago simulado · UP',
       description: 'Pago simulado de UP. No se solicitan datos de tarjeta.',
     },
+    { path: '/admin', view: adminView('resumen'), title: 'Panel UP · Resumen' },
+    { path: '/admin/funciones', view: adminView('funciones'), title: 'Panel UP · Funciones' },
+    { path: '/admin/catalogo', view: adminView('catalogo'), title: 'Panel UP · Catálogo' },
+    { path: '/admin/datos', view: adminView('datos'), title: 'Panel UP · Calidad de datos' },
+    { path: '/admin/reportes', view: adminView('reportes'), title: 'Panel UP · Reportes' },
+    { path: '/admin/alertas', view: adminView('alertas'), title: 'Panel UP · Alertas' },
+    { path: '/admin/pedidos', view: adminView('pedidos'), title: 'Panel UP · Pedidos' },
+    {
+      path: '/admin/config',
+      view: adminView('config'),
+      adminOnly: true,
+      title: 'Panel UP · Configuración',
+    },
+    { path: '/admin/auditoria', view: adminView('auditoria'), title: 'Panel UP · Auditoría' },
     { path: '*', view: notFoundView, title: 'Página no encontrada · UP' },
   ];
 
   const router = createRouter({
     routes,
     getSession: () => sessionUser(loadState()),
+    getRole: () => sessionUser(loadState())?.role || null,
     onBefore: ({ path }) => {
       if (path === '/' && !$('product-grid').children.length) renderProducts();
       if (isOnboardingOpen()) closeOnboarding();

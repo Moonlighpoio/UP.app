@@ -38,7 +38,7 @@ test('el inventario cubre todas las áreas de la web y por defecto están activa
 });
 
 test('desactivar una flag oculta la ruta y registra auditoría local sin datos personales', () => {
-  const saved = { analytics: [], flags: {} };
+  const saved = { analytics: [], audit: [], flags: {}, users: [], session: null };
   assert.equal(setFlag(saved, 'comparar', true), false);
   assert.equal(setFlag(saved, 'comparador', false), true);
   assert.equal(isFeatureEnabled(saved.flags, 'comparador'), false);
@@ -46,6 +46,12 @@ test('desactivar una flag oculta la ruta y registra auditoría local sin datos p
   assert.equal(saved.analytics.length, 1);
   assert.equal(saved.analytics[0].event, 'flag_changed');
   assert.deepEqual(saved.analytics[0].props, { featureId: 'comparador', enabled: false });
+  assert.equal(saved.audit.length, 1);
+  assert.equal(saved.audit[0].action, 'flag_changed');
+  assert.equal(saved.audit[0].entity, 'flag');
+  assert.equal(saved.audit[0].entityId, 'comparador');
+  assert.deepEqual(saved.audit[0].before, { enabled: true });
+  assert.deepEqual(saved.audit[0].after, { enabled: false });
 });
 
 test('flags corruptos vuelven a valores seguros', () => {

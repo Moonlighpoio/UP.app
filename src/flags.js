@@ -4,6 +4,7 @@
  * registra en analítica sin datos personales y en el estado local.
  */
 import { ANALYTICS_EVENTS, trackEvent } from './analytics.js';
+import { recordWrite } from './admin.js';
 
 export const FEATURES = Object.freeze([
   { id: 'catalogo', label: 'Catálogo y filtros', route: '#/' },
@@ -46,8 +47,16 @@ export function isFeatureEnabled(flags, id) {
 /** Devuelve el estado mutado y registra el cambio con el nombre de la flag. */
 export function setFlag(state, id, enabled) {
   if (!ids.has(id) || typeof enabled !== 'boolean') return false;
+  const before = { enabled: normalizeFlags(state.flags)[id] };
   state.flags = { ...normalizeFlags(state.flags), [id]: enabled };
   trackEvent(state, 'flag_changed', { featureId: id, enabled });
+  recordWrite(state, {
+    action: 'flag_changed',
+    entity: 'flag',
+    entityId: id,
+    before,
+    after: { enabled },
+  });
   return true;
 }
 

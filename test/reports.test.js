@@ -69,10 +69,11 @@ test('aceptar marca la oferta como pending y escribe auditoría', () => {
   assert.equal(report.status, 'aceptado');
   assert.equal(report.resolvedAt, '2026-11-24T12:00:01.000Z');
   assert.equal(effectiveSkuStatus(state, 'p1', 'lider', 'verified'), 'pending');
-  assert.equal(state.audit.length, 1);
-  assert.equal(state.audit[0].action, 'reporte_aceptar');
-  assert.equal(state.audit[0].role, 'admin');
-  assert.deepEqual(state.audit[0].before, { status: 'abierto' });
+  assert.equal(state.audit.length, 2);
+  assert.equal(state.audit[0].action, 'report_created');
+  assert.equal(state.audit[1].action, 'reporte_aceptar');
+  assert.equal(state.audit[1].role, 'admin');
+  assert.deepEqual(state.audit[1].before, { status: 'abierto' });
 });
 
 test('rechazar exige motivo y deja rastro; no se puede resolver dos veces', () => {

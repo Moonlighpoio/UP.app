@@ -1,6 +1,7 @@
 /** Inicio de sesión de prueba (#/login). */
 import { updateStateAsync } from '../storage.js';
-import { loginUser } from '../auth.js';
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, loginUser } from '../auth.js';
+import { ensureDemoAccounts } from '../demo-accounts.js';
 import { accountNotice, clearFormErrors, showFormErrors, updateAuthLinks } from './shared.js';
 import { showToast } from '../ui.js';
 
@@ -11,6 +12,9 @@ export const loginView = {
     container.innerHTML = `
       <section class="up-auth-wrap up-container">
         ${accountNotice()}
+        <p id="demo-account-note" class="up-test-notice" role="status" aria-live="polite">
+          Preparando cuentas públicas de prueba…
+        </p>
         <div class="up-auth-card">
           <span class="up-eyebrow">ACCESO DE PRUEBA</span>
           <h1 data-view-title tabindex="-1">Ingresa a tu cuenta</h1>
@@ -41,6 +45,23 @@ export const loginView = {
     const status = container.querySelector('#login-status');
     const forgotBtn = container.querySelector('#forgot-password-btn');
     const forgotMessage = container.querySelector('#forgot-message');
+    const demoNote = container.querySelector('#demo-account-note');
+
+    // La siembra es idempotente: el inicio de la app también la dispara.
+    const seeded = ensureDemoAccounts();
+    seeded
+      .then(() => {
+        if (!demoNote?.isConnected) return;
+        demoNote.innerHTML = `<strong>CUENTAS DEMO</strong><p>${DEMO_ACCOUNTS.map(
+          (item) => `${item.role}: ${item.email}`
+        ).join(
+          ' · '
+        )} · contraseña pública <code>${DEMO_PASSWORD}</code>. El panel <a href="#/admin">#/admin</a> es sólo local y NO es seguro.</p>`;
+      })
+      .catch(() => {
+        if (demoNote?.isConnected)
+          demoNote.textContent = 'No se pudieron preparar las cuentas demo.';
+      });
 
     form.onsubmit = async (event) => {
       event.preventDefault();
@@ -53,6 +74,7 @@ export const loginView = {
       button.disabled = true;
       button.textContent = 'Verificando…';
       try {
+        await seeded;
         const result = await updateStateAsync((state) => loginUser(state, input));
         if (!result.ok) {
           showFormErrors(form, result.errors);

@@ -27,6 +27,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const crypto = require('crypto');
 const { readCatalogPayload } = require('./scripts/catalog-db.js');
 const {
   CHAIN_IDS,
@@ -113,6 +114,7 @@ const HEAD_RETRY_STATUSES = new Set([403, 405, 501]);
 // Rate limiting en memoria por IP. No se confía en X-Forwarded-For (spoofable).
 const VERIFY_RATE = { limit: 10, windowMs: 60_000 };
 const PRICES_RATE = { limit: 60, windowMs: 60_000 };
+const ADMIN_RATE = { limit: 20, windowMs: 60_000 };
 
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -399,11 +401,18 @@ function createRateLimiter({ limit, windowMs, now = Date.now } = {}) {
 
 const checkVerifyRate = createRateLimiter(VERIFY_RATE);
 const checkPricesRate = createRateLimiter(PRICES_RATE);
+const checkAdminRate = createRateLimiter(ADMIN_RATE);
 
 // Solo para tests: deja el limitador en estado inicial entre suites.
 function resetRateLimits() {
   checkVerifyRate.reset();
   checkPricesRate.reset();
+  resetAdminRate();
+}
+
+// Solo para tests: reinicia únicamente el bucket de /api/admin.
+function resetAdminRate() {
+  checkAdminRate.reset();
 }
 
 // Solo para tests: deja caché y circuit breakers en estado inicial.
@@ -418,6 +427,27 @@ function resetIntegrationState() {
 function clientIp(req) {
   // X-Forwarded-For es spoofable si el servidor está expuesto directamente.
   return req.socket.remoteAddress || 'unknown';
+}
+
+function adminTokenFromRequest(req) {
+  const direct = req.headers['x-admin-token'];
+  if (typeof direct === 'string') return direct;
+  if (Array.isArray(direct)) return direct[0];
+  const auth = req.headers.authorization;
+  const value = Array.isArray(auth) ? auth[0] : auth;
+  if (typeof value !== 'string') return null;
+  const match = /^Bearer\s+(.+)$/i.exec(value.trim());
+  return match ? match[1].trim() : null;
+}
+
+function adminAuthorized(req) {
+  // Se lee en cada petición: nunca se cachea al cargar el módulo.
+  const expected = process.env.ADMIN_TOKEN;
+  if (typeof expected !== 'string' || expected.length === 0) return false;
+  const provided = adminTokenFromRequest(req);
+  if (provided == null) return false;
+  const digest = (value) => crypto.createHash('sha256').update(value, 'utf8').digest();
+  return crypto.timingSafeEqual(digest(expected), digest(provided));
 }
 
 function rateLimited(res, check, req) {
@@ -715,6 +745,25 @@ function sendStatic(req, res, status, body, type) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
+  // El acceso admin se decide ANTES de cualquier otra ruta o archivo estático.
+  if (url.pathname === '/api/admin' || url.pathname.startsWith('/api/admin/')) {
+    if (rateLimited(res, checkAdminRate, req)) return;
+    if (!adminAuthorized(req)) {
+      return send(res, 401, JSON.stringify({ ok: false, error: 'No autorizado' }));
+    }
+    if (url.pathname === '/api/admin/status') {
+      return send(
+        res,
+        200,
+        JSON.stringify({ ok: true, service: 'UP admin (demo)', authenticated: true })
+      );
+    }
+    if (url.pathname === '/api/admin/health') {
+      return send(res, 200, JSON.stringify({ ok: true, status: 'ok' }));
+    }
+    return send(res, 404, JSON.stringify({ ok: false, error: 'No encontrado' }));
+  }
+
   if (url.pathname === '/api/prices') {
     if (rateLimited(res, checkPricesRate, req)) return;
     try {
@@ -805,6 +854,7 @@ module.exports = {
   verifyLink,
   createRateLimiter,
   resetRateLimits,
+  resetAdminRate,
   resetIntegrationState,
   chainForUrl,
   FEED_TTL_MS,
@@ -821,6 +871,7 @@ module.exports = {
   normalizeFeed,
   VERIFY_RATE,
   PRICES_RATE,
+  ADMIN_RATE,
   NETWORK_TIMEOUT_MS,
   MAX_REDIRECTS,
   SECURITY_HEADERS,

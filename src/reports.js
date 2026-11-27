@@ -5,6 +5,7 @@
  */
 import { MAX_REPORTS_PER_HOUR, REPORT_WINDOW_MS, STORES } from './config.js';
 import { recordAudit } from './audit.js';
+import { recordWrite } from './admin.js';
 
 export const REPORT_REASONS = Object.freeze([
   { value: 'precio-distinto', label: 'Precio distinto' },
@@ -69,6 +70,13 @@ export function createReport(state, input, { now = Date.now() } = {}) {
     resolvedAt: null,
   };
   state.reports = [...(Array.isArray(state.reports) ? state.reports : []), report];
+  recordWrite(state, {
+    action: 'report_created',
+    entity: 'report',
+    entityId: report.id,
+    after: { productId, chain, reason, status: report.status },
+    now,
+  });
   return { ok: true, report };
 }
 

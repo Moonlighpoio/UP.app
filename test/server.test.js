@@ -9,8 +9,10 @@ const {
   verifyLink,
   createRateLimiter,
   resetRateLimits,
+  resetAdminRate,
   VERIFY_RATE,
   PRICES_RATE,
+  ADMIN_RATE,
   NETWORK_TIMEOUT_MS,
   MAX_REDIRECTS,
   SECURITY_HEADERS,
@@ -428,4 +430,100 @@ test('GET /api/verify-link devuelve 429 con Retry-After al exceder el límite', 
     resetRateLimits();
   }
   assert.ok(PRICES_RATE.limit >= VERIFY_RATE.limit);
+});
+
+const ADMIN_TEST_TOKEN = 'token-de-prueba-no-real';
+const adminHeaders = (token) => ({ 'x-admin-token': token });
+
+test('admin sin ADMIN_TOKEN responde 401 uniforme', async () => {
+  delete process.env.ADMIN_TOKEN;
+  try {
+    const res = await fetch(`${base}/api/admin/status`);
+    assert.equal(res.status, 401);
+    assert.deepEqual(await res.json(), { ok: false, error: 'No autorizado' });
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      assert.equal(res.headers.get(name.toLowerCase()), value, name);
+    }
+  } finally {
+    delete process.env.ADMIN_TOKEN;
+  }
+});
+
+test('admin valida la cabecera contra ADMIN_TOKEN en cada petición', async () => {
+  process.env.ADMIN_TOKEN = ADMIN_TEST_TOKEN;
+  resetAdminRate();
+  try {
+    const target = `${base}/api/admin/status`;
+    const missing = await fetch(target);
+    assert.equal(missing.status, 401);
+    assert.deepEqual(await missing.json(), { ok: false, error: 'No autorizado' });
+
+    const wrong = await fetch(target, {
+      headers: adminHeaders(ADMIN_TEST_TOKEN + '-malo'),
+    });
+    assert.equal(wrong.status, 401);
+    assert.deepEqual(await wrong.json(), { ok: false, error: 'No autorizado' });
+
+    const ok = await fetch(target, { headers: adminHeaders(ADMIN_TEST_TOKEN) });
+    assert.equal(ok.status, 200);
+    const body = await ok.text();
+    assert.deepEqual(JSON.parse(body), {
+      ok: true,
+      service: 'UP admin (demo)',
+      authenticated: true,
+    });
+    assert.equal(body.includes(ADMIN_TEST_TOKEN), false);
+    for (const [name, value] of ok.headers) {
+      assert.equal(value.includes(ADMIN_TEST_TOKEN), false, name);
+    }
+  } finally {
+    resetAdminRate();
+    delete process.env.ADMIN_TOKEN;
+  }
+});
+
+test('admin autorizado: health responde 200 y otras rutas 404', async () => {
+  process.env.ADMIN_TOKEN = ADMIN_TEST_TOKEN;
+  resetAdminRate();
+  try {
+    const health = await fetch(`${base}/api/admin/health`, {
+      headers: adminHeaders(ADMIN_TEST_TOKEN),
+    });
+    assert.equal(health.status, 200);
+    assert.deepEqual(await health.json(), { ok: true, status: 'ok' });
+
+    const missing = await fetch(`${base}/api/admin/no-existe`, {
+      headers: adminHeaders(ADMIN_TEST_TOKEN),
+    });
+    assert.equal(missing.status, 404);
+    assert.deepEqual(await missing.json(), { ok: false, error: 'No encontrado' });
+  } finally {
+    resetAdminRate();
+    delete process.env.ADMIN_TOKEN;
+  }
+});
+
+test('admin excede el límite con 429 y Retry-After', async () => {
+  process.env.ADMIN_TOKEN = ADMIN_TEST_TOKEN;
+  resetAdminRate();
+  try {
+    const target = `${base}/api/admin/status`;
+    for (let i = 0; i < ADMIN_RATE.limit; i += 1) {
+      const res = await fetch(target, { headers: adminHeaders(ADMIN_TEST_TOKEN) });
+      assert.equal(res.status, 200);
+    }
+    const blocked = await fetch(target, { headers: adminHeaders(ADMIN_TEST_TOKEN) });
+    assert.equal(blocked.status, 429);
+    const retryAfter = Number(blocked.headers.get('retry-after'));
+    assert.ok(retryAfter >= 1);
+    assert.deepEqual(await blocked.json(), {
+      ok: false,
+      paused: true,
+      error: 'Demasiadas solicitudes',
+      retryAfter,
+    });
+  } finally {
+    resetAdminRate();
+    delete process.env.ADMIN_TOKEN;
+  }
 });

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   VIEW_TRANSITION_MS,
+  isAdminPath,
   loginTarget,
   matchRoute,
   parseHash,
@@ -41,6 +42,10 @@ test('las rutas privadas redirigen al login conservando el destino', () => {
   assert.equal(requiresSession('/checkout'), true);
   assert.equal(requiresSession('/producto/arroz-1kg'), false);
   assert.equal(requiresSession('/lista'), false);
+  assert.equal(requiresSession('/admin'), true);
+  assert.equal(requiresSession('/admin/auditoria'), true);
+  assert.equal(isAdminPath('/admin/config'), true);
+  assert.equal(isAdminPath('/cuenta'), false);
   assert.equal(loginTarget('/checkout'), '#/login?next=%23%2Fcheckout');
 });
 

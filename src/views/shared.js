@@ -102,6 +102,7 @@ export function updateAuthLinks() {
   const user = sessionUser(state);
   const loginLink = document.getElementById('login-link');
   const accountLink = document.getElementById('account-link');
+  const adminLink = document.getElementById('admin-link');
   if (loginLink) loginLink.hidden = !!user;
   if (accountLink) {
     accountLink.hidden = !user;
@@ -109,6 +110,10 @@ export function updateAuthLinks() {
       accountLink.textContent = `Mi cuenta · ${user.name}`;
       accountLink.setAttribute('aria-label', `Mi cuenta de ${user.name}`);
     }
+  }
+  if (adminLink) {
+    adminLink.hidden = !user;
+    adminLink.textContent = user?.role === 'admin' ? 'Panel admin' : 'Panel (lectura)';
   }
   return user;
 }

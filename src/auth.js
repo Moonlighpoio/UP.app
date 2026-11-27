@@ -10,6 +10,13 @@ export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const PBKDF2_ITERATIONS = 150000;
 const SALT_BYTES = 16;
 
+// Credenciales públicas de demostración: no protegen nada real (FASE P1).
+export const DEMO_PASSWORD = 'ClaveDePrueba123!';
+export const DEMO_ACCOUNTS = Object.freeze([
+  { role: 'admin', name: 'Administrador demo', email: 'admin-demo@ejemplo.cl' },
+  { role: 'viewer', name: 'Observador demo', email: 'viewer-demo@ejemplo.cl' },
+]);
+
 function subtle() {
   const crypto = globalThis.crypto;
   if (!crypto || !crypto.subtle) {
@@ -30,7 +37,7 @@ function fromBase64(value) {
   return Uint8Array.from(globalThis.atob(value), (char) => char.charCodeAt(0));
 }
 
-function constantTimeEqual(a, b) {
+export function constantTimeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -144,7 +151,42 @@ export function isSessionValid(session, { now = Date.now } = {}) {
 
 export function sessionUser(state) {
   if (!isSessionValid(state?.session)) return null;
-  return state.users.find((user) => user.id === state.session.userId) || null;
+  const user = state.users.find((candidate) => candidate.id === state.session.userId);
+  return user && user.active !== false ? user : null;
+}
+
+/** admin puede escribir; viewer sólo lee. Cuentas inactivas nunca tienen sesión. */
+export function isAdminUser(user) {
+  return !!user && user.active !== false && user.role === 'admin';
+}
+
+export function canWrite(user) {
+  return isAdminUser(user);
+}
+
+/** Siembra las cuentas públicas de prueba una sola vez, con hash local aleatorio. */
+export async function seedDemoAccounts(state) {
+  if (!Array.isArray(state.users)) state.users = [];
+  const added = [];
+  for (const account of DEMO_ACCOUNTS) {
+    if (state.users.some((user) => user.email === account.email)) continue;
+    const passwordHash = await hashPassword(DEMO_PASSWORD);
+    const now = new Date().toISOString();
+    const user = {
+      id: `usr_demo_${account.role}`,
+      name: account.name,
+      email: account.email,
+      passwordHash,
+      createdAt: now,
+      termsAcceptedAt: now,
+      isDemo: true,
+      role: account.role,
+      active: true,
+    };
+    state.users.push(user);
+    added.push(user);
+  }
+  return added;
 }
 
 /** Mutamos el estado ya leído por storage.updateState; el guardado lo hace el llamador. */
@@ -186,7 +228,11 @@ export async function loginUser(state, input) {
 
   const email = input.email.trim().toLowerCase();
   const user = state.users.find((candidate) => candidate.email === email);
-  if (!user || !(await verifyPassword(input.password, user.passwordHash))) {
+  if (
+    !user ||
+    user.active === false ||
+    !(await verifyPassword(input.password, user.passwordHash))
+  ) {
     return {
       ok: false,
       errors: [{ field: 'password', message: 'Correo o contraseña incorrectos.' }],

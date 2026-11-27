@@ -115,6 +115,14 @@ test('U7 conserva foco visible, reduced motion, aviso de privacidad y estados ac
   assert.match(css, /\.up-state-error/);
 });
 
+test('P1 mantiene accesible el enlace al panel, el layout denso y el buscador Ctrl+K', () => {
+  assert.match(html, /id="admin-link" href="#\/admin" class="up-header-auth" hidden/);
+  assert.match(css, /\.up-admin-body/);
+  assert.match(css, /\.up-admin-nav ul\.is-open/);
+  assert.match(css, /\.up-admin-search-option\[aria-selected='true'\]/);
+  assert.match(css, /\.up-switch input/);
+});
+
 test('el módulo a11y expone las primitivas sin ejecutar DOM al importarlo', () => {
   for (const fn of [visibleFocusables, openDialog, closeDialog, trapDialogTab]) {
     assert.equal(typeof fn, 'function');
